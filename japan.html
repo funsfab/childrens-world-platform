@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071426"><title>Japan Mission — My World HQ</title><link rel="stylesheet" href="css/style.css"></head>
+<body class="country-page">
+<header class="hq-topbar shell-wide"><a class="brand compact" href="hq.html"><span class="brand-mark">🌍</span><span><strong>MY WORLD HQ</strong><small>WORLD EXPLORER</small></span></a><div class="breadcrumb">World Explorer <span>›</span> Asia <span>›</span> Japan</div><a class="pill ghost" href="hq.html">← Back to HQ</a></header>
+<main class="country-shell shell-wide">
+  <section class="country-hero">
+    <div class="country-copy"><span class="eyebrow">WORLD MISSION 024 • ASIA</span><h1><span>🇯🇵</span> Japan</h1><p>Neon cities, ancient traditions, mountains, islands, technology and food — explore how the pieces connect.</p><div class="country-chips"><span>Capital: Tokyo</span><span>Currency: Yen (¥)</span><span>Language: Japanese</span><span>Region: East Asia</span></div><div class="progress country-progress"><span id="countryProgressBar" style="width:68%"></span></div><small id="countryProgressText">Mission progress: 68%</small></div>
+    <div class="japan-art"><div class="sun"></div><div class="mountain m1"></div><div class="mountain m2"></div><div class="torii"><i></i><b></b><em></em></div><div class="cityline"><i></i><i></i><i></i><i></i><i></i></div></div>
+  </section>
+
+  <section class="country-layout">
+    <aside class="country-nav">
+      <b>MISSION MAP</b>
+      <button class="active" data-tab="snapshot">01 • Quick Snapshot</button>
+      <button data-tab="cities">02 • Cities & Places</button>
+      <button data-tab="culture">03 • Culture & Food</button>
+      <button data-tab="life">04 • Everyday Life</button>
+      <button data-tab="quiz">05 • Japan Challenge</button>
+    </aside>
+    <section class="country-content">
+      <div class="country-tab active" id="snapshot">
+        <span class="eyebrow">QUICK SNAPSHOT</span><h2>Start with the essentials.</h2>
+        <div class="fact-grid"><article><span>🏙️</span><b>Capital</b><strong>Tokyo</strong><small>Japan's capital and its largest metropolitan centre.</small></article><article><span>🗾</span><b>Geography</b><strong>Island country</strong><small>Thousands of islands; Honshu is the largest.</small></article><article><span>💴</span><b>Money</b><strong>Japanese yen</strong><small>Currency symbol: ¥</small></article><article><span>🗣️</span><b>Language</b><strong>Japanese</strong><small>Writing includes kanji, hiragana and katakana.</small></article><article><span>🗻</span><b>Landmark</b><strong>Mount Fuji</strong><small>Japan's highest mountain and a famous cultural symbol.</small></article><article><span>⚾</span><b>Popular sport</b><strong>Baseball</strong><small>Football, sumo and other sports are also widely followed.</small></article></div>
+        <div class="link-path"><b>Knowledge connection</b><span>Japan → Earthquakes → Plate tectonics → Science Lab</span><button class="text-btn" data-country-next="cities">Continue mission →</button></div>
+      </div>
+      <div class="country-tab" id="cities"><span class="eyebrow">CITIES & PLACES</span><h2>One country, many different environments.</h2><div class="place-list"><article><span>🌆</span><div><b>Tokyo</b><p>Dense neighbourhoods, trains, business districts, temples, shopping areas and modern technology.</p></div></article><article><span>⛩️</span><div><b>Kyoto</b><p>Known for historic temples, shrines, gardens and traditional architecture.</p></div></article><article><span>🏯</span><div><b>Osaka</b><p>A major city known for commerce, food culture and lively urban neighbourhoods.</p></div></article><article><span>🗻</span><div><b>Mount Fuji</b><p>An active stratovolcano and the highest mountain in Japan.</p></div></article></div><button class="btn small primary" data-country-next="culture">Next: Culture & Food →</button></div>
+      <div class="country-tab" id="culture"><span class="eyebrow">CULTURE & FOOD</span><h2>Tradition and modern life can exist side by side.</h2><div class="culture-grid"><article><span>🍜</span><b>Food</b><p>Examples include ramen, sushi, rice dishes and many regional specialities.</p></article><article><span>🎎</span><b>Traditions</b><p>Festivals and customs vary by region and family; avoid thinking one tradition represents everyone.</p></article><article><span>🎮</span><b>Entertainment</b><p>Japan has major video-game, animation, music and publishing industries.</p></article><article><span>🚅</span><b>Transport</b><p>Rail is important in many cities, and Shinkansen trains connect major regions at high speed.</p></article></div><div class="culture-note">🌏 <b>Culture rule:</b> We describe what is popular, traditional or common without pretending every person lives the same way.</div><button class="btn small primary" data-country-next="life">Next: Everyday Life →</button></div>
+      <div class="country-tab" id="life"><span class="eyebrow">EVERYDAY LIFE</span><h2>What might a young person notice?</h2><div class="scenario-card"><div><span>🚉</span><h3>Tokyo morning challenge</h3><p>You need to be at a museum by 10:00. The train takes 22 minutes and the walk takes 8 minutes. What is the latest time you should leave if you want a 10-minute safety buffer?</p></div><div class="scenario-options"><button data-answer="wrong">09:30</button><button data-answer="correct">09:20</button><button data-answer="wrong">09:40</button></div><p id="scenarioFeedback"></p></div><button class="btn small primary" data-country-next="quiz">Finish with Japan Challenge →</button></div>
+      <div class="country-tab" id="quiz"><span class="eyebrow">JAPAN CHALLENGE</span><h2>Can you earn the passport stamp?</h2><div id="japanQuiz" class="inline-quiz"></div></div>
+    </section>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+<script src="js/questions.js"></script><script src="js/common.js"></script><script src="js/japan.js"></script>
+</body></html>

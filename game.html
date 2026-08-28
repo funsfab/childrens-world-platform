@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090d24"><title>Flag Quest — My World HQ</title><link rel="stylesheet" href="css/style.css"></head>
+<body class="game-page">
+<div class="game-stars"></div>
+<header class="hq-topbar shell-wide"><a class="brand compact" href="hq.html"><span class="brand-mark">🎮</span><span><strong>FLAG QUEST</strong><small>GAME WORLD • PROTOTYPE</small></span></a><div class="game-hud"><span>⚡ <b id="gameXp">0</b> XP</span><span>🔥 <b id="combo">0</b> combo</span><span>❤️ <b id="lives">3</b></span></div><a class="pill ghost" href="hq.html">Exit game</a></header>
+<main class="game-shell">
+  <section class="game-intro" id="gameIntro"><div class="game-logo">🌐</div><span class="eyebrow">AROUND THE WORLD • NO-REPEAT SHUFFLE</span><h1>Flag Quest</h1><p>Identify countries, capitals and world clues. Questions are drawn from a shuffle bag so the same item is not repeated until the current pool has been used.</p><div class="mode-row"><button class="mode active" data-mode="mixed">🌍 Mixed World</button><button class="mode" data-mode="flags">🚩 Flags</button><button class="mode" data-mode="capitals">🏙️ Capitals</button></div><button class="btn primary game-start" id="startGame">START QUEST →</button><small>Prototype bank: dozens of curated items. Production target: hundreds per subject where appropriate.</small></section>
+  <section class="game-arena" id="gameArena" hidden>
+    <div class="arena-top"><div><span id="roundLabel">ROUND 1</span><div class="timer"><i id="timerBar"></i></div></div><div class="score-orb"><b id="score">0</b><small>SCORE</small></div></div>
+    <div class="question-stage"><div class="question-icon" id="questionIcon">🌍</div><span class="question-category" id="questionCategory">WORLD</span><h2 id="gameQuestion">Question</h2><div class="answer-grid" id="answerGrid"></div><div class="game-feedback" id="gameFeedback"></div></div>
+  </section>
+  <section class="game-results" id="gameResults" hidden><div class="trophy">🏆</div><h2>Quest complete!</h2><p id="resultCopy"></p><div class="result-stats"><div><b id="finalScore">0</b><small>Score</small></div><div><b id="finalCorrect">0</b><small>Correct</small></div><div><b id="finalXp">0</b><small>XP earned</small></div></div><button class="btn primary" id="playAgain">Play another set</button><a class="btn secondary" href="hq.html">Back to HQ</a></section>
+</main>
+<script src="js/questions.js"></script><script src="js/common.js"></script><script src="js/game.js"></script>
+</body></html>

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#071426" />
+  <title>My World HQ — Child Dashboard Prototype</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body class="hq-page">
+  <div class="starfield" aria-hidden="true"></div>
+  <header class="hq-topbar shell-wide">
+    <a class="brand compact" href="index.html"><span class="brand-mark">🌍</span><span><strong>MY WORLD HQ</strong><small>PROTOTYPE</small></span></a>
+    <div class="hq-search"><span>🔎</span><input id="globalSearch" aria-label="Search the prototype" placeholder="What do you want to discover?" /><button id="searchBtn">Search</button></div>
+    <div class="profile-chip"><span class="avatar">🦊</span><div><b>RocketFox</b><small>Level 4 • 2,480 XP</small></div></div>
+  </header>
+
+  <main class="hq-layout shell-wide">
+    <aside class="side-rail left-rail">
+      <section class="rail-card live-card">
+        <div class="rail-title"><span>⚡</span><b>Live World Feed</b></div>
+        <div class="feed-item"><span>🇰🇪</span><div><b>Kenya</b><small>3 new discoveries</small></div></div>
+        <div class="feed-item"><span>🪐</span><div><b>Saturn</b><small>New ring mission</small></div></div>
+        <div class="feed-item"><span>🧠</span><div><b>Brain Lab</b><small>Logic puzzle #42</small></div></div>
+      </section>
+      <section class="rail-card discovery-card">
+        <div class="rail-title"><span>💡</span><b>Quick Discovery</b></div>
+        <p id="quickFact">Octopuses have three hearts.</p>
+        <button class="text-btn" id="newFactBtn">Another fact ↻</button>
+      </section>
+      <section class="rail-card pulse-card">
+        <div class="pulse-orb"></div>
+        <b>World Pulse</b>
+        <small>12 activities waiting today</small>
+      </section>
+    </aside>
+
+    <section class="hq-main">
+      <div class="welcome-panel">
+        <div>
+          <span class="eyebrow">WELCOME BACK, EXPLORER</span>
+          <h1>Ready for your next mission, RocketFox?</h1>
+          <p>You left Japan at 68%. Finish the Tokyo challenge to earn your next World Passport stamp.</p>
+        </div>
+        <div class="mini-globe" aria-hidden="true"><span>🌏</span><i></i><i></i><i></i></div>
+      </div>
+
+      <section class="continue-card">
+        <div class="continue-art"><span>🇯🇵</span><i>68%</i></div>
+        <div class="continue-info">
+          <span class="eyebrow">CONTINUE YOUR MISSION</span>
+          <h2>Japan: City Lights & Ancient Traditions</h2>
+          <p>Tokyo • culture • food • geography • mini quiz</p>
+          <div class="progress"><span style="width:68%"></span></div>
+          <div class="continue-actions"><a class="btn small primary" href="japan.html">Continue mission</a><button class="btn small secondary" id="saveLaterBtn">Save for later</button></div>
+        </div>
+      </section>
+
+      <section class="daily-grid">
+        <article class="mission-card daily-main">
+          <div class="mission-top"><span>🔥 TODAY'S MISSION</span><b>+180 XP</b></div>
+          <h3>Can you spot the scam?</h3>
+          <p>Five messages. Some are safe. Some are trying to trick you.</p>
+          <button class="mission-btn" data-open="safety">Start safety mission →</button>
+        </article>
+        <article class="mission-card"><span class="big-emoji">🌋</span><b>Question of the Day</b><p>Why do volcanoes erupt?</p><button class="text-btn" data-open="why">Discover why →</button></article>
+        <article class="mission-card"><span class="big-emoji">💷</span><b>Life Challenge</b><p>Feed four people with £35.</p><a class="text-btn" href="life-lab.html">Take challenge →</a></article>
+      </section>
+
+      <div class="section-heading compact-heading" id="worlds"><span class="eyebrow">YOUR 10 WORLDS</span><h2>Where do you want to go?</h2></div>
+      <section class="hq-world-grid">
+        <a class="hq-world w1" href="japan.html"><span>🌍</span><b>World Explorer</b><small>24 countries visited</small><i>68%</i></a>
+        <button class="hq-world w2" data-open="quiz"><span>📚</span><b>Learning Academy</b><small>8 subjects</small><i>42%</i></button>
+        <a class="hq-world w3" href="life-lab.html"><span>🌱</span><b>Life Lab</b><small>Real-life skills</small><i>35%</i></a>
+        <button class="hq-world w4" data-open="why" id="discover"><span>🔬</span><b>Discovery Universe</b><small>Science • space • why</small><i>51%</i></button>
+        <a class="hq-world w5" href="game.html"><span>🎮</span><b>Game World</b><small>Flag Quest live</small><i>77%</i></a>
+        <button class="hq-world w6" data-open="create"><span>🎨</span><b>Creative World</b><small>Design something</small><i>31%</i></button>
+        <button class="hq-world w7" data-open="mind"><span>❤️</span><b>Me, Body & Mind</b><small>Healthy habits</small><i>46%</i></button>
+        <button class="hq-world w8" data-open="safety" id="safety"><span>🛡️</span><b>People & Safety</b><small>Safe choices</small><i>58%</i></button>
+        <button class="hq-world w9" data-open="uk"><span>🇬🇧</span><b>My UK</b><small>How the UK works</small><i>39%</i></button>
+        <button class="hq-world w10" data-open="future"><span>💷</span><b>My Future</b><small>Money • careers • business</small><i>28%</i></button>
+      </section>
+
+      <section class="surprise-band">
+        <div><span class="eyebrow">DON'T KNOW WHAT TO PICK?</span><h2>Let the World choose for you.</h2><p>A random age-appropriate discovery from somewhere completely different.</p></div>
+        <button class="surprise-btn" id="surpriseBtn"><span>🎲</span> SURPRISE ME</button>
+      </section>
+    </section>
+
+    <aside class="side-rail right-rail">
+      <section class="rail-card passport-card">
+        <div class="rail-title"><span>🛂</span><b>World Passport</b></div>
+        <div class="passport-count"><b>24</b><small>countries explored</small></div>
+        <div class="stamp-row"><span>🇳🇬</span><span>🇫🇷</span><span>🇯🇵</span><span>🇧🇷</span><span>🇨🇦</span></div>
+        <a class="text-btn" href="japan.html">Open passport →</a>
+      </section>
+      <section class="rail-card xp-card">
+        <div class="rail-title"><span>🏆</span><b>Explorer Level</b></div>
+        <div class="level-ring"><b>4</b><span>LEVEL</span></div>
+        <div class="progress"><span style="width:62%"></span></div><small>520 XP to Level 5</small>
+      </section>
+      <section class="rail-card weekly-card">
+        <div class="rail-title"><span>🗺️</span><b>Weekly Quest</b></div>
+        <p>Explore 5 countries from 3 continents.</p>
+        <div class="quest-dots"><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i></div>
+        <small>3 of 5 complete</small>
+      </section>
+    </aside>
+  </main>
+
+  <div class="modal" id="activityModal" aria-hidden="true">
+    <div class="modal-card">
+      <button class="modal-close" aria-label="Close">×</button>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script src="js/questions.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/hq.js"></script>
+</body>
+</html>
