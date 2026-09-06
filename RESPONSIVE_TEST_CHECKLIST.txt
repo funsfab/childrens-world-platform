@@ -1,0 +1,29 @@
+CHILDREN WORLD — BUILD PACK 11 v0.2
+FIVE-MODE RESPONSIVE TEST CHECKLIST
+
+Representative test sizes:
+- Mobile portrait: 390 x 844
+- Mobile landscape: 844 x 390
+- Tablet portrait: 820 x 1180
+- Tablet landscape: 1180 x 820
+- Desktop: 1440 x 900
+
+CHECK ON EACH MODE
+[ ] Header fits without clipping
+[ ] Main navigation/search remains usable
+[ ] Cards do not overlap
+[ ] No unwanted horizontal scrolling
+[ ] No large accidental blank gutters
+[ ] Vertical gaps remain compact and consistent
+[ ] Locked-content badges remain readable
+[ ] Registration/trial forms fit the viewport
+[ ] My World HQ remains easy to scan
+[ ] Story World sections fit correctly
+[ ] Build Your City controls remain usable
+[ ] Parent Centre remains readable
+[ ] Buttons and tap targets are large enough
+[ ] Text remains readable without zooming
+[ ] Content order makes sense for that orientation
+
+IMPORTANT
+Future responsive corrections should be made inside the matching protected mode block in css/style.css rather than by adding a new override layer at the bottom of the stylesheet.

@@ -1,0 +1,22 @@
+CHILDREN WORLD PLATFORM — BUILD PACK 11 v0.2 CHANGELOG
+
+Purpose of this revision
+The user had already uploaded Build Pack 11 v0.1, then confirmed the permanent requirement that every website/platform build must support five protected responsive viewing modes from the beginning.
+
+What changed
+- Reworked css/style.css responsive rules into isolated mode-specific blocks.
+- Added dedicated Mobile Portrait layout.
+- Added dedicated Mobile Landscape layout.
+- Added dedicated Tablet Portrait layout.
+- Added dedicated Tablet Landscape layout.
+- Preserved Desktop as the base large-screen layout.
+- Added mode-specific handling for My World HQ, public landing page, Story World, Arcade, Build Your City, challenge screens, Parent Centre, registration/trial/membership screens and content grids.
+- Kept reduced-motion accessibility shared across all modes.
+- Added RESPONSIVE_TEST_CHECKLIST.txt.
+- Updated Pack 11 README/project record.
+
+No production backend change
+This revision does not add Supabase/production authentication/Stripe. Trial and Full World states remain front-end prototype logic using localStorage.
+
+GitHub update
+Extract this ZIP and upload/replace the contents in the existing childrens-world-platform repository, preserving the css/, js/ and assets/ folder structure.

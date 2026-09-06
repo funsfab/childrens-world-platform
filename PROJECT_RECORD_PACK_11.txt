@@ -9,3 +9,5 @@ PACK 11 PROJECT RECORD — CURRENT WORKING IMPLEMENTATION
 - Full World activation is test-mode only in this pack.
 - Trial expiry, entitlements and profile progress will move to secure backend/database in production.
 - Exact trial duration, pricing and plan structure remain provisional.
+- Build Pack 11 v0.2 adds five protected responsive viewing modes: mobile portrait, mobile landscape, tablet portrait, tablet landscape and desktop.
+- Responsive corrections should be made in the original protected mode block in css/style.css; do not stack later override chains.

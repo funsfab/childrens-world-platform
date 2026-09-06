@@ -1,3 +1,6 @@
+BUILD PACK 11 v0.2 RESPONSIVE UPDATE
+This revision adds five protected responsive viewing modes: mobile portrait, mobile landscape, tablet portrait, tablet landscape and desktop. See README_PACK_11.txt and RESPONSIVE_TEST_CHECKLIST.txt.
+
 BUILD PACK 11 NOTE
 This pack is based on Build Pack 09 and adds the first access/trial prototype. See README_PACK_11.txt.
 
