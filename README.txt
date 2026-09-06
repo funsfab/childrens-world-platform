@@ -1,38 +1,75 @@
-BUILD PACK 07 — FIRST VISUAL & WORKING PROTOTYPE v0.1
-====================================================
+BUILD PACK 11 NOTE
+This pack is based on Build Pack 09 and adds the first access/trial prototype. See README_PACK_11.txt.
 
-This is a static, GitHub-Pages-ready visual prototype for the UK ages 10–13 whole-world learning platform.
+CHILDREN WORLD PLATFORM — BUILD PACK 09 v0.2
+FUN, GAMES & INTERACTIVITY EXPANSION
+
+WHAT THIS PACK DOES
+-------------------
+Build Pack 09 expands the live prototype beyond a learning-heavy experience.
+It makes Play, Build, Watch, Create, Explore and Challenge visible as equal gateways beside Learn.
+
+NEW / UPDATED
+-------------
+1. Redesigned My World HQ around 7 big actions:
+   PLAY • BUILD • WATCH • CREATE • EXPLORE • CHALLENGE • LEARN
+
+2. New playable Build Your City prototype:
+   - drag/drop on desktop
+   - tap building then tap plot on mobile
+   - £2,000,000 budget
+   - population, education, health, safety, happiness
+   - required services and mission checklist
+   - undo/reset
+   - first city event
+   - foundation for traffic, utilities, jobs, taxes, pollution and emergencies later
+
+3. Children World Arcade page:
+   - Build Your City (playable)
+   - Flag Quest (playable)
+   - Brain Battle (playable)
+   - visual future slots for Business Empire, Mystery Files, Space Mission, AI Detective, Science Lab and World Traveller
+
+4. Brain Battle / adaptive challenge prototype:
+   - Explorer → Challenger → Investigator → Expert → Master Mission
+   - difficulty can rise after strong performance
+   - harder multi-step questions
+   - Prove It reasoning on higher tiers
+   - starter prototype bank only; production target remains large reviewed non-repeating banks
+
+5. Children World TV / Story World page integrated into the platform:
+   - featured episode prototype
+   - episode shelves
+   - Watch → Think → Play → Earn connection
+   - final cinematic 3D videos are still a separate production step
+
+6. Creator Studio prototype:
+   - Future Vehicle
+   - Dream Room
+   - Design a Park
+   - Invent a Robot
+   - Story Builder
+   - Mars Base
+   - simple local idea saving for prototype
+
+7. Public landing page updated to show the broader Children World direction.
 
 IMPORTANT
-- MY WORLD HQ is a working/prototype identity, NOT the final commercial name.
-- This pack does NOT yet connect to Supabase, Stripe or a production backend.
-- Prototype progress/game history uses browser localStorage only.
-- The production platform will require proper database/auth/payment/security work from Blueprints 02–03.
+---------
+This is still a visual/working prototype. It does NOT yet contain:
+- production database / Supabase
+- real parent authentication
+- real Stripe payments
+- final no-code Admin Studio
+- final 3D video files
+- hundreds of questions per subject
+- full international languages
 
-START HERE
-Open index.html.
+Those remain in the project roadmap.
 
-KEY PAGES
-- index.html       Public landing page / product vision
-- hq.html          Child My World HQ dashboard
-- japan.html       First World Explorer sample journey
-- game.html        Animated Flag Quest game
-- life-lab.html    £35 supermarket Life Lab challenge
-- parent.html      Parent Centre visual prototype
+GITHUB UPDATE
+-------------
+To update the existing GitHub Pages prototype, upload/replace the CONTENTS of this folder in the repository root.
+Do not upload the ZIP itself as the website.
 
-QUESTION SYSTEM
-- js/questions.js contains the initial prototype question pool.
-- The game uses a non-repeat shuffle-bag approach and stores recently used IDs in localStorage.
-- Production target: expand individual subjects to hundreds of reviewed items (500+ where appropriate), with difficulty bands and editorial QA.
-
-RESPONSIVE DESIGN
-Designed for phone, tablet and desktop from the start.
-
-NEXT BUILD ITERATION
-After visual review/corrections:
-1. lock a visual direction / provisional brand,
-2. connect development authentication + database,
-3. save real child progress,
-4. build parent registration/profile creation,
-5. expand question/content banks,
-6. replace prototype-only data with managed content.
+Core entry file: index.html
