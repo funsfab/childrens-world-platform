@@ -1,0 +1,20 @@
+BUILD PACK 12 - QUICK FUNCTION TEST
+
+[ ] Create/start a prototype trial and child profile.
+[ ] Open HQ; profile nickname should appear.
+[ ] Search for "city"; result should open Build Your City.
+[ ] Open City Builder, place buildings, leave, return; city should restore.
+[ ] Complete Brain Battle; return to HQ; XP/level should update.
+[ ] Play Flag Quest; return to Parent Centre; recent activity should show.
+[ ] Complete Japan mission; Passport count should increase.
+[ ] Complete £35 Life Lab; Parent Centre should reflect completion.
+[ ] Play Story World prototype scene; progress should save.
+[ ] Send Parent Feedback; refresh Parent Centre; feedback remains stored locally.
+[ ] Open functionality-audit.html and compare status labels.
+[ ] Check mobile portrait.
+[ ] Check mobile landscape.
+[ ] Check tablet portrait.
+[ ] Check tablet landscape.
+[ ] Check desktop.
+
+NOTE: Secure backend/login/payment tests are deliberately NOT part of Pack 12.

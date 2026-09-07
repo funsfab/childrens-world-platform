@@ -1,78 +1,42 @@
-BUILD PACK 11 v0.2 RESPONSIVE UPDATE
-This revision adds five protected responsive viewing modes: mobile portrait, mobile landscape, tablet portrait, tablet landscape and desktop. See README_PACK_11.txt and RESPONSIVE_TEST_CHECKLIST.txt.
+CHILDREN WORLD PLATFORM - BUILD PACK 12 v0.1
+FUNCTIONAL INTELLIGENCE - PHASE 1
 
-BUILD PACK 11 NOTE
-This pack is based on Build Pack 09 and adds the first access/trial prototype. See README_PACK_11.txt.
+START HERE
+Open index.html.
 
-CHILDREN WORLD PLATFORM — BUILD PACK 09 v0.2
-FUN, GAMES & INTERACTIVITY EXPANSION
+WHAT THIS BUILD IS FOR
+Pack 12 keeps the visual direction and five responsive modes from Pack 11, but focuses on intelligence and real behaviour. It begins replacing hard-coded demonstration values and explanatory placeholders with working prototype state.
 
-WHAT THIS PACK DOES
--------------------
-Build Pack 09 expands the live prototype beyond a learning-heavy experience.
-It makes Play, Build, Watch, Create, Explore and Challenge visible as equal gateways beside Learn.
+MAIN WORKING IMPROVEMENTS
+- shared XP / level / progress state
+- dynamic Continue Mission
+- working search across current built activities
+- saved Japan mission / Passport connection
+- saved Brain Battle result / XP / achievement
+- saved Flag Quest result / XP
+- saved Life Lab completion / achievement
+- Build Your City save + restore
+- Story World watch-state prototype
+- Parent Centre reads child progress
+- Parent private feedback works locally
+- QA-only functionality-audit.html
 
-NEW / UPDATED
--------------
-1. Redesigned My World HQ around 7 big actions:
-   PLAY • BUILD • WATCH • CREATE • EXPLORE • CHALLENGE • LEARN
+STILL NOT PRODUCTION BACKEND
+- secure parent authentication
+- cloud database child profiles
+- real Stripe payment integration
+- secure server-side entitlements
+- Owner/Admin Studio
+- Admin Feedback Inbox
+- real 3D Story World video library/CMS
+- production-size question banks
 
-2. New playable Build Your City prototype:
-   - drag/drop on desktop
-   - tap building then tap plot on mobile
-   - £2,000,000 budget
-   - population, education, health, safety, happiness
-   - required services and mission checklist
-   - undo/reset
-   - first city event
-   - foundation for traffic, utilities, jobs, taxes, pollution and emergencies later
+RESPONSIVE MODES
+1. mobile portrait
+2. mobile landscape
+3. tablet portrait
+4. tablet landscape
+5. desktop
 
-3. Children World Arcade page:
-   - Build Your City (playable)
-   - Flag Quest (playable)
-   - Brain Battle (playable)
-   - visual future slots for Business Empire, Mystery Files, Space Mission, AI Detective, Science Lab and World Traveller
-
-4. Brain Battle / adaptive challenge prototype:
-   - Explorer → Challenger → Investigator → Expert → Master Mission
-   - difficulty can rise after strong performance
-   - harder multi-step questions
-   - Prove It reasoning on higher tiers
-   - starter prototype bank only; production target remains large reviewed non-repeating banks
-
-5. Children World TV / Story World page integrated into the platform:
-   - featured episode prototype
-   - episode shelves
-   - Watch → Think → Play → Earn connection
-   - final cinematic 3D videos are still a separate production step
-
-6. Creator Studio prototype:
-   - Future Vehicle
-   - Dream Room
-   - Design a Park
-   - Invent a Robot
-   - Story Builder
-   - Mars Base
-   - simple local idea saving for prototype
-
-7. Public landing page updated to show the broader Children World direction.
-
-IMPORTANT
----------
-This is still a visual/working prototype. It does NOT yet contain:
-- production database / Supabase
-- real parent authentication
-- real Stripe payments
-- final no-code Admin Studio
-- final 3D video files
-- hundreds of questions per subject
-- full international languages
-
-Those remain in the project roadmap.
-
-GITHUB UPDATE
--------------
-To update the existing GitHub Pages prototype, upload/replace the CONTENTS of this folder in the repository root.
-Do not upload the ZIP itself as the website.
-
-Core entry file: index.html
+UPLOAD
+Extract this ZIP and upload/replace the files in the existing childrens-world-platform GitHub repository. Preserve css/, js/ and assets/ folders. Do not upload the ZIP itself as the site.

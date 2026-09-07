@@ -1,0 +1,23 @@
+CHILDREN WORLD - BUILD PACK 12 v0.1 CHANGELOG
+
+BASE
+- Built from Build Pack 11 v0.2 Five Modes.
+
+INTELLIGENCE CHANGES
+- Added js/state.js shared prototype profile state.
+- My World HQ now reads XP, level, Passport and resume state dynamically.
+- Global search opens actual built prototype destinations.
+- Build Your City now persists and restores city data.
+- Brain Battle, Flag Quest, Life Lab and Japan feed shared profile state.
+- Story World stores prototype watch progress.
+- Parent Centre reads shared progress and recent activity.
+- Parent feedback form now saves categorised feedback locally.
+- Added functionality-audit.html for internal QA/status tracking.
+
+NOT YET INCLUDED
+- secure backend/database
+- real parent authentication
+- Stripe integration
+- Owner/Admin Studio
+- production Story World video CMS
+- production-size content banks
