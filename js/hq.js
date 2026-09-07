@@ -15,5 +15,40 @@ modal.querySelector('.modal-close').onclick=()=>modal.classList.remove('open');m
 function startMiniQuiz(){const bank=[...WORLD_QUESTIONS].sort(()=>Math.random()-.5).slice(0,5);let i=0,score=0;const render=()=>{if(i>=bank.length){openModal(`<span class="eyebrow">MINI QUIZ COMPLETE</span><h2>${score}/5 correct</h2><p>${score>=4?'Excellent — your knowledge bank is growing.':'Good start. The full platform will explain every answer and serve a fresh set next time.'}</p>`);return}const q=bank[i];openModal(`<span class="eyebrow">QUICK KNOWLEDGE CHECK • ${i+1}/5</span><h2>${q.q}</h2><div class="modal-options">${q.choices.sort(()=>Math.random()-.5).map(x=>`<button data-answer="${x.replaceAll('"','&quot;')}">${x}</button>`).join('')}</div><p id="quizFeed"></p>`);content.querySelectorAll('[data-answer]').forEach(btn=>btn.onclick=()=>{const ok=btn.dataset.answer===q.a;document.getElementById('quizFeed').innerHTML=ok?'✅ Correct!':'❌ Not this time. Correct answer: <b>'+q.a+'</b>';playTone(ok);if(ok)score++;setTimeout(()=>{i++;render()},650)})};render()}
 document.getElementById('surpriseBtn').onclick=()=>{const pool=[templates.why,templates.create,templates.future,templates.uk,templates.safety];openModal(pool[Math.floor(Math.random()*pool.length)])};
 document.getElementById('saveLaterBtn').onclick=()=>{localStorage.setItem('savedJapan','yes');openModal('<span class="eyebrow">SAVED</span><h2>Japan mission saved.</h2><p>In the production platform this will sync to the child profile database so it follows them across approved devices.</p>')};
-const searchMap={shark:'Animal Kingdom → Ocean World → Shark facts → Shark quiz',japan:'World Explorer → Japan → Tokyo → Culture → Japan Challenge',money:'Life Lab → Budgeting → Money World → Business Lab',space:'Discovery Universe → Space Station → Planets → Missions',scam:'People & Safety → Online Safety → Spot the Scam'};
-function doSearch(){const v=document.getElementById('globalSearch').value.toLowerCase().trim();let r='Try: Japan, sharks, money, space or scam.';for(const k in searchMap)if(v.includes(k)){r=searchMap[k];break}openModal(`<span class="eyebrow">GLOBAL SEARCH • PROTOTYPE</span><h2>Discovery path</h2><div class="search-result">${r}</div><p>The production search will index thousands of connected topics and activities.</p>`)}document.getElementById('searchBtn').onclick=doSearch;document.getElementById('globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+const searchIndex=[
+ {keys:['japan','tokyo','culture','yen'],title:'Japan World Mission',path:'World Explorer → Japan → Tokyo → Culture',href:'japan.html',icon:'🇯🇵'},
+ {keys:['city','build','planning','roads','hospital','school'],title:'Build Your City',path:'Build → City planning → Budget → Services',href:'city-builder.html',icon:'🏙️'},
+ {keys:['game','arcade','play','flag'],title:'Children World Arcade',path:'Play → Arcade → Flag Quest and missions',href:'arcade.html',icon:'🎮'},
+ {keys:['flag','capital','country'],title:'Flag Quest',path:'Play → Flag Quest → World knowledge',href:'game.html',icon:'🚩'},
+ {keys:['brain','challenge','hard','prove','maths','science'],title:'Brain Battle',path:'Challenge → Adaptive difficulty → Prove It',href:'challenge.html',icon:'🧠'},
+ {keys:['money','budget','shopping','food','life'],title:'£35 Life Lab',path:'Life Lab → Budgeting → Shopping decisions',href:'life-lab.html',icon:'💷'},
+ {keys:['story','video','watch','scam','film'],title:'Story World',path:'Watch → Story World → Think → Play',href:'story-world.html',icon:'🎬'},
+ {keys:['create','design','invent','art'],title:'Creator Studio',path:'Create → Design → Invent → Imagine',href:'creator.html',icon:'🎨'},
+ {keys:['parent','family','progress','membership'],title:'Parent Centre',path:'Parent Centre → Progress → Controls → Membership',href:'parent.html',icon:'👨‍👩‍👧'}
+];
+function doSearch(){
+  const v=document.getElementById('globalSearch').value.toLowerCase().trim();
+  const hits=v?searchIndex.filter(item=>item.keys.some(k=>v.includes(k)||k.includes(v))).slice(0,5):[];
+  const html=hits.length?hits.map(x=>`<a class="search-live-result" href="${x.href}"><span>${x.icon}</span><div><b>${x.title}</b><small>${x.path}</small></div><i>Open →</i></a>`).join(''):'<p>Try: city, Japan, money, story, flags, science, create or parent.</p>';
+  openModal(`<span class="eyebrow">GLOBAL SEARCH • WORKING PROTOTYPE</span><h2>${hits.length?'Results':'What do you want to discover?'}</h2><div class="search-live-results">${html}</div><p class="small-note">Pack 12 searches the activities currently built. The production index will expand as content is published.</p>`)
+}
+document.getElementById('searchBtn').onclick=doSearch;document.getElementById('globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
+
+function syncHQState(){
+  if(!window.CWState)return;
+  const s=CWState.load(), li=CWState.levelInfo();
+  const chip=document.querySelector('.profile-chip');
+  if(chip){const b=chip.querySelector('b'),sm=chip.querySelector('small'); if(b&&window.CWAccess?.get().childNickname)b.textContent=CWAccess.get().childNickname; if(sm)sm.textContent=`Level ${li.level} • ${li.xp.toLocaleString()} XP`;}
+  const ring=document.querySelector('.level-ring b');if(ring)ring.textContent=li.level;
+  const xpCard=document.querySelector('.xp-card');if(xpCard){const bar=xpCard.querySelector('.progress span'),sm=xpCard.querySelector(':scope > small');if(bar)bar.style.width=li.percent+'%';if(sm)sm.textContent=`${li.next-li.current} XP to Level ${li.level+1}`;}
+  const count=document.querySelector('.passport-count b');if(count)count.textContent=Math.max(0,s.passport.length);
+  const stamps=document.querySelector('.stamp-row');if(stamps&&s.passport.length){const flagMap={JP:'🇯🇵',NG:'🇳🇬',FR:'🇫🇷',BR:'🇧🇷',CA:'🇨🇦'};stamps.innerHTML=s.passport.slice(-5).map(x=>`<span>${flagMap[x.code]||'🌍'}</span>`).join('');}
+  const card=document.querySelector('.continue-card');
+  if(card){
+    const r=s.resume;
+    const title=card.querySelector('.continue-info h2'), desc=card.querySelector('.continue-info p'), link=card.querySelector('.continue-actions a'), icon=card.querySelector('.continue-art span'), pctEl=card.querySelector('.continue-art i'), bar=card.querySelector('.progress span');
+    if(r){const val=Math.max(1,Math.min(99,Number(s.progress[r.id]?.value||20)));if(title)title.textContent=r.title;if(desc)desc.textContent=`${r.kind||'Activity'} • continue where you stopped`;if(link){link.href=r.href;link.textContent='Continue →'}if(icon)icon.textContent=r.icon||'▶️';if(pctEl)pctEl.textContent=val+'%';if(bar)bar.style.width=val+'%';}
+    else {if(title)title.textContent='Choose your next adventure';if(desc)desc.textContent='Nothing unfinished yet — start a game, build, story or mission.';if(link){link.href='arcade.html';link.textContent='Explore activities →'}if(icon)icon.textContent='✨';if(pctEl)pctEl.textContent='NEW';if(bar)bar.style.width='5%';}
+  }
+}
+syncHQState();
