@@ -29,8 +29,9 @@ const searchIndex=[
 function doSearch(){
   const v=document.getElementById('globalSearch').value.toLowerCase().trim();
   const hits=v?searchIndex.filter(item=>item.keys.some(k=>v.includes(k)||k.includes(v))).slice(0,5):[];
+  if(v&&window.CWState)CWState.logSearch(v,hits.length);
   const html=hits.length?hits.map(x=>`<a class="search-live-result" href="${x.href}"><span>${x.icon}</span><div><b>${x.title}</b><small>${x.path}</small></div><i>Open →</i></a>`).join(''):'<p>Try: city, Japan, money, story, flags, science, create or parent.</p>';
-  openModal(`<span class="eyebrow">GLOBAL SEARCH • WORKING PROTOTYPE</span><h2>${hits.length?'Results':'What do you want to discover?'}</h2><div class="search-live-results">${html}</div><p class="small-note">Pack 12 searches the activities currently built. The production index will expand as content is published.</p>`)
+  openModal(`<span class="eyebrow">GLOBAL SEARCH • WORKING PROTOTYPE</span><h2>${hits.length?'Results':'What do you want to discover?'}</h2><div class="search-live-results">${html}</div><p class="small-note">Pack 13 searches the activities currently built. The production index will expand as content is published.</p>`)
 }
 document.getElementById('searchBtn').onclick=doSearch;document.getElementById('globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch()});
 

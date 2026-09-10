@@ -10,8 +10,8 @@
     'creator.html':{id:'creator',title:'Creator Studio',icon:'🎨',href:'creator.html',kind:'Create'},
     'arcade.html':{id:'arcade',title:'Children World Arcade',icon:'🕹️',href:'arcade.html',kind:'Play'}
   };
-  function blank(){return {xp:0,achievements:[],passport:[],completed:{},progress:{},recent:[],resume:null,feedback:[],settings:{sound:true,reducedMotion:false},updatedAt:Date.now()}}
-  function load(){let s=blank();try{s=Object.assign(s,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){};s.recent=Array.isArray(s.recent)?s.recent:[];s.passport=Array.isArray(s.passport)?s.passport:[];s.achievements=Array.isArray(s.achievements)?s.achievements:[];s.completed=s.completed||{};s.progress=s.progress||{};s.feedback=Array.isArray(s.feedback)?s.feedback:[];return s}
+  function blank(){return {xp:0,achievements:[],passport:[],completed:{},progress:{},recent:[],resume:null,feedback:[],searchLog:[],settings:{sound:true,reducedMotion:false},updatedAt:Date.now()}}
+  function load(){let s=blank();try{s=Object.assign(s,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){};s.recent=Array.isArray(s.recent)?s.recent:[];s.passport=Array.isArray(s.passport)?s.passport:[];s.achievements=Array.isArray(s.achievements)?s.achievements:[];s.completed=s.completed||{};s.progress=s.progress||{};s.feedback=Array.isArray(s.feedback)?s.feedback:[];s.searchLog=Array.isArray(s.searchLog)?s.searchLog:[];return s}
   function save(s){s.updatedAt=Date.now();localStorage.setItem(KEY,JSON.stringify(s));return s}
   function logActivity(item){const s=load();const entry=Object.assign({time:Date.now()},item);s.recent=[entry,...s.recent.filter(x=>!(x.id===entry.id&&x.detail===entry.detail))].slice(0,20);return save(s)}
   function setProgress(id,value,meta={}){const s=load();s.progress[id]=Object.assign({},s.progress[id]||{},meta,{value,updatedAt:Date.now()});return save(s)}
@@ -23,9 +23,10 @@
   function addAchievement(id,title,icon='🏆'){const s=load();if(!s.achievements.some(x=>x.id===id))s.achievements.push({id,title,icon,earnedAt:Date.now()});return save(s)}
   function levelInfo(){const s=load();const xp=Number(s.xp||0);const level=Math.floor(xp/600)+1;const current=xp%600;return {xp,level,current,next:600,percent:Math.round(current/600*100)}}
   function addFeedback(data){const s=load();s.feedback.unshift(Object.assign({id:'fb-'+Date.now(),status:'New',createdAt:Date.now()},data));return save(s)}
+  function logSearch(query,resultCount=0){const q=String(query||'').trim().slice(0,120);if(!q)return load();const s=load();s.searchLog.unshift({query:q.toLowerCase(),results:Number(resultCount)||0,time:Date.now()});s.searchLog=s.searchLog.slice(0,500);return save(s)}
   function reset(){localStorage.removeItem(KEY)}
   function currentPage(){return location.pathname.split('/').pop()||'index.html'}
-  window.CWState={load,save,logActivity,setProgress,setResume,clearResume,addXP,complete,addPassport,addAchievement,levelInfo,addFeedback,reset,pageMeta};
+  window.CWState={load,save,logActivity,setProgress,setResume,clearResume,addXP,complete,addPassport,addAchievement,levelInfo,addFeedback,logSearch,reset,pageMeta};
 
   // Record meaningful visits and make them resumable. Home/account pages are intentionally excluded.
   const p=currentPage(),meta=pageMeta[p];
