@@ -1,0 +1,11 @@
+CHILDREN WORLD — BUILD PACK 13 v0.1 CHANGELOG
+
+- Consolidated Problems 1–9 from live review.
+- Added Owner/Admin Preview testing mode.
+- Added admin dashboard and placeholder feature inspector.
+- Added privacy-conscious local search logging and Search Insights display.
+- Refined access-lock UI to a small padlock with hover/touch explanation.
+- Added compact responsive navigation for tablet portrait, mobile landscape and mobile portrait.
+- Added separate Children World Home control on My World HQ.
+- Reduced oversized typography across primary page/section headings.
+- Preserved the temporary Story World prototype notices for later replacement.

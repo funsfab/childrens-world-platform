@@ -1,0 +1,31 @@
+CHILDREN WORLD — BUILD PACK 13 v0.1
+FUNCTIONAL TEST CHECKLIST
+
+NORMAL VISITOR
+[ ] Homepage has one clear My World HQ entry and no duplicate hero trial button
+[ ] Public Demo status is visible
+[ ] Small-screen Menu opens Experience / Arcade / Story World / My World HQ / Parent Centre / Trial
+[ ] Explorer Access cards show a small padlock; hover/tap explains the lock
+[ ] First touch on a locked card shows access explanation; second touch opens access screen
+[ ] My World HQ brand stays on My World HQ
+[ ] Children World Home link returns to homepage
+[ ] Story World public samples open; Full World items remain gated
+
+OWNER / ADMIN PREVIEW
+[ ] Open admin-login.html
+[ ] Login with owner / 2413
+[ ] Admin dashboard opens
+[ ] Admin Preview bar appears
+[ ] Build Your City opens even when visitor state is Public Demo
+[ ] Brain Battle / Creator Studio gated prototype pages open in Admin Preview
+[ ] Planned Full World catalogue items open Owner Feature Inspector instead of a false playable page
+[ ] Switch Public Demo / Family Trial / Full World visitor state from admin dashboard
+[ ] Exit admin returns to admin login
+
+SEARCH INSIGHTS
+[ ] Search in My World HQ
+[ ] Admin dashboard Search Insights records the term locally
+[ ] No-result searches are identified
+
+NOTE
+Admin Preview is static front-end testing only. It is not production security.
