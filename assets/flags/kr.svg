@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 240" role="img">
+<rect width="360" height="240" fill="#ffffff"/>
+<g transform="translate(180 120) rotate(-25)">
+ <path d="M0,-52 A52,52 0 1,1 0,52 A26,26 0 1,0 0,0 A26,26 0 1,1 0,-52" fill="#CD2E3A"/>
+ <path d="M0,52 A52,52 0 1,1 0,-52 A26,26 0 1,0 0,0 A26,26 0 1,1 0,52" fill="#0047A0"/>
+</g>
+<g fill="#111">
+ <g transform="translate(68 48) rotate(-32)"><rect width="56" height="8"/><rect y="14" width="56" height="8"/><rect y="28" width="56" height="8"/></g>
+ <g transform="translate(240 158) rotate(-32)"><rect width="56" height="8"/><rect y="14" width="56" height="8"/><rect y="28" width="56" height="8"/></g>
+ <g transform="translate(246 48) rotate(32)"><rect width="23" height="8"/><rect x="33" width="23" height="8"/><rect y="14" width="56" height="8"/><rect y="28" width="23" height="8"/><rect x="33" y="28" width="23" height="8"/></g>
+ <g transform="translate(60 158) rotate(32)"><rect width="56" height="8"/><rect y="14" width="23" height="8"/><rect x="33" y="14" width="23" height="8"/><rect y="28" width="56" height="8"/></g>
+</g></svg>
