@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" role="img">
+<defs><linearGradient id="lSky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#264869"/><stop offset="1" stop-color="#9bc9df"/></linearGradient></defs>
+<rect width="800" height="460" fill="url(#lSky)"/>
+<rect y="360" width="800" height="100" fill="#1d3134"/>
+<g fill="#d3ad58" stroke="#704d20" stroke-width="5">
+ <rect x="330" y="110" width="105" height="250"/><polygon points="382,42 440,110 324,110"/>
+ <rect x="300" y="245" width="165" height="115"/>
+</g>
+<circle cx="382" cy="150" r="36" fill="#f6f0d7" stroke="#704d20" stroke-width="6"/>
+<line x1="382" y1="150" x2="382" y2="126" stroke="#253343" stroke-width="4"/><line x1="382" y1="150" x2="402" y2="158" stroke="#253343" stroke-width="4"/>
+<text x="38" y="58" fill="#fff" font-size="31" font-family="system-ui, sans-serif" font-weight="800">London • United Kingdom</text>
+</svg>
