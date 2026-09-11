@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 460" role="img">
+<defs><linearGradient id="nSky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1d6c8d"/><stop offset=".65" stop-color="#66b8a8"/><stop offset="1" stop-color="#f1c66f"/></linearGradient></defs>
+<rect width="800" height="460" fill="url(#nSky)"/>
+<circle cx="675" cy="90" r="42" fill="#ffeab0" opacity=".9"/>
+<rect y="350" width="800" height="110" fill="#173327"/>
+<g fill="#1b2635">
+ <rect x="80" y="205" width="70" height="145"/><rect x="160" y="165" width="92" height="185"/><rect x="270" y="230" width="62" height="120"/>
+ <rect x="350" y="118" width="74" height="232"/><polygon points="387,66 414,118 360,118" fill="#1b2635"/>
+ <rect x="445" y="185" width="88" height="165"/><rect x="545" y="222" width="68" height="128"/><rect x="625" y="150" width="96" height="200"/>
+</g>
+<g fill="#ffd978" opacity=".9">
+ <rect x="96" y="225" width="10" height="12"/><rect x="121" y="247" width="10" height="12"/><rect x="181" y="188" width="12" height="14"/><rect x="214" y="219" width="12" height="14"/>
+ <rect x="368" y="150" width="10" height="12"/><rect x="397" y="178" width="10" height="12"/><rect x="474" y="205" width="12" height="14"/><rect x="657" y="175" width="12" height="14"/>
+</g>
+<path d="M0 390 Q130 350 270 390 T540 388 T800 380" fill="none" stroke="#71b95d" stroke-width="28" opacity=".55"/>
+<text x="38" y="58" fill="#fff" font-size="31" font-family="system-ui, sans-serif" font-weight="800">Nairobi skyline • Kenya</text>
+</svg>
