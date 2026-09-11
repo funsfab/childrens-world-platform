@@ -1,6 +1,7 @@
 (function(){
   const KEY='cw_profile_state_v2';
   const pageMeta={
+    'world-explorer.html':{id:'world-explorer',title:'World Explorer',icon:'🌍',href:'world-explorer.html',kind:'Explore'},
     'japan.html':{id:'japan',title:'Japan World Mission',icon:'🇯🇵',href:'japan.html',kind:'Explore'},
     'game.html':{id:'flagquest',title:'Flag Quest',icon:'🎮',href:'game.html',kind:'Play'},
     'challenge.html':{id:'brainbattle',title:'Brain Battle',icon:'🧠',href:'challenge.html',kind:'Challenge'},

@@ -16,6 +16,7 @@ function startMiniQuiz(){const bank=[...WORLD_QUESTIONS].sort(()=>Math.random()-
 document.getElementById('surpriseBtn').onclick=()=>{const pool=[templates.why,templates.create,templates.future,templates.uk,templates.safety];openModal(pool[Math.floor(Math.random()*pool.length)])};
 document.getElementById('saveLaterBtn').onclick=()=>{localStorage.setItem('savedJapan','yes');openModal('<span class="eyebrow">SAVED</span><h2>Japan mission saved.</h2><p>In the production platform this will sync to the child profile database so it follows them across approved devices.</p>')};
 const searchIndex=[
+ {keys:['world','countries','explore','culture','travel'],title:'World Explorer',path:'World Explorer → Countries & cultures',href:'world-explorer.html',icon:'🌍'},
  {keys:['japan','tokyo','culture','yen'],title:'Japan World Mission',path:'World Explorer → Japan → Tokyo → Culture',href:'japan.html',icon:'🇯🇵'},
  {keys:['city','build','planning','roads','hospital','school'],title:'Build Your City',path:'Build → City planning → Budget → Services',href:'city-builder.html',icon:'🏙️'},
  {keys:['game','arcade','play','flag'],title:'Children World Arcade',path:'Play → Arcade → Flag Quest and missions',href:'arcade.html',icon:'🎮'},

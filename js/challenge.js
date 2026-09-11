@@ -1,27 +1,144 @@
-const tiers=['Explorer','Challenger','Investigator','Expert','Master Mission'];
-const bank=[
-{tier:0,subject:'WORLD',q:'A country uses the yen and has Tokyo as its capital. Which country is it?',a:'Japan',choices:['Japan','China','Thailand','South Korea'],why:'Japan uses the yen and Tokyo is its capital.',reasons:['Japan uses the yen and Tokyo is its capital.','Tokyo is in China.','The yen is used across all of Asia.']},
-{tier:0,subject:'SCIENCE',q:'Which change is most likely reversible?',a:'Ice melting',choices:['Ice melting','Paper burning','An egg cooking','Iron rusting'],why:'Melted water can be frozen back into ice.',reasons:['Melted water can be frozen back into ice.','Burnt paper can easily become paper again.','Rust disappears by cooling it.']},
-{tier:0,subject:'LIFE',q:'You have £30 and spend £18.75. How much remains?',a:'£11.25',choices:['£11.25','£12.25','£10.25','£11.75'],why:'£30.00 - £18.75 = £11.25.',reasons:['£30.00 - £18.75 = £11.25.','£18.75 - £30.00 = £11.25.','£30.00 + £18.75 = £11.25.']},
-{tier:1,subject:'MATHS + LIFE',q:'A cinema ticket is £8.50. Three friends each buy one ticket. What is the total?',a:'£25.50',choices:['£25.50','£24.50','£26.50','£17.00'],why:'8.50 × 3 = 25.50.',reasons:['8.50 × 3 = 25.50.','8.50 + 3 = 25.50.','8.50 × 2 = 25.50.']},
-{tier:1,subject:'SAFETY',q:'A message says your account will close in 10 minutes unless you click a link and enter your password. What is the strongest warning sign?',a:'Urgency plus a password request',choices:['Urgency plus a password request','The message has words','It arrived in the afternoon','It mentions an account'],why:'Scams often create urgency and ask for secret information.',reasons:['Scams often create urgency and ask for secret information.','Real companies always demand passwords by message.','Urgent messages are automatically true.']},
-{tier:1,subject:'SCIENCE',q:'A plant is kept in darkness for many days. Which process is most directly reduced?',a:'Photosynthesis',choices:['Photosynthesis','Gravity','Melting','Magnetism'],why:'Photosynthesis requires light energy.',reasons:['Photosynthesis requires light energy.','Plants only use light for warmth.','Gravity stops in darkness.']},
-{tier:2,subject:'TIME + TRAVEL',q:'A train leaves London at 14:20 and the journey lasts 2 h 45 min. What time does it arrive?',a:'17:05',choices:['17:05','16:55','17:15','16:05'],why:'14:20 + 2 hours = 16:20, then +45 minutes = 17:05.',reasons:['14:20 + 2 hours = 16:20, then +45 minutes = 17:05.','14:20 + 45 minutes = 14:65.','Two hours and 45 minutes is the same as 2.45 hours.']},
-{tier:2,subject:'GEOGRAPHY',q:'A place is at 0° latitude. Which major line is it on?',a:'The Equator',choices:['The Equator','Prime Meridian','Arctic Circle','Tropic of Capricorn'],why:'The Equator is defined as 0° latitude.',reasons:['The Equator is defined as 0° latitude.','The Prime Meridian is 0° latitude.','All latitude lines are the Equator.']},
-{tier:2,subject:'MONEY',q:'A £60 jacket is reduced by 25%. What is the sale price?',a:'£45',choices:['£45','£35','£50','£15'],why:'25% of £60 is £15, so £60 - £15 = £45.',reasons:['25% of £60 is £15, so £60 - £15 = £45.','25% means subtract £25.','60 ÷ 25 = 45.']},
-{tier:3,subject:'MATHS + TRAVEL',q:'A flight leaves London at 09:30. The flight takes 7 h 20 min. The destination is 5 hours ahead of London. What is the local arrival time?',a:'21:50',choices:['21:50','16:50','20:50','22:50'],why:'09:30 + 7:20 = 16:50 London time; +5 hours = 21:50 local time.',reasons:['09:30 + 7:20 = 16:50 London time; +5 hours = 21:50 local time.','Time zones change flight duration.','Add the 5 hours before the flight and ignore the journey.']},
-{tier:3,subject:'SCIENCE',q:'Two identical plants get the same water and soil. Plant A gets light; Plant B stays dark. After a week, Plant B is weaker. Which is the best explanation?',a:'Plant B had much less light for photosynthesis',choices:['Plant B had much less light for photosynthesis','Plant A experienced less gravity','Darkness removed oxygen from the room','Water only works in light'],why:'Light is needed for photosynthesis, which helps the plant make sugars.',reasons:['Light is needed for photosynthesis, which helps the plant make sugars.','Plants eat soil only when light is present.','Gravity is stronger in dark rooms.']},
-{tier:3,subject:'MEDIA LITERACY',q:'Three websites repeat the same dramatic claim, but all copied it from one anonymous post. Does having three websites make the claim reliable?',a:'No, because they may all depend on the same weak source',choices:['No, because they may all depend on the same weak source','Yes, three websites always prove a fact','Yes, if the headlines are identical','No, because websites can never be trusted'],why:'Independent evidence matters more than the number of pages repeating one source.',reasons:['Independent evidence matters more than the number of pages repeating one source.','Repeating a claim makes it true.','Anonymous posts are always wrong.']},
-{tier:4,subject:'MASTER • BUDGET',q:'You have £120. You must buy 4 tickets at £18 each and keep at least £20 for food. What is the most you can spend on transport?',a:'£28',choices:['£28','£48','£20','£32'],why:'Tickets cost 4 × £18 = £72. £120 - £72 - £20 = £28.',reasons:['Tickets cost 4 × £18 = £72. £120 - £72 - £20 = £28.','120 - 18 - 20 = 82.','Four tickets cost £54.']},
-{tier:4,subject:'MASTER • LOGIC',q:'All Zorps are blue. No blue objects are invisible. Which statement must be true?',a:'No Zorps are invisible',choices:['No Zorps are invisible','All invisible things are Zorps','Some Zorps are invisible','Nothing blue exists'],why:'If every Zorp is blue and no blue object is invisible, a Zorp cannot be invisible.',reasons:['If every Zorp is blue and no blue object is invisible, a Zorp cannot be invisible.','Invisible objects must be Zorps.','Blue and invisible mean the same thing.']},
-{tier:4,subject:'MASTER • DECISION',q:'A city has money for either one large car park or a bus network upgrade. Its goal is to reduce congestion long-term. Which choice is more directly aligned with that goal?',a:'Upgrade the bus network',choices:['Upgrade the bus network','Build the large car park','Do nothing','Remove all pavements'],why:'Better public transport can reduce the number of individual car journeys.',reasons:['Better public transport can reduce the number of individual car journeys.','More parking always reduces the number of cars.','Congestion is caused only by pedestrians.']}
-];
-let tier=0,score=0,streak=0,round=0,current=null,answered=false,session=[];const intro=document.getElementById('challengeIntro'),arena=document.getElementById('challengeArena'),results=document.getElementById('challengeResults');
-function freshQuestion(){let pool=bank.filter(x=>x.tier===tier&&!session.includes(x.q));if(!pool.length)pool=bank.filter(x=>x.tier===tier);current=pool[Math.floor(Math.random()*pool.length)];session.push(current.q);renderQuestion()}
-function renderQuestion(){answered=false;document.getElementById('tierName').textContent=tiers[tier];document.getElementById('challengeScore').textContent=score;document.getElementById('challengeStreak').textContent=streak;document.getElementById('challengeSubject').textContent=current.subject;document.getElementById('challengeQuestion').textContent=current.q;document.getElementById('difficultyPips').innerHTML=Array.from({length:5},(_,i)=>`<i class="${i<=tier?'on':''}"></i>`).join('');document.getElementById('challengeFeedback').textContent='';document.getElementById('nextChallenge').hidden=true;document.getElementById('provePanel').hidden=true;const choices=[...current.choices].sort(()=>Math.random()-.5);const box=document.getElementById('challengeOptions');box.innerHTML=choices.map(c=>`<button>${c}</button>`).join('');box.querySelectorAll('button').forEach(b=>b.onclick=()=>answer(b))}
-function answer(btn){if(answered)return;answered=true;const ok=btn.textContent===current.a;document.querySelectorAll('#challengeOptions button').forEach(b=>{if(b.textContent===current.a)b.classList.add('correct')});if(!ok){btn.classList.add('wrong');streak=0;score=Math.max(0,score-20);document.getElementById('challengeFeedback').innerHTML=`❌ Correct answer: <b>${current.a}</b>`;playTone(false);document.getElementById('nextChallenge').hidden=false}else{btn.classList.add('correct');score+=100+(tier*35);streak++;playTone(true);if(current.reasons&&tier>=2){const p=document.getElementById('provePanel');p.hidden=false;const opts=[...current.reasons].sort(()=>Math.random()-.5);const holder=document.getElementById('proveOptions');holder.innerHTML=opts.map(r=>`<button>${r}</button>`).join('');holder.querySelectorAll('button').forEach(b=>b.onclick=()=>prove(b))}else{document.getElementById('challengeFeedback').textContent='✅ Correct. Keep going.';document.getElementById('nextChallenge').hidden=false}}}
-function prove(btn){document.querySelectorAll('#proveOptions button').forEach(b=>b.disabled=true);const ok=btn.textContent===current.why;if(ok){btn.classList.add('correct');score+=60;document.getElementById('challengeFeedback').textContent='✅ Correct — and you proved it.';playTone(true)}else{btn.classList.add('wrong');document.getElementById('challengeFeedback').innerHTML='Almost. Best reasoning: <b>'+current.why+'</b>';playTone(false)}document.getElementById('nextChallenge').hidden=false}
-function next(){round++;if(streak>=2&&tier<4){tier++;streak=0}else if(round%3===0&&tier>0&&score<round*65)tier--;if(round>=10){end();return}freshQuestion()}
-function start(){tier=0;score=0;streak=0;round=0;session=[];intro.hidden=true;results.hidden=true;arena.hidden=false;freshQuestion()}
-function end(){arena.hidden=true;results.hidden=false;document.getElementById('challengeResultTitle').textContent=`You reached ${tiers[tier]}.`;document.getElementById('challengeResultCopy').textContent=`Final score: ${score}. The production engine will use much larger non-repeating banks and adapt independently by subject.`;localStorage.setItem('brainBattleLast',JSON.stringify({tier,score,date:Date.now()}));if(window.CWState){const earned=Math.max(40,Math.round(score/10));CWState.addXP(earned,'Brain Battle');CWState.setProgress('brainbattle',100,{tier:tiers[tier],score});CWState.complete('brainbattle',{tier:tiers[tier],score});CWState.logActivity({id:'brainbattle-result',title:'Brain Battle complete',icon:'🧠',detail:`Reached ${tiers[tier]} • ${score} points • +${earned} XP`,href:'challenge.html'});if(tier>=3)CWState.addAchievement('deep-thinker','Deep Thinker','🧠')}}
-document.getElementById('startChallenge').onclick=start;document.getElementById('againChallenge').onclick=start;document.getElementById('nextChallenge').onclick=next;
+(()=>{
+  'use strict';
+  const TIERS=['Explorer','Challenger','Investigator','Expert','Master Mission'];
+  const STORAGE='cw_brain_battle_v3';
+  const PER_TIER=20;
+  const bank=Array.isArray(window.BRAIN_BANK)?window.BRAIN_BANK:[];
+  const $=id=>document.getElementById(id);
+  const intro=$('challengeIntro'), arena=$('challengeArena'), results=$('challengeResults');
+  let run=null,current=null,answered=false;
+
+  const lang=()=>window.CWLang?.current?.()||'en';
+  const txt=(obj)=>obj?.[lang()] ?? obj?.en ?? String(obj??'');
+  const tr=(en,fr)=>lang()==='fr'?fr:en;
+  const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x};
+
+  function loadProgress(){
+    try{return JSON.parse(localStorage.getItem(STORAGE)||'{}')}catch(_){return {}}
+  }
+  function saveProgress(data){localStorage.setItem(STORAGE,JSON.stringify(data))}
+  function firstIncompleteTier(){
+    const p=loadProgress();
+    const mastered=Array.isArray(p.mastered)?p.mastered:[];
+    for(let i=0;i<TIERS.length;i++) if(!mastered.includes(i)) return i;
+    return 4;
+  }
+  function startTier(tierIndex=firstIncompleteTier()){
+    const pool=shuffle(bank.filter(q=>q.tier===tierIndex)).slice(0,PER_TIER);
+    if(pool.length<PER_TIER){alert('Brain Battle question bank is incomplete for this level.');return}
+    run={tier:tierIndex,phase:'base',queue:pool.map(q=>q.id),position:0,missed:[],attempts:{},score:0,streak:0,baseAnswered:0,masteredThisRun:false};
+    intro.hidden=true;results.hidden=true;arena.hidden=false;nextQuestion();
+  }
+  function findQuestion(id){return bank.find(q=>q.id===id)}
+  function nextQuestion(){
+    if(!run)return;
+    if(run.position>=run.queue.length){
+      if(run.phase==='base') return finishBaseRound();
+      return finishReviewRound();
+    }
+    current=findQuestion(run.queue[run.position]);
+    if(!current){run.position++;return nextQuestion()}
+    answered=false;renderQuestion();
+  }
+  function renderQuestion(){
+    $('tierName').textContent=TIERS[run.tier];
+    $('challengeScore').textContent=run.score;
+    $('challengeStreak').textContent=run.streak;
+    const number=run.phase==='base'?run.position+1:run.position+1;
+    const total=run.queue.length;
+    $('challengeProgress').textContent=`${number} / ${total}`;
+    $('challengePhase').textContent=run.phase==='base'?tr('Main round','Série principale'):tr('Review round','Révision');
+    $('challengeSubject').textContent=txt(current.subject);
+    $('challengeQuestion').textContent=txt(current.q);
+    $('difficultyPips').innerHTML=Array.from({length:5},(_,i)=>`<i class="${i<=run.tier?'on':''}"></i>`).join('');
+    $('challengeFeedback').textContent='';
+    $('nextChallenge').hidden=true;
+    $('provePanel').hidden=true;
+    const choices=shuffle(current.choices);
+    const box=$('challengeOptions');
+    box.innerHTML=choices.map((c,i)=>`<button type="button" data-choice="${i}"></button>`).join('');
+    box.querySelectorAll('button').forEach((b,i)=>{b.textContent=txt(choices[i]);b.dataset.answer=choices[i].en;b.onclick=()=>answer(b,choices[i])});
+  }
+  function answer(btn,choice){
+    if(answered)return; answered=true;
+    const correct=choice.en===current.a.en;
+    run.attempts[current.id]=(run.attempts[current.id]||0)+1;
+    document.querySelectorAll('#challengeOptions button').forEach(b=>b.disabled=true);
+    if(correct){
+      btn.classList.add('correct');
+      run.score+=100+(run.tier*30)+(run.phase==='review'?25:0);
+      run.streak++;
+      run.missed=run.missed.filter(id=>id!==current.id);
+      $('challengeFeedback').textContent=tr('✅ Correct. Keep going.','✅ Correct. Continue.');
+      if(run.tier>=2){
+        $('provePanel').hidden=false;
+        $('provePanel').innerHTML=`<span class="eyebrow">${tr('WHY IT WORKS','POURQUOI')}</span><p>${txt(current.why)}</p>`;
+      }
+      window.playTone?.(true);
+    }else{
+      btn.classList.add('wrong');
+      run.streak=0;
+      run.score=Math.max(0,run.score-15);
+      if(!run.missed.includes(current.id))run.missed.push(current.id);
+      const attempts=run.attempts[current.id];
+      $('challengeFeedback').textContent=attempts>=2
+        ? tr(`Not quite. Hint: ${txt(current.hint)} This question will return.`,`Pas encore. Indice : ${txt(current.hint)} Cette question reviendra.`)
+        : tr('Not quite. This question will return in your review round.','Pas encore. Cette question reviendra pendant la révision.');
+      window.playTone?.(false);
+    }
+    $('challengeScore').textContent=run.score;$('challengeStreak').textContent=run.streak;
+    $('nextChallenge').textContent=run.position===run.queue.length-1?tr('Finish round →','Terminer la série →'):tr('Next challenge →','Question suivante →');
+    $('nextChallenge').hidden=false;
+  }
+  function advance(){if(!run||!answered)return;run.position++;nextQuestion()}
+  function finishBaseRound(){
+    run.baseAnswered=PER_TIER;
+    if(run.missed.length){
+      showIntermission(
+        tr(`${run.missed.length} question${run.missed.length===1?'':'s'} to strengthen.`,`${run.missed.length} question${run.missed.length===1?'':'s'} à renforcer.`),
+        tr('You are not moving up yet. Retry only the questions you missed until you master them.','Tu ne passes pas encore au niveau suivant. Reprends uniquement les questions manquées jusqu’à les maîtriser.'),
+        tr('Start review →','Commencer la révision →'),
+        ()=>beginReview()
+      );
+    }else masterTier();
+  }
+  function beginReview(){
+    run.phase='review';run.queue=shuffle(run.missed);run.position=0;results.hidden=true;arena.hidden=false;nextQuestion();
+  }
+  function finishReviewRound(){
+    if(run.missed.length){
+      showIntermission(
+        tr(`${run.missed.length} still to master.`,`${run.missed.length} encore à maîtriser.`),
+        tr('Good effort. Those questions will come back again — with a hint if you need one.','Bon effort. Ces questions vont revenir — avec un indice si nécessaire.'),
+        tr('Review again →','Réviser encore →'),
+        ()=>beginReview()
+      );
+    }else masterTier();
+  }
+  function masterTier(){
+    const progress=loadProgress();
+    const mastered=new Set(Array.isArray(progress.mastered)?progress.mastered:[]);mastered.add(run.tier);
+    saveProgress({mastered:[...mastered].sort(),lastTier:run.tier,updatedAt:Date.now()});
+    const tierName=TIERS[run.tier];
+    if(window.CWState){
+      CWState.addXP(180+(run.tier*40),`Brain Battle: ${tierName}`);
+      CWState.setProgress('brainbattle',Math.round((mastered.size/TIERS.length)*100),{tier:tierName,score:run.score});
+      CWState.logActivity({id:'brain-'+Date.now(),title:`${tierName} mastered`,icon:'🧠',detail:`20 questions mastered • ${run.score} points`,href:'challenge.html'});
+      if(run.tier===4){CWState.complete('brainbattle',{score:run.score});CWState.addAchievement('brain-master','Brain Battle Master','🧠')}
+    }
+    const isMaster=run.tier===4;
+    showIntermission(
+      isMaster?tr('Brain Battle Mastered!','Brain Battle maîtrisé !'):tr(`${tierName} mastered.`,`${tierName} maîtrisé.`),
+      isMaster?tr('You completed all five levels and mastered every missed question.','Tu as terminé les cinq niveaux et maîtrisé toutes les questions manquées.'):tr(`You mastered all 20 ${tierName} questions. The next level is ${TIERS[run.tier+1]}.`,`Tu as maîtrisé les 20 questions ${tierName}. Le prochain niveau est ${TIERS[run.tier+1]}.`),
+      isMaster?tr('Play Master Mission again','Rejouer Master Mission'):tr(`Continue to ${TIERS[run.tier+1]} →`,`Continuer vers ${TIERS[run.tier+1]} →`),
+      ()=>startTier(isMaster?4:run.tier+1)
+    );
+  }
+  function showIntermission(title,copy,button,handler){
+    arena.hidden=true;results.hidden=false;$('challengeResultTitle').textContent=title;$('challengeResultCopy').textContent=copy;
+    const b=$('againChallenge');b.textContent=button;b.onclick=handler;
+  }
+  $('startChallenge').onclick=()=>startTier(firstIncompleteTier());
+  $('nextChallenge').onclick=advance;
+  $('resetBrain').onclick=()=>{if(confirm(tr('Reset Brain Battle level progress?','Réinitialiser la progression de Brain Battle ?'))){localStorage.removeItem(STORAGE);startTier(0)}};
+})();
