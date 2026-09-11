@@ -1,0 +1,34 @@
+CHILDREN WORLD — BUILD PACK 14 v0.1 TEST CHECKLIST
+
+AFTER UPLOAD, TEST IN THIS ORDER
+[ ] Homepage loads with no horizontal scrolling.
+[ ] Header works in mobile portrait.
+[ ] Header works in mobile landscape.
+[ ] Header works in tablet portrait.
+[ ] Header works in tablet landscape.
+[ ] Header works on desktop.
+[ ] EN/FR selector changes child-facing interface text.
+[ ] Music control appears and can mute/unmute after first browser interaction.
+[ ] My World HQ opens World Explorer.
+[ ] World Explorer shows Japan as one country mission.
+[ ] Build Your City can complete with 5 homes + every essential service without overspending.
+[ ] Build Your City does not require budget £0.
+[ ] Build Your City mobile portrait is readable and stacked correctly.
+[ ] Brain Battle starts at Explorer.
+[ ] Explorer contains 20 questions before level checkpoint.
+[ ] Wrong Brain Battle answers are repeated in review.
+[ ] Next tier unlocks only after review is cleared.
+[ ] Challenger, Investigator, Expert and Master Mission progress in order.
+[ ] Life Lab plus adds an item.
+[ ] Life Lab minus removes an item.
+[ ] Flag Quest Flags mode displays a real flag image under the country code.
+[ ] Flag Quest runs 20 questions.
+[ ] Flag Quest Play another set keeps the same category.
+[ ] Flag Quest Choose another category returns to Mixed World / Flags / Capitals selection.
+[ ] Flag Quest Back to HQ returns to My World HQ.
+[ ] Creator Studio can select a mission and save an idea on device.
+[ ] Story World reviewed page still loads correctly.
+[ ] Arcade links still open the implemented games.
+
+IF OLD CONTENT APPEARS
+Refresh the page after GitHub finishes publishing. If needed, close/reopen the browser tab or clear the site's cached files so the new JS/CSS is loaded.

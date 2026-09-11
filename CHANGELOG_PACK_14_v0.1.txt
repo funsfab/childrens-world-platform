@@ -1,0 +1,15 @@
+CHILDREN WORLD — BUILD PACK 14 v0.1 CHANGELOG
+11 September 2026
+
+This pack consolidates the correction batch identified during the user's page-by-page testing of Homepage, My World HQ, Build Your City, Brain Battle, Story World, Creator Studio, Life Lab, World Explorer/Japan, Flag Quest and Arcade.
+
+HIGHLIGHTS
+- Brain Battle: 5 ordered levels × 20 questions, review-until-mastered logic, corrected level completion flow.
+- Build Your City: achievable balanced-city budget and complete essential-services checklist.
+- Life Lab: plus/minus basket controls.
+- Flag Quest: real flag artwork, richer visuals, 20-question rounds, larger non-repeating banks, better end-of-quest navigation.
+- World Explorer: separate landing page; Japan is now one mission/example within the world system.
+- EN/FR selector: first child-facing language pass.
+- Background music: 30 original local prototype tracks, automatic shuffle, persistent mute control.
+- Responsive shell: dedicated fixes for the five protected viewing modes.
+- Updated Functionality Audit and admin quick-open list.
