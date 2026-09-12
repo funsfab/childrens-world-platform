@@ -1,29 +1,19 @@
-CHILDREN WORLD — BUILD PACK 14 v0.1
-FIVE-MODE RESPONSIVE TEST CHECKLIST
+CHILDREN WORLD — BUILD PACK 16 v0.1 RESPONSIVE CHECKLIST
 
-Representative test sizes:
-- Mobile portrait: 390 x 844
-- Mobile landscape: 844 x 390
-- Tablet portrait: 820 x 1180
-- Tablet landscape: 1180 x 820
-- Desktop: 1440 x 900
+Protected modes:
+1. Mobile portrait
+2. Mobile landscape
+3. Tablet portrait
+4. Tablet landscape
+5. Desktop/laptop
 
-CHECK ON EACH MODE
-[ ] Header fits without clipping or sideways page movement
-[ ] Public Demo / access status remains readable
-[ ] Compact menu exposes Experience, Arcade and Story World where full nav is not used
-[ ] My World HQ naming is clear
-[ ] Cards do not overlap
-[ ] No unwanted horizontal scrolling
-[ ] No large accidental blank gutters
-[ ] Vertical gaps remain compact and consistent
-[ ] Padlocks stay small and do not hide card content
-[ ] Major headings feel professional, not oversized
-[ ] Registration/trial forms fit the viewport
-[ ] Story World sections fit correctly
-[ ] Build Your City controls remain usable
-[ ] Parent Centre remains readable
-[ ] Admin Preview bar does not block page controls when Admin mode is active
+For every changed page verify:
+[ ] No horizontal page scrolling.
+[ ] No clipped buttons/text.
+[ ] Utility language/music dock does not cover critical controls.
+[ ] Admin preview bar fits the viewport.
+[ ] Creator drawing canvas remains usable and proportional.
+[ ] Flag Quest question/flag/options fit without overflow.
 
-PROTECTED MODES
-Future corrections must be made in the existing source rule / appropriate protected responsive block rather than stacking random override chains.
+Special rule for this correction batch:
+- Problems 1 and 2 are mobile portrait fixes. Do not intentionally redesign mobile landscape, tablet or desktop layouts to solve them.

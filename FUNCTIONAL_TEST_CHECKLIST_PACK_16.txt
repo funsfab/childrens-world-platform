@@ -1,0 +1,53 @@
+CHILDREN WORLD - BUILD PACK 16 v0.1 TEST CHECKLIST
+
+A. MOBILE PORTRAIT ONLY
+[ ] Admin preview bar fits without left/right movement.
+[ ] Owner/Admin Preview cards appear one below another.
+[ ] Mobile landscape still looks correct.
+
+B. BUILD YOUR CITY
+[ ] Complete all objectives.
+[ ] Mission Complete flashes five times, then stays visible.
+[ ] Reset replay hint appears beside the completion message.
+[ ] Reset restarts the city.
+
+C. BRAIN BATTLE
+[ ] Explorer shows only Explorer questions.
+[ ] Challenger uses a different 20-question set.
+[ ] Investigator uses a different 20-question set.
+[ ] Expert uses a different 20-question set.
+[ ] Master Mission uses its own 20-question set.
+[ ] No tier reuses another tier's 20-question bank.
+
+D. CREATOR STUDIO
+[ ] Open each of the six missions.
+[ ] Faint blueprint appears.
+[ ] Pencil draws with finger/mouse/stylus.
+[ ] Colour can be changed.
+[ ] Eraser works.
+[ ] Brush size works.
+[ ] Undo/redo work.
+[ ] Blueprint can be hidden for free drawing.
+[ ] Mission parts can be added and moved.
+[ ] Test My Creation animates and gives coach feedback.
+[ ] Save project and reopen the same mission; design returns.
+
+E. FLAG QUEST
+[ ] Start Flags mode.
+[ ] Country code and actual flag appear together.
+[ ] Philippines (PH) displays a flag.
+[ ] Poland (PL) displays a flag.
+[ ] Switzerland (CH) displays a flag.
+[ ] No broken-image icon or Question visual placeholder appears.
+[ ] Let timer expire: correct answer is NOT revealed.
+[ ] Timed-out question is placed into review.
+[ ] Intentionally answer one question wrong; it enters review.
+[ ] Finish 20 questions; Review Round appears if anything was missed.
+[ ] Missed questions keep returning until answered correctly.
+[ ] Flag does not visibly pop in after the question text/options.
+[ ] Play another set and Choose another category both work.
+
+F. LANGUAGES / MUSIC / OTHER PAGES
+[ ] EN/FR selector still works.
+[ ] Music control still works.
+[ ] HQ, Story World, Life Lab, World Explorer and Parent Centre still open normally.

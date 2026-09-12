@@ -1,0 +1,53 @@
+CHILDREN WORLD - BUILD PACK 16 v0.1 CHANGELOG
+
+1. MOBILE PORTRAIT ADMIN HEADER
+- Removed horizontal scrolling from the Owner/Admin Preview bar.
+- Portrait mode now uses a compact two-row layout.
+- Mobile landscape remains unchanged.
+
+2. MOBILE PORTRAIT ADMIN CARDS
+- Visitor state, Admin mode and Audit cards now stack vertically.
+- Desktop/tablet layouts remain responsive.
+
+3. BUILD YOUR CITY COMPLETION
+- Mission Complete flashes five times only when the mission is first completed.
+- Added a visible hint directing the child to Reset if they want to replay.
+
+4. BRAIN BATTLE TIER BANKS
+- Confirmed 100 total questions: 20 unique questions for each of 5 tiers.
+- Added tier-bank integrity validation.
+- Updated storage/session version so stale pre-fix runs cannot reuse an old mixed queue.
+
+5. CREATOR STUDIO ADVANCED WORKSPACE
+- Replaced typing-first workflow with a visual design studio.
+- Faint mission blueprint templates.
+- Pencil and eraser.
+- Multi-colour palette and brush thickness.
+- Undo / redo.
+- Blueprint on/off for free drawing.
+- Mission-specific movable parts that can be dragged after placement.
+- Test My Creation interaction and Design Coach feedback.
+- Save/restore project drawing, movable parts and optional design notes.
+- Six missions now have distinct blueprint/component sets.
+
+6. FLAG QUEST IMAGE RELIABILITY
+- Full assets/flags folder is included.
+- Flag renderer keeps country code plus actual flag.
+- Missing visual fallback avoids broken image icon / Question visual box.
+
+7. FLAG QUEST TIMEOUT / MASTERY LOOP
+- Timeout does not reveal or auto-select the correct answer.
+- Timed-out items are marked for review and the game moves on.
+- Wrong/timed-out questions are collected after the 20-question main set.
+- Review rounds reshuffle those items and continue until all are answered correctly.
+
+8. FLAG QUEST PRELOADING
+- Current 20-question visual set preloads before the game starts.
+- Next visual is preloaded while the child answers the current question.
+- This removes the visible late flag pop-in on normal connections.
+
+QA
+- JavaScript syntax checked across all JS files.
+- CSS brace integrity checked.
+- Brain Battle: 20 unique IDs per tier verified.
+- All flag image paths referenced by the question bank exist in the packaged assets.
