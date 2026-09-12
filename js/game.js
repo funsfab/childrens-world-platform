@@ -1,7 +1,7 @@
 (()=>{
 'use strict';
 const intro=document.getElementById('gameIntro'),arena=document.getElementById('gameArena'),results=document.getElementById('gameResults');
-const SET_SIZE=20;let mode='mixed',round=0,score=0,correct=0,xp=0,combo=0,lives=5,current=[],timerId,time=20,locked=false;
+const SET_SIZE=20;let mode='mixed',round=0,score=0,correct=0,xp=0,combo=0,lives=5,current=[],timerId,time=20,locked=false,advanceTimer=null;
 const lang=()=>window.CWLang?.current?.()||'en';const tr=(en,fr)=>lang()==='fr'?fr:en;
 const local=(q,key)=>lang()==='fr'?(q[key+'Fr']??q[key]):q[key];
 const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x};
@@ -24,18 +24,18 @@ function renderVisual(q){
  else if(q.icon){const span=document.createElement('span');span.className='quest-emoji';span.textContent=q.icon;holder.appendChild(span)}
 }
 function showRound(){
- if(round>=current.length){endGame();return}locked=false;const q=current[round];
+ if(round>=current.length){endGame();return}locked=false;clearTimeout(advanceTimer);nextFlagQuestion.hidden=true;const q=current[round];
  roundLabel.textContent=tr(`ROUND ${round+1} / ${current.length}`,`MANCHE ${round+1} / ${current.length}`);renderVisual(q);questionCategory.textContent=local(q,'category');gameQuestion.textContent=local(q,'q');gameFeedback.textContent='';
  const enChoices=[...q.choices];const frChoices=q.choicesFr||q.choices;const order=enChoices.map((_,i)=>i);for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]]}
  const grid=answerGrid;grid.innerHTML=order.map(i=>`<button type="button" data-index="${i}"></button>`).join('');grid.querySelectorAll('button').forEach(b=>{const i=+b.dataset.index;b.textContent=lang()==='fr'?frChoices[i]:enChoices[i];b.onclick=()=>answer(b,q,enChoices[i])});
  time=20;timerBar.style.width='100%';clearInterval(timerId);timerId=setInterval(()=>{time--;timerBar.style.width=(time/20*100)+'%';if(time<=0){clearInterval(timerId);timeout(q)}},1000)
 }
 function correctText(q){return lang()==='fr'?(q.aFr||q.a):q.a}
-function timeout(q){if(locked)return;locked=true;lives=Math.max(0,lives-1);combo=0;gameFeedback.textContent=tr(`⏱️ Time. Answer: ${correctText(q)}`,`⏱️ Temps écoulé. Réponse : ${correctText(q)}`);window.playTone?.(false);updateHud();setTimeout(()=>{round++;showRound()},1100)}
-function answer(btn,q,enValue){if(locked)return;locked=true;clearInterval(timerId);const ok=enValue===q.a;document.querySelectorAll('#answerGrid button').forEach(b=>{const idx=+b.dataset.index;if(q.choices[idx]===q.a)b.classList.add('correct')});if(ok){btn.classList.add('correct');correct++;combo++;const bonus=100+combo*15+time*2;score+=bonus;xp+=20+combo*2;gameFeedback.textContent=tr(`✅ Correct! +${bonus}`,`✅ Correct ! +${bonus}`);window.playTone?.(true)}else{btn.classList.add('wrong');lives=Math.max(0,lives-1);combo=0;gameFeedback.textContent=tr(`❌ Answer: ${correctText(q)}`,`❌ Réponse : ${correctText(q)}`);window.playTone?.(false)}updateHud();setTimeout(()=>{round++;showRound()},950)}
+function timeout(q){if(locked)return;locked=true;lives=Math.max(0,lives-1);combo=0;document.querySelectorAll('#answerGrid button').forEach(b=>{const idx=+b.dataset.index;b.disabled=true;if(q.choices[idx]===q.a)b.classList.add('correct')});gameFeedback.textContent=tr(`⏱️ Time. Correct answer: ${correctText(q)}. Read it, then continue when you are ready.`,`⏱️ Temps écoulé. Bonne réponse : ${correctText(q)}. Lis-la puis continue quand tu es prêt.`);window.playTone?.(false);updateHud();nextFlagQuestion.hidden=false}
+function answer(btn,q,enValue){if(locked)return;locked=true;clearInterval(timerId);const ok=enValue===q.a;document.querySelectorAll('#answerGrid button').forEach(b=>{const idx=+b.dataset.index;b.disabled=true;if(q.choices[idx]===q.a)b.classList.add('correct')});if(ok){btn.classList.add('correct');correct++;combo++;const bonus=100+combo*15+time*2;score+=bonus;xp+=20+combo*2;gameFeedback.textContent=tr(`✅ Correct! +${bonus}`,`✅ Correct ! +${bonus}`);window.playTone?.(true);advanceTimer=setTimeout(()=>{round++;showRound()},850)}else{btn.classList.add('wrong');lives=Math.max(0,lives-1);combo=0;gameFeedback.textContent=tr(`❌ Correct answer: ${correctText(q)}. Take a moment to remember it, then press Next question.`,`❌ Bonne réponse : ${correctText(q)}. Prends le temps de la retenir, puis appuie sur Question suivante.`);window.playTone?.(false);nextFlagQuestion.hidden=false}updateHud()}
 function endGame(){clearInterval(timerId);arena.hidden=true;results.hidden=false;finalScore.textContent=score;finalCorrect.textContent=`${correct}/${current.length}`;finalXp.textContent=xp;resultCopy.textContent=correct>=16?tr('Excellent world knowledge. Your next set will avoid the questions you just used.','Excellentes connaissances du monde. La prochaine série évitera les questions déjà utilisées.'):correct>=10?tr('Solid run. A fresh shuffled set is ready when you are.','Bonne série. Une nouvelle série mélangée t’attend.'):tr('Good start. Try another set and keep exploring.','Bon début. Essaie une autre série et continue d’explorer.');
  localStorage.setItem('lastFlagQuest',JSON.stringify({mode,score,correct,total:current.length,xp,date:Date.now()}));
  if(window.CWState){CWState.addXP(xp,'Flag Quest');CWState.setProgress('flagquest',Math.min(100,Math.round(correct/current.length*100)),{score,correct,total:current.length,mode});CWState.logActivity({id:'flagquest-result-'+Date.now(),title:'Flag Quest complete',icon:'🚩',detail:`${correct}/${current.length} correct • ${score} points • +${xp} XP`,href:'game.html'});if(correct>=16)CWState.addAchievement('flag-ace','Flag Ace','🚩')}
 }
-startGame.onclick=start;playAgain.onclick=start;chooseMode.onclick=()=>{results.hidden=true;arena.hidden=true;intro.hidden=false};
+nextFlagQuestion.onclick=()=>{if(!locked)return;round++;showRound()};startGame.onclick=start;playAgain.onclick=start;chooseMode.onclick=()=>{results.hidden=true;arena.hidden=true;intro.hidden=false};
 })();

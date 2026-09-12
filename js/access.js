@@ -49,10 +49,10 @@
   // so the owner can see what a normal visitor state currently is.
   const header=document.querySelector('.topbar,.hq-topbar,.sub-top,.parent-topbar');
   if(header && !header.querySelector('.access-status-chip')){
-    const a=document.createElement('a'); a.className='access-status-chip';
-    a.href=statusForUi==='visitor'?'register.html':'membership.html';
-    a.innerHTML='<span>'+ (statusForUi==='active'?'🌍':statusForUi==='trial'?'🧭':'👀') +'</span><b>'+labels[statusForUi]+'</b>';
-    header.appendChild(a);
+    const chip=document.createElement('span'); chip.className='access-status-chip'; chip.setAttribute('role','status');
+    chip.setAttribute('aria-label',statusForUi==='visitor'?'Public Demo status':statusForUi==='trial'?'Explorer Access status':'Full World status');
+    chip.innerHTML='<span>'+ (statusForUi==='active'?'🌍':statusForUi==='trial'?'🧭':'👀') +'</span><b>'+labels[statusForUi]+'</b>';
+    header.appendChild(chip);
   }
 
   // Child profile personalization
