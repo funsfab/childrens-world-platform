@@ -1,0 +1,56 @@
+CHILDREN WORLD - BUILD PACK 15 v0.1 TEST CHECKLIST
+
+A. MOBILE OVERFLOW
+[ ] Mobile portrait homepage cannot be dragged left/right.
+[ ] Mobile landscape homepage cannot be dragged left/right.
+[ ] Header, hero, decorative globe/orbits and utility dock stay inside the viewport.
+[ ] Tablet portrait, tablet landscape and desktop remain visually intact.
+
+B. PUBLIC DEMO
+[ ] Public Demo remains fully readable in the header.
+[ ] Tapping/clicking Public Demo does NOT open registration or Family Trial.
+[ ] Start Family Trial still opens the registration/trial flow.
+
+C. BUILD YOUR CITY
+[ ] Mission starts with GBP 2,350,000.
+[ ] Five homes + one of each essential service alone is NOT enough to complete the mission.
+[ ] Education must reach 50+.
+[ ] Final reserve must be between GBP 30,000 and GBP 70,000.
+[ ] A valid city can complete with GBP 70,000 remaining.
+[ ] City Adviser explains which part of the plan still needs work.
+
+D. BRAIN BATTLE LANGUAGE CONTINUITY
+[ ] Start Brain Battle and answer several questions.
+[ ] Change EN to FR during the active level.
+[ ] The same tier/question position returns after reload.
+[ ] Score and streak are preserved.
+[ ] If the current question had already been answered, the selected/correct state and feedback are restored.
+
+E. BRAIN BATTLE MASTER COMPLETION
+[ ] Complete Master Mission.
+[ ] Play Master Mission Again is shown.
+[ ] Start Again from Explorer is also shown.
+[ ] Play Master Mission Again starts only Master Mission.
+[ ] Start Again from Explorer clears level progress and begins Explorer.
+
+F. CREATOR STUDIO
+[ ] Open Mission visibly opens a mission workspace.
+[ ] Mission title and brief match the selected card.
+[ ] Planning fields appear.
+[ ] Design-choice buttons can be selected/deselected.
+[ ] Notes can be entered.
+[ ] Save & continue stores the draft.
+[ ] Leaving/reopening the same mission restores the draft.
+[ ] Mission list returns to the mission cards.
+
+G. FLAG QUEST
+[ ] Start Capitals mode.
+[ ] Intentionally choose a wrong answer.
+[ ] Correct answer remains visible after more than one second.
+[ ] Next question button is visible.
+[ ] Question changes only after pressing Next question.
+[ ] Timeout behaves the same way.
+[ ] Correct answers still continue normally.
+
+IF OLD CONTENT APPEARS
+Wait for GitHub Pages to finish publishing, refresh the page, then close/reopen the tab if necessary. If the browser still serves old JavaScript/CSS, clear the site cache for the GitHub Pages URL and reload.

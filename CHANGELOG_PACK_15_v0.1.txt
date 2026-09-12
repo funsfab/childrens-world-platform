@@ -1,0 +1,42 @@
+CHILDREN WORLD - BUILD PACK 15 v0.1 CHANGELOG
+12 September 2026
+
+CORRECTION 1 - MOBILE HORIZONTAL OVERFLOW
+- Constrained the root document to the viewport.
+- Removed the viewport-width decorative pseudo-element that could create scrollable overflow.
+- Added min-width:0/flexible grid containment to the main landing-page structures.
+- Clipped decorative hero/orbit overflow at its owning section instead of allowing it to expand the page.
+- Kept mobile portrait and mobile landscape as separate protected responsive modes.
+
+CORRECTION 2 - PUBLIC DEMO STATUS
+- Public Demo is now a non-navigation status chip.
+- Compact menu Public Demo state is also informational only.
+- Start Family Trial stays a separate explicit action.
+
+CORRECTION 3 - BUILD YOUR CITY DIFFICULTY
+- Kept the GBP 2,350,000 starting budget.
+- Mission now requires: 5,000+ population, all essential services, Education 50+, and GBP 30k-GBP 70k remaining.
+- Adviser gives targeted hints when population, services, education or reserve are not balanced.
+- This prevents the mission from ending after simply placing one of each obvious service.
+
+CORRECTION 4 - BRAIN BATTLE LANGUAGE SWITCH
+- Active Brain Battle run is saved locally.
+- EN/FR switching restores current tier, question number, score, streak, missed-question list and answered-state feedback.
+- No restart to the Brain Battle homepage during an active run.
+
+CORRECTION 5 - BRAIN BATTLE MASTER ENDING
+- Added a second completion action: Start Again from Explorer.
+- Kept Play Master Mission Again as the top-tier replay option.
+
+CORRECTION 6 - CREATOR STUDIO OPEN MISSION
+- Replaced the old selection-only workbench with a real structured mission workspace.
+- Each mission now opens planning prompts, selectable design features, project notes and saved draft state.
+- Added Save & continue, Clear this draft and Mission list controls.
+
+CORRECTION 7 - FLAG QUEST WRONG-ANSWER FEEDBACK
+- Incorrect answer and timeout feedback no longer auto-disappear.
+- Correct answer remains visible until the child presses Next question.
+- Correct responses still move at normal game pace.
+
+AUDIT
+- Functionality Audit updated to Build Pack 15 and reflects these behaviours.
