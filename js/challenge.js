@@ -1,8 +1,8 @@
 (()=>{
   'use strict';
   const TIERS=['Explorer','Challenger','Investigator','Expert','Master Mission'];
-  const STORAGE='cw_brain_battle_v3';
-  const SESSION='cw_brain_battle_active_v1';
+  const STORAGE='cw_brain_battle_v4';
+  const SESSION='cw_brain_battle_active_v2';
   const PER_TIER=20;
   const bank=Array.isArray(window.BRAIN_BANK)?window.BRAIN_BANK:[];
   const $=id=>document.getElementById(id);
@@ -21,8 +21,11 @@
   function loadSession(){try{const s=JSON.parse(localStorage.getItem(SESSION)||'null');if(!s?.run||!Array.isArray(s.run.queue)||!Number.isInteger(s.run.tier))return null;return s}catch(_){return null}}
   function firstIncompleteTier(){const p=loadProgress();const mastered=Array.isArray(p.mastered)?p.mastered:[];for(let i=0;i<TIERS.length;i++)if(!mastered.includes(i))return i;return 4}
   function startTier(tierIndex=firstIncompleteTier()){
-    const pool=shuffle(bank.filter(q=>q.tier===tierIndex)).slice(0,PER_TIER);
-    if(pool.length<PER_TIER){alert('Brain Battle question bank is incomplete for this level.');return}
+    const tierBank=bank.filter(q=>q.tier===tierIndex);
+    const ids=new Set(tierBank.map(q=>q.id));
+    const prompts=new Set(tierBank.map(q=>q.q?.en));
+    if(tierBank.length!==PER_TIER || ids.size!==PER_TIER || prompts.size!==PER_TIER){alert('Brain Battle question bank is incomplete or duplicated for this level.');return}
+    const pool=shuffle(tierBank).slice(0,PER_TIER);
     run={tier:tierIndex,phase:'base',queue:pool.map(q=>q.id),position:0,missed:[],attempts:{},score:0,streak:0,baseAnswered:0};
     answered=false;answerState=null;saveSession();intro.hidden=true;results.hidden=true;arena.hidden=false;nextQuestion();
   }
