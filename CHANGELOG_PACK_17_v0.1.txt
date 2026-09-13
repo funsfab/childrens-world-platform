@@ -1,0 +1,60 @@
+CHILDREN WORLD - BUILD PACK 17 v0.1 CHANGELOG
+
+1. MOBILE PORTRAIT CREATOR STUDIO OVERFLOW
+- Fixed the Creator Studio workspace so nested Mission Brief / mode / design panels stay inside the mobile portrait viewport.
+- Added min-width:0/max-width:100% and mobile-specific stacking for the workspace, toolbars, object controls, palette and result cards.
+- The fix targets mobile portrait while preserving the other responsive modes.
+
+2. CREATOR STUDIO SOPHISTICATION UPGRADE
+- Creator Studio now uses mission-specific design modes rather than one generic parts list.
+- Added extra drawing tools: line, rectangle and circle in addition to pencil and eraser.
+- Added optional design grid on/off.
+- Added selected-object editing panel with object controls.
+- Added richer testing reports, mission checks and mission-specific simulation feedback.
+- Design Coach now responds to missing mission requirements after a test.
+
+3. MOVABLE PART SIZE + ROTATION
+- Added a dedicated Object size slider separate from Brush size.
+- Added rotation control for the selected movable object.
+- Size/rotation are saved with the project.
+
+4. FINISHED CREATIONS COME ALIVE
+- Vehicle and Robot test modes now expose left/centre/right movement controls for the finished creation.
+- Park and Room use moving visitor simulations.
+- Mars Base uses system pulse simulation.
+- Story Builder previews panel progression.
+- These controls are part of Test My Creation, not decorative animation.
+
+5. FULL MULTI-STEP UNDO / REDO
+- Undo/redo now stores a visual action history rather than only one drawing state.
+- Repeated Undo moves backward through drawing, object additions, movements, size/rotation changes, deletions, layer changes, blueprint/grid changes and similar visual actions.
+- Repeated Redo moves forward through the undone history.
+- A new action after Undo clears the forward redo branch, like a normal design application.
+
+6. RICHER MISSION-SPECIFIC LIBRARIES
+- Design a Park now contains real categories: Play area, Trees & nature, Sports & movement, Accessible paths and Facilities.
+- Added multiple different play/sport/nature/access/facility options instead of one generic Play object.
+- Added a long park bench visual instead of relying on a single-chair representation.
+- Future Vehicle, Dream Room, Robot, Story Builder and Mars Base now also have distinct category-specific libraries.
+
+7. CLEAR PROJECT CONFIRMATION
+- Clear this project no longer erases immediately.
+- Added a confirmation dialog with Keep my project and Clear project actions.
+- Keep my project is presented as the safer first action.
+
+8. QUICK IDEA / CATEGORY BUTTONS NOW WORK
+- The former idea chips are now real design-mode selectors.
+- Selecting a mode changes the movable-parts/tool library for the mission.
+- Example: selecting Play area loads play equipment; Accessible paths loads accessibility tools.
+
+9. DESIGN MODE NOW COMES BEFORE YOUR DESIGN
+- Reordered Creator Studio workflow:
+  Mission Brief -> Choose a Design Mode -> Your Design -> Test -> Improve/Save.
+- Children decide what they are designing first, then the correct tool/part palette loads before they build.
+
+QA
+- JavaScript syntax checked with Node.
+- CSS parsed with tinycss2: zero stylesheet parse errors.
+- Creator Studio HTML checked for duplicate IDs: none found.
+- All static IDs referenced by creator.js were verified in creator.html; the only extra ID is dynamically created at runtime for the Run Again simulation button.
+- Existing Build Pack 16 folder structure and assets preserved.

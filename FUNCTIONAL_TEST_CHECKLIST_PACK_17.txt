@@ -1,0 +1,74 @@
+CHILDREN WORLD - BUILD PACK 17 v0.1 TEST CHECKLIST
+
+A. MOBILE PORTRAIT - CREATOR STUDIO
+[ ] Open Design a Park on mobile portrait.
+[ ] Mission Workspace does not move horizontally.
+[ ] Mission Brief stays fully inside the outer workspace card.
+[ ] Choose a Design Mode panel stays inside the viewport.
+[ ] Your Design toolbar, canvas, object controls and parts palette do not overflow right.
+[ ] Mobile landscape still looks correct.
+
+B. DESIGN MODE / MISSION LIBRARIES
+[ ] Design a Park shows design modes before Your Design.
+[ ] Tap Play area: play equipment appears.
+[ ] Tap Trees & nature: nature items replace the palette.
+[ ] Tap Sports & movement: sports items appear.
+[ ] Tap Accessible paths: accessibility items appear.
+[ ] Tap Facilities: long park bench, picnic, toilets, bin, light and water appear.
+[ ] Open the other five Creator Studio missions and confirm each has different modes/parts.
+
+C. DRAWING TOOLS
+[ ] Pencil draws.
+[ ] Eraser removes drawing.
+[ ] Line tool draws a straight line.
+[ ] Rectangle tool draws a rectangle.
+[ ] Circle tool draws a circle/ellipse.
+[ ] Brush size changes line thickness.
+[ ] Colour buttons change drawing colour.
+[ ] Blueprint can be turned on/off.
+[ ] Grid can be turned on/off.
+
+D. MOVABLE OBJECT CONTROLS
+[ ] Add a movable part.
+[ ] Drag it to a new position.
+[ ] Object size slider changes only the selected object.
+[ ] Rotate slider rotates only the selected object.
+[ ] Duplicate creates a second copy.
+[ ] Front/Back changes object layer order.
+[ ] Remove deletes selected object.
+[ ] Long park bench looks like a long public bench rather than a single chair.
+
+E. UNDO / REDO HISTORY
+[ ] Draw three separate marks; press Undo three times and watch them disappear step-by-step.
+[ ] Press Redo three times and watch them return in order.
+[ ] Add, move and resize an object; Undo repeatedly through those actions.
+[ ] Redo restores them.
+[ ] After Undo, make a brand-new action and confirm the old Redo branch no longer returns.
+
+F. TEST MY CREATION / SIMULATION
+[ ] Test before enough detail: system asks for more design work.
+[ ] Add enough drawing/objects and test again.
+[ ] A score/report appears with mission requirement checks.
+[ ] Design Coach gives an improvement suggestion when something is missing.
+[ ] Future Vehicle: left/centre/right movement controls appear after test.
+[ ] Robot: movement controls appear after test.
+[ ] Park: visitor simulation runs.
+[ ] Dream Room: visitor/walkthrough simulation runs.
+[ ] Mars Base: system pulse simulation runs.
+[ ] Story Builder: panel preview animation runs.
+
+G. CLEAR PROJECT SAFETY
+[ ] Tap Clear this project.
+[ ] Confirmation dialog appears before anything is deleted.
+[ ] Keep my project closes the dialog without deleting work.
+[ ] Clear project removes the current design only after confirmation.
+
+H. SAVE / RESTORE
+[ ] Save a Creator Studio project.
+[ ] Leave the page and return to the same mission.
+[ ] Drawing, objects, object sizes/rotation, mode, blueprint/grid state and notes restore.
+
+I. LANGUAGES / REGRESSION
+[ ] EN/FR selector still works.
+[ ] Creator Studio headings/dialog labels translate where implemented.
+[ ] HQ, Flag Quest, Brain Battle, Story World, Life Lab and City Builder still open normally.
