@@ -58,6 +58,25 @@
 
         <section class="creator-canvas-panel">
           <span class="eyebrow" id="creatorDesignStep">2 • YOUR DESIGN</span><h3>Build it for real.</h3>
+
+          <div class="creator-vehicle-view-controls" id="vehicleViewControls" hidden>
+            <div class="creator-vehicle-view-copy">
+              <b>🚗 Vehicle blueprint views</b>
+              <small>With Select active, drag anywhere on the empty blueprint to rotate it left/right and tilt it up/down. Use a preset for a quick view.</small>
+            </div>
+            <div class="creator-vehicle-view-buttons" id="vehicleViewButtons">
+              <button class="creator-tool" type="button" data-vehicle-view="left">Left side</button>
+              <button class="creator-tool" type="button" data-vehicle-view="right">Right side</button>
+              <button class="creator-tool" type="button" data-vehicle-view="front">Front</button>
+              <button class="creator-tool" type="button" data-vehicle-view="rear">Rear</button>
+              <button class="creator-tool" type="button" data-vehicle-view="top">Top</button>
+              <button class="creator-tool" type="button" data-vehicle-view="interior">Interior</button>
+              <button class="creator-tool active" type="button" data-vehicle-view="orbit">Free rotate</button>
+              <button class="creator-tool" id="vehicleResetOrbit" type="button">Reset angle</button>
+            </div>
+            <div class="creator-vehicle-orbit-status" id="vehicleOrbitStatus">Drag sideways / up / down to inspect the blueprint.</div>
+          </div>
+
           <div class="creator-toolbar" aria-label="Drawing tools">
             <button class="creator-tool active" id="toolSelect" type="button">↖ Select</button>
             <button class="creator-tool" id="toolPen" type="button">✏️ Pencil</button>
