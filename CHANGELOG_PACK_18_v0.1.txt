@@ -1,0 +1,78 @@
+CHILDREN WORLD - BUILD PACK 18 v0.1 CHANGELOG
+
+FOCUS: CREATOR STUDIO DEEP-BUILD UPGRADE
+
+1-7. OBJECT SYSTEM + FUTURE VEHICLE TEST FOUNDATION
+- Permanent visible cards/rectangles behind movable objects removed.
+- Object size can be changed with slider plus Smaller/Bigger controls; rotate remains available.
+- The Future Vehicle test animates the full build layer (blueprint, drawing and parts) as one creation.
+- Road movement is smooth and continuous rather than jumping between preset positions.
+- Wheels rotate with the road-test direction.
+- The previous Move Left / Centre / Move Right controls were removed.
+- Road test pauses at each side before reversing and repeats until Stop Test.
+- Stop Test is placed inside the stage at top-right so it remains visible on mobile.
+
+8-12. FUTURE VEHICLE REBUILD
+- Body & Movement now contains normal-car components such as body shell, chassis, roof, doors, windows, windscreen, wheels, lights, mirrors, bumper, steering wheel, seats and dashboard.
+- Power System now includes petrol/diesel/electric/hybrid-style components, batteries, charge port, fuel tank, exhaust and solar assist.
+- Safety now includes seat belt, airbag, collision sensor, safety camera, indicators, warning lights and emergency stop.
+- Future Tech now includes wings, propeller, jet, hover, amphibious hull, water jet, retractable wheels, drone lift, stabiliser and future sensors.
+- Test My Creation reads the technology added: normal builds use road test; flight builds lift/fly; amphibious builds switch to a water test with wheel retraction effect.
+
+13-22. DREAM ROOM
+- Structure, Furniture, Lighting and Storage & Organisation remain as the main modes.
+- Object boxes removed; size and rotate retained.
+- The room itself stays stationary during test mode.
+- Test mode remains active until Stop Test.
+- Lighting objects glow/switch on during test and return to normal after stopping.
+- Shelving is a real shelf visual; books are separate placeable objects.
+- Added separate television, TV stand/media unit and provider/set-top box.
+- Sofa styling includes built-in cushions.
+- Added furniture-collision checking for unrealistic overlap between large room objects.
+- Valid smaller-on-furniture combinations remain allowed.
+
+21 + 23. DRAWING TOOLS BECOME EDITABLE OBJECTS
+- Added Curved Path beside Line.
+- Pencil drawings are now vector objects rather than permanently flattened marks.
+- Line, curve, rectangle, circle and pencil drawings remain selectable after creation.
+- Drawn objects can be moved, resized, rotated, duplicated, layered and deleted like placed parts.
+- Eraser can delete a selectable object and still erases legacy/raster drawing content on empty canvas areas.
+
+24-25. DESIGN A PARK - LIVING MODULAR PARK
+- Expanded Play, Nature, Sports, Accessibility, Facilities and People & Activity libraries.
+- Added walking and seated people, adults, children, buggy/baby, park users and activity-specific characters.
+- Added richer park assets such as bridge, water, ducks, picnic/facility items, sports users and activity equipment.
+- Added soft compatibility snapping: seated people can align to benches/seating, ducks to water, pushing adult to buggy, swing rider to swing.
+- Park is now designed as a matching/reasoning/building game rather than mainly a drawing activity.
+
+26. INVENT A ROBOT - ROBOT LAB
+- Added six original selectable robot concepts: Classroom Helper, Explorer Rover, Builder Bot, Rescue Unit, Ocean Cleaner and Sky Scout.
+- Robot cards use original/custom concept artwork stored in assets/creator.
+- Selecting a robot places a faint movable blueprint on the board rather than a finished robot.
+- Multiple different robot blueprints can share the same board.
+- Selecting a blueprint switches the modular parts library to the correct robot.
+- Each robot has distinct body, sensor, tool and power/mobility parts.
+- Existing drawing tools remain available so children can also customise freely.
+
+27. STORY BUILDER
+- Added five original story concepts: Forest Rescue Adventure, Museum Mystery Night, Space Delivery Mission, Castle Festival Quest and School Invention Day.
+- Selecting a story places a faint scene blueprint and loads story-specific small modular parts.
+- Parts are divided into characters, places/scenes, props/clues and story details.
+- System is designed for slow, piece-by-piece construction rather than instantly placing a finished scene.
+
+28. MARS BASE
+- Added five original Mars-base concepts: Red Horizon Research Base, Olympus Family Colony, Ice Core Mining Outpost, Canyon Shield Habitat and Launchport Engineering Base.
+- Selecting a concept places a faint base blueprint and loads matching modular structures/systems/transport/terrain parts.
+- Replaces the previous simplistic Mars-base concept with a richer modular construction direction.
+
+ORIGINALITY / IP
+- Build Pack 18 adopts the permanent Children World originality rule for Creator Studio assets and concepts.
+- New concept images were created for this project and are not intended to reproduce known franchises or branded characters.
+
+QA COMPLETED
+- creator.js syntax checked with Node.
+- creator.html checked for duplicate IDs: none.
+- All static element IDs referenced by creator.js exist in creator.html.
+- All 16 new Creator Studio image assets referenced by JavaScript exist.
+- CSS parsed with tinycss2: zero stylesheet parse errors.
+- Full folder/path audit completed before packaging.

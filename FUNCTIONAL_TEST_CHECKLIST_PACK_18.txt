@@ -1,0 +1,90 @@
+CHILDREN WORLD - BUILD PACK 18 FUNCTIONAL TEST CHECKLIST
+
+IMPORTANT
+Test on the five protected modes: mobile portrait, mobile landscape, tablet portrait, tablet landscape, desktop.
+
+A. GLOBAL CREATOR STUDIO
+[ ] Open each of the six missions.
+[ ] No horizontal scrolling/overflow.
+[ ] Placed objects show no permanent background rectangle/card.
+[ ] Select an object: size slider works.
+[ ] Smaller and Bigger buttons work repeatedly.
+[ ] Rotate works.
+[ ] Duplicate / Back / Front / Remove work.
+[ ] Undo repeatedly steps backward through multiple actions.
+[ ] Redo repeatedly restores undone actions.
+[ ] Clear this project asks for confirmation first.
+[ ] Save project, leave mission, return and verify restoration.
+
+B. DRAWING TOOLS
+[ ] Pencil creates a selectable drawing object.
+[ ] Straight Line creates a selectable line.
+[ ] Curve creates a selectable curved path.
+[ ] Rectangle creates a selectable shape.
+[ ] Circle creates a selectable shape.
+[ ] Move/resize/rotate a drawn line/curve/shape.
+[ ] Eraser deletes a selected object when tapped.
+
+C. FUTURE VEHICLE
+[ ] Body & Movement shows normal-car parts, not wings/jet/boat parts.
+[ ] Power, Safety and Future Tech categories show different relevant parts.
+[ ] Add body + wheels + other parts and test.
+[ ] Whole build moves together; individual parts do not jump separately.
+[ ] Road test moves smoothly and pauses at both ends before reversing.
+[ ] Wheels visibly rotate with travel direction.
+[ ] Move Left / Centre / Move Right buttons are absent.
+[ ] Stop Test is visible inside top-right of the stage and returns to edit mode.
+[ ] Add a flight component and verify flying test behavior.
+[ ] Add amphibious technology and verify water appears and wheels retract.
+
+D. DREAM ROOM
+[ ] Structure/Furniture/Lighting/Storage modes remain available.
+[ ] Shelf appears as shelving; Books are a separate button/object.
+[ ] TV / TV stand / provider box are separate placeable objects.
+[ ] Sofa visual includes cushion styling.
+[ ] Place bulb/lamp or fluorescent light and start test: it glows.
+[ ] Stop test: light returns to normal/off state.
+[ ] Room itself does not travel around the stage.
+[ ] Overlap two large furniture items strongly and test: collision warning appears.
+
+E. DESIGN A PARK
+[ ] Play/Nature/Sports/Accessible Paths/Facilities/People categories work.
+[ ] Curved Path can make a bending park route.
+[ ] Long bench, accessible seating, bridge, water and playground parts are available.
+[ ] Walking/seated adults and children are available.
+[ ] Buggy and pushing-adult pose are available.
+[ ] Ducks are available.
+[ ] Move seated person near bench: soft snap/alignment occurs.
+[ ] Move duck near water: soft snap/alignment occurs.
+[ ] Move pushing adult near buggy: soft snap/alignment occurs.
+[ ] Move swing rider near swing: soft snap/alignment occurs.
+
+F. INVENT A ROBOT
+[ ] Robot Lab shows six original robot cards.
+[ ] Select robot A: a blueprint is added and matching parts load.
+[ ] Select robot B/C/etc.: additional blueprints can coexist on board.
+[ ] Resize and rotate each blueprint independently.
+[ ] Blueprint on/off hides/shows blueprint guides.
+[ ] Selecting a different robot blueprint changes the parts palette.
+[ ] Drawing tools still work with robot blueprints.
+
+G. STORY BUILDER
+[ ] Five original story cards display with thumbnails.
+[ ] Selecting a story adds a faint scene blueprint.
+[ ] Correct story-specific small parts load.
+[ ] Characters / Places / Props / Story Details modes work.
+[ ] Multiple small pieces can be arranged to rebuild the scene.
+
+H. MARS BASE
+[ ] Five Mars-base cards display with thumbnails.
+[ ] Selecting a base adds a faint base blueprint.
+[ ] Structures / Systems / Rovers & crew / Terrain categories work.
+[ ] Base pieces are movable/resizable/rotatable.
+[ ] Test scan runs until Stop Test.
+
+I. RESPONSIVE SAFETY
+[ ] Mobile portrait: library cards and workspace remain within viewport.
+[ ] Mobile landscape: controls remain usable without side overflow.
+[ ] Tablet portrait: no nested-card overflow.
+[ ] Tablet landscape: palette/layout remains readable.
+[ ] Desktop: full workspace remains balanced and compact.
