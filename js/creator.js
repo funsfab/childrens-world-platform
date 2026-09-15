@@ -227,7 +227,7 @@ const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLaye
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
 let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false;
 const STORAGE='cw_creator_projects_v18';
-const VEHICLE_PUZZLE_VERSION=5;
+const VEHICLE_PUZZLE_VERSION=6;
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
 function allParts(){if(!active)return[];return modesForMission(missions[active]).flatMap(m=>m.parts||[]);}
@@ -285,6 +285,50 @@ function vehicleSlotDefinitions(){
   slots.push(vehicleSlot('rear-bumper','rear-bumper',[.495*L,0,.31],[0,W*.43,0],[0,0,.15],[1,0,0],{aspect:3.1,minFacing:.48}));
   return slots;
 }
+function vehiclePartShape(partId){
+  const shapes={
+    door:[[-1,-.76],[-.78,-1],[.82,-.92],[1,.74],[.72,1],[-.88,.88]],
+    window:[[-1,.82],[-.72,-.92],[.78,-1],[1,.62],[.78,.92],[-.82,1]],
+    windscreen:[[-.92,.88],[-.72,-.88],[.78,-.98],[.96,.82],[.72,1],[-.72,.98]],
+    'rear-window':[[-.96,.78],[-.74,-.94],[.72,-.88],[.94,.84],[.68,1],[-.72,.96]],
+    roof:[[-.98,.32],[-.72,-.72],[-.28,-1],[.42,-.94],[.92,-.38],[1,.34],[.70,.82],[-.56,.88]],
+    hood:[[-1,.60],[-.78,-.70],[-.28,-1],[.54,-.90],[1,.48],[.72,.92],[-.60,.90]],
+    trunk:[[-1,.48],[-.68,-.78],[.10,-1],[.88,-.72],[1,.54],[.58,.88],[-.62,.90]],
+    mirror:[[-1,.18],[-.56,-.72],[.28,-1],[1,-.24],[.72,.54],[-.30,.92]],
+    headlight:[[-1,.30],[-.56,-.62],[.18,-.94],[1,-.42],[.74,.54],[-.20,.86]],
+    taillight:[[-1,-.36],[-.54,-.86],[.38,-.72],[1,.02],[.54,.70],[-.34,.86]],
+    bumper:[[-1,-.24],[-.68,-.72],[.22,-.92],[1,-.40],[.86,.40],[.30,.78],[-.62,.72]],
+    'rear-bumper':[[-1,-.38],[-.30,-.86],[.60,-.70],[1,-.20],[.66,.66],[-.20,.86],[-.92,.46]]
+  };
+  return shapes[partId]||[[-1,-1],[1,-1],[1,1],[-1,1]];
+}
+function vehicleSlotShapePoints(slot){
+  return vehiclePartShape(slot.partId).map(([a,b])=>[
+    slot.center[0]+slot.u[0]*a+slot.v[0]*b,
+    slot.center[1]+slot.u[1]*a+slot.v[1]*b,
+    slot.center[2]+slot.u[2]*a+slot.v[2]*b
+  ]);
+}
+function vehiclePartFill(partId){
+  if(partId==='headlight')return{fill:'rgba(220,249,255,.88)',stroke:'rgba(247,254,255,.98)'};
+  if(partId==='taillight')return{fill:'rgba(255,84,111,.78)',stroke:'rgba(255,196,207,.95)'};
+  if(['window','windscreen','rear-window'].includes(partId))return{fill:'rgba(95,202,235,.34)',stroke:'rgba(218,248,255,.82)'};
+  if(partId==='mirror')return{fill:'rgba(132,170,195,.70)',stroke:'rgba(229,244,252,.88)'};
+  return{fill:'rgba(128,159,185,.63)',stroke:'rgba(229,243,251,.90)'};
+}
+function drawInstalledVehiclePanel(proj){
+  if(!proj||proj.partId==='wheel')return;
+  const pts=proj.shapeCorners||proj.corners,style=vehiclePartFill(proj.partId);
+  tctx.save();tctx.beginPath();pts.forEach((q,i)=>i?tctx.lineTo(q.x,q.y):tctx.moveTo(q.x,q.y));tctx.closePath();
+  tctx.fillStyle=style.fill;tctx.strokeStyle=style.stroke;tctx.lineWidth=1.65;tctx.fill();tctx.stroke();
+  if(proj.partId==='door'){
+    const a=pts[Math.min(2,pts.length-1)],b=pts[Math.min(3,pts.length-1)];
+    const hx=a.x*.66+b.x*.34,hy=a.y*.66+b.y*.34;
+    tctx.strokeStyle='rgba(26,58,78,.72)';tctx.lineWidth=2.2;tctx.beginPath();tctx.moveTo(hx-7,hy);tctx.lineTo(hx+4,hy);tctx.stroke();
+  }
+  tctx.restore();
+}
+
 function vehicleInteriorSlots(){
   return[
     {key:'dashboard',partId:'dashboard',x:.39,y:.39,size:.19,aspect:2.4,required:true},
@@ -314,8 +358,9 @@ function vehicleSlotProjection(slot){
   const h=Math.max(10,Math.hypot(vx,vy)*2);
   const screenAngle=Math.atan2(uy,ux)*180/Math.PI;
   const n=vehicleProjectVector(slot.normal),facing=n.depth;
+  const shapeCorners=vehicleSlotShapePoints(slot).map(vehicleProjectPoint);
   return{...slot,cx:c.x,cy:c.y,w,h,sizePx:w,screenAspect:clamp(w/h,.28,4.2),screenAngle,
-    screenU:{x:ux,y:uy},screenV:{x:vx,y:vy},facing,visible:facing>=slot.minFacing,corners};
+    screenU:{x:ux,y:uy},screenV:{x:vx,y:vy},facing,visible:facing>=slot.minFacing,corners,shapeCorners};
 }
 function vehicleMainEdges(){
   const p=vehicleProfile(),L=p.length,W=p.width,H=p.height,y=W*.49;
@@ -356,7 +401,8 @@ function drawVehicleWheelGuide(slot,proj,installed){
 }
 function drawVehicleSlotGuide(slot,proj,installed){
   if(slot.partId==='wheel'){drawVehicleWheelGuide(slot,proj,installed);return}
-  tctx.save();tctx.beginPath();proj.corners.forEach((q,i)=>i?tctx.lineTo(q.x,q.y):tctx.moveTo(q.x,q.y));tctx.closePath();
+  const pts=proj.shapeCorners||proj.corners;
+  tctx.save();tctx.beginPath();pts.forEach((q,i)=>i?tctx.lineTo(q.x,q.y):tctx.moveTo(q.x,q.y));tctx.closePath();
   if(installed){tctx.fillStyle='rgba(68,229,173,.055)';tctx.strokeStyle='rgba(68,229,173,.16)';tctx.setLineDash([]);tctx.lineWidth=1.2}
   else{tctx.fillStyle='rgba(93,228,255,.025)';tctx.strokeStyle='rgba(164,239,255,.58)';tctx.setLineDash([7,6]);tctx.lineWidth=2}
   tctx.fill();tctx.stroke();tctx.restore();
@@ -399,11 +445,14 @@ function drawVehicleInterior(){
 function drawVehicleBlueprint(){
   if(!templateOn)return;
   if(vehicleViewMode==='interior'){drawVehicleInterior();syncInstalledVehicleParts();return}
-  drawVehicleGround();drawVehicleWireframe();
+  drawVehicleGround();
   const installed=installedVehicleKeys();
-  vehicleSlotDefinitions().map(vehicleSlotProjection).filter(Boolean).sort((a,b)=>a.depth-b.depth).forEach(proj=>{
-    if(!proj.visible)return;
-    drawVehicleSlotGuide(proj,proj,installed.has(proj.key));
+  const projections=vehicleSlotDefinitions().map(vehicleSlotProjection).filter(Boolean).sort((a,b)=>a.depth-b.depth);
+  projections.forEach(proj=>{if(proj.visible&&installed.has(proj.key))drawInstalledVehiclePanel(proj)});
+  drawVehicleWireframe();
+  projections.forEach(proj=>{
+    if(!proj.visible||installed.has(proj.key))return;
+    drawVehicleSlotGuide(proj,proj,false);
   });
   tctx.save();tctx.fillStyle='rgba(145,236,255,.66)';tctx.font='700 13px system-ui';tctx.textAlign='center';
   tctx.fillText(t('Drag the car to rotate it freely. Fitted pieces stay attached while you turn it.','Fais glisser la voiture pour la tourner librement. Les pièces fixées restent attachées pendant la rotation.'),400,425);
@@ -460,17 +509,12 @@ function renderPlan(m,saved={}){const host=$('creatorPlanFields');host.innerHTML
 function vehiclePartSvg(id){
   const common='class="creator-object-icon creator-vehicle-part" viewBox="0 0 120 80" aria-hidden="true"';
   if(id==='wheel')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#202733" stroke="#d7e4ee" stroke-width="4"/><circle cx="50" cy="50" r="31" fill="#b8c4cf" stroke="#f4f8fb" stroke-width="3"/><circle cx="50" cy="50" r="8" fill="#303b48"/>${[0,72,144,216,288].map(a=>`<rect x="47" y="17" width="6" height="30" rx="3" fill="#4a5b69" transform="rotate(${a} 50 50)"/>`).join('')}</svg>`;
-  if(id==='door')return `<svg ${common}><path d="M15 18 Q55 7 104 18 L100 67 Q56 73 18 63 Z" fill="#8da6bb" stroke="#eef8ff" stroke-width="4"/><path d="M80 29h13" stroke="#33495b" stroke-width="4" stroke-linecap="round"/></svg>`;
-  if(id==='window')return `<svg ${common}><path d="M10 61 L25 19 Q55 8 105 22 L108 60 Z" fill="rgba(158,213,237,.68)" stroke="#e8fbff" stroke-width="4"/></svg>`;
-  if(id==='windscreen')return `<svg ${common}><path d="M16 65 L38 14 Q65 6 103 24 L110 65 Z" fill="rgba(165,220,240,.70)" stroke="#ecfbff" stroke-width="4"/></svg>`;
-  if(id==='rear-window')return `<svg ${common}><path d="M12 25 Q52 7 92 16 L110 63 L21 63 Z" fill="rgba(165,220,240,.66)" stroke="#ecfbff" stroke-width="4"/></svg>`;
-  if(id==='roof')return `<svg ${common}><path d="M7 57 Q28 17 61 13 Q92 15 114 55 L104 64 L16 64 Z" fill="#c6d2dc" stroke="#f5f9fc" stroke-width="4"/></svg>`;
-  if(id==='mirror')return `<svg ${common}><path d="M15 46 Q35 20 73 25 Q91 30 105 42 Q81 61 38 58 Z" fill="#a7b8c7" stroke="#f1f8fc" stroke-width="4"/><path d="M17 48L7 62" stroke="#66798a" stroke-width="7"/></svg>`;
-  if(id==='headlight')return `<svg ${common}><path d="M8 53 Q39 13 108 28 Q94 58 27 66 Z" fill="#dff8ff" stroke="#ffffff" stroke-width="4"/><path d="M31 49 Q56 29 91 34" stroke="#61dfff" stroke-width="5"/></svg>`;
-  if(id==='taillight')return `<svg ${common}><path d="M10 31 Q53 15 108 33 L98 59 Q51 62 17 52 Z" fill="#ff596f" stroke="#ffd6dd" stroke-width="4"/><path d="M31 42h48" stroke="#ffb4bf" stroke-width="4"/></svg>`;
-  if(id==='bumper'||id==='rear-bumper')return `<svg ${common}><path d="M5 35 Q31 20 58 23 Q89 22 115 36 L103 61 Q74 70 17 61 Z" fill="#aab9c6" stroke="#f0f7fb" stroke-width="4"/></svg>`;
-  if(id==='hood')return `<svg ${common}><path d="M9 58 Q24 20 58 14 Q93 18 111 57 L95 65 L23 65 Z" fill="#b7c6d1" stroke="#f3f8fb" stroke-width="4"/></svg>`;
-  if(id==='trunk')return `<svg ${common}><path d="M13 26 Q51 11 99 20 L110 58 Q65 68 20 58 Z" fill="#b3c2cf" stroke="#f3f8fb" stroke-width="4"/></svg>`;
+  if(['door','window','windscreen','rear-window','roof','mirror','headlight','taillight','bumper','rear-bumper','hood','trunk'].includes(id)){
+    const pts=vehiclePartShape(id).map(([a,b])=>`${(60+a*52).toFixed(1)},${(40+b*31).toFixed(1)}`).join(' ');
+    const style=vehiclePartFill(id);
+    const handle=id==='door'?'<path d="M82 37h13" stroke="#33495b" stroke-width="4" stroke-linecap="round"/>':'';
+    return `<svg ${common}><polygon points="${pts}" fill="${style.fill}" stroke="#eef8ff" stroke-width="4" stroke-linejoin="round"/>${handle}</svg>`;
+  }
   if(id==='dashboard')return `<svg ${common}><path d="M7 30 Q55 11 113 28 L106 62 Q59 53 15 63 Z" fill="#475766" stroke="#dfeaf1" stroke-width="4"/><rect x="45" y="32" width="28" height="14" rx="3" fill="#5de4ff"/></svg>`;
   if(id==='steering')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="none" stroke="#dce6ee" stroke-width="8"/><circle cx="50" cy="50" r="12" fill="#455666"/><path d="M50 50L25 27M50 50l25-23M50 50v35" stroke="#65798a" stroke-width="7"/></svg>`;
   if(id==='driver-seat'||id==='seat')return `<svg ${common}><path d="M39 8 Q68 7 75 27 L72 50 L91 67 L30 67 L35 48 L31 25 Q32 12 39 8Z" fill="#596a79" stroke="#e5edf3" stroke-width="4"/><path d="M38 36h33" stroke="#9fb2c1" stroke-width="3"/></svg>`;
@@ -570,7 +614,9 @@ function syncInstalledVehiclePart(el){
     el.dataset.rotation=Number.isFinite(pr.screenAngle)?pr.screenAngle:0;
     el.style.setProperty('--object-squash','1');applyObjectStyle(el);
   }else{
-    applyVehicleSurfaceProjection(el,pr);
+    clearVehicleProjectedStyle(el);
+    el.style.opacity='0';
+    el.style.pointerEvents='none';
   }
 }
 function syncInstalledVehicleParts(){
