@@ -234,3 +234,22 @@ html[data-admin="true"] .cw-lock-badge{display:none}html[data-admin="true"] .ful
 .admin-page{min-height:100vh;background:linear-gradient(180deg,#08172a,#06101d);color:#f4f9ff}.admin-shell{width:min(1180px,calc(100% - 28px));margin:0 auto;padding:34px 0 70px}.admin-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:22px}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px}.admin-card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.05);padding:16px}.admin-card h2,.admin-card h3{margin:4px 0 10px}.admin-card p,.admin-card small{color:#a9bfd2}.admin-actions{display:flex;flex-wrap:wrap;gap:8px}.admin-actions button,.admin-actions a{display:inline-flex;border:1px solid rgba(255,255,255,.14);background:#102943;color:#fff;border-radius:11px;padding:9px 11px;font-weight:850;cursor:pointer}.admin-list{display:grid;gap:7px}.admin-list a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px;border-radius:10px;background:rgba(255,255,255,.05)}.admin-wide{grid-column:1/-1}.admin-login-card{width:min(520px,calc(100% - 28px));margin:8vh auto 0;padding:24px;border:1px solid rgba(255,255,255,.14);border-radius:22px;background:rgba(13,32,56,.9)}.admin-login-card label{display:grid;gap:6px;margin:12px 0;font-weight:800}.admin-login-card input{width:100%;padding:12px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:#0a1d34;color:#fff}.admin-login-card .note{font-size:.78rem;color:#9fb5c9;line-height:1.5}.admin-error{min-height:20px;color:#ff9aad;font-weight:800}.admin-table{width:100%;border-collapse:collapse;font-size:.82rem}.admin-table th,.admin-table td{text-align:left;padding:9px;border-bottom:1px solid rgba(255,255,255,.09)}.admin-table th{color:#8fead7}.admin-badge{display:inline-flex;padding:4px 7px;border-radius:999px;background:rgba(115,233,206,.12);color:#94f0db;font-size:.68rem;font-weight:900}
 
 html[data-admin="true"] .hq-topbar{top:var(--admin-preview-offset,38px)}
+
+/* Future Vehicle puzzle-fit pass — keep the car compact enough to test-drive and let the complete build orbit together. */
+.creator-design-stage.vehicle-3d-view:not(.testing){perspective:1100px}
+.creator-design-stage.vehicle-3d-view:not(.testing) .creator-template-canvas,
+.creator-design-stage.vehicle-3d-view:not(.testing) .creator-draw-canvas,
+.creator-design-stage.vehicle-3d-view:not(.testing) .creator-object-layer{
+  transform-origin:50% 52%;
+  transform:rotateX(var(--vehicle-pitch,0deg)) rotateY(var(--vehicle-yaw,0deg));
+  transition:transform .12s ease-out;
+  backface-visibility:visible;
+}
+.creator-design-stage.vehicle-orbiting .creator-template-canvas,
+.creator-design-stage.vehicle-orbiting .creator-draw-canvas,
+.creator-design-stage.vehicle-orbiting .creator-object-layer{transition:none}
+.creator-object.installed-part{pointer-events:auto}
+.creator-object.installed-part .creator-object-icon{filter:drop-shadow(0 0 4px rgba(94,227,164,.95)) drop-shadow(0 0 10px rgba(94,227,164,.28))}
+.creator-design-stage.testing .creator-template-canvas,
+.creator-design-stage.testing .creator-draw-canvas,
+.creator-design-stage.testing .creator-object-layer{transform:none!important}
