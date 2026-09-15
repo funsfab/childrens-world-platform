@@ -227,7 +227,7 @@ const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLaye
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
 let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false;
 const STORAGE='cw_creator_projects_v18';
-const VEHICLE_PUZZLE_VERSION=4;
+const VEHICLE_PUZZLE_VERSION=5;
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
 function allParts(){if(!active)return[];return modesForMission(missions[active]).flatMap(m=>m.parts||[]);}
@@ -305,10 +305,17 @@ function vehicleSlotProjection(slot){
     [slot.center[0]+slot.u[0]+slot.v[0],slot.center[1]+slot.u[1]+slot.v[1],slot.center[2]+slot.u[2]+slot.v[2]],
     [slot.center[0]-slot.u[0]+slot.v[0],slot.center[1]-slot.u[1]+slot.v[1],slot.center[2]-slot.u[2]+slot.v[2]]
   ].map(vehicleProjectPoint);
-  const xs=corners.map(q=>q.x),ys=corners.map(q=>q.y);
-  const w=Math.max(10,Math.max(...xs)-Math.min(...xs)),h=Math.max(10,Math.max(...ys)-Math.min(...ys));
+  const u0=vehicleProjectPoint([slot.center[0]-slot.u[0],slot.center[1]-slot.u[1],slot.center[2]-slot.u[2]]);
+  const u1=vehicleProjectPoint([slot.center[0]+slot.u[0],slot.center[1]+slot.u[1],slot.center[2]+slot.u[2]]);
+  const v0=vehicleProjectPoint([slot.center[0]-slot.v[0],slot.center[1]-slot.v[1],slot.center[2]-slot.v[2]]);
+  const v1=vehicleProjectPoint([slot.center[0]+slot.v[0],slot.center[1]+slot.v[1],slot.center[2]+slot.v[2]]);
+  const ux=(u1.x-u0.x)/2,uy=(u1.y-u0.y)/2,vx=(v1.x-v0.x)/2,vy=(v1.y-v0.y)/2;
+  const w=Math.max(10,Math.hypot(ux,uy)*2);
+  const h=Math.max(10,Math.hypot(vx,vy)*2);
+  const screenAngle=Math.atan2(uy,ux)*180/Math.PI;
   const n=vehicleProjectVector(slot.normal),facing=n.depth;
-  return{...slot,cx:c.x,cy:c.y,w,h,sizePx:Math.max(w,h*slot.aspect),screenAspect:clamp(w/h,.35,3.8),facing,visible:facing>=slot.minFacing,corners};
+  return{...slot,cx:c.x,cy:c.y,w,h,sizePx:w,screenAspect:clamp(w/h,.28,4.2),screenAngle,
+    screenU:{x:ux,y:uy},screenV:{x:vx,y:vy},facing,visible:facing>=slot.minFacing,corners};
 }
 function vehicleMainEdges(){
   const p=vehicleProfile(),L=p.length,W=p.width,H=p.height,y=W*.49;
@@ -399,7 +406,7 @@ function drawVehicleBlueprint(){
     drawVehicleSlotGuide(proj,proj,installed.has(proj.key));
   });
   tctx.save();tctx.fillStyle='rgba(145,236,255,.66)';tctx.font='700 13px system-ui';tctx.textAlign='center';
-  tctx.fillText(t('Drag the blueprint to rotate it freely. Fit one puzzle piece at a time.','Fais glisser le plan pour le tourner librement. Place une pièce du puzzle à la fois.'),400,425);
+  tctx.fillText(t('Drag the car to rotate it freely. Fitted pieces stay attached while you turn it.','Fais glisser la voiture pour la tourner librement. Les pièces fixées restent attachées pendant la rotation.'),400,425);
   tctx.restore();
   syncInstalledVehicleParts();
 }
@@ -476,9 +483,37 @@ function addBlueprint(item,x,y,size,rotation,opt={}){const el=document.createEle
 function addObject(p,x=.5,y=.5,size=58,rotation=0,opt={}){const el=document.createElement('div');el.className='creator-object'+(p.className?' '+p.className:'');el.dataset.kind='part';el.dataset.partId=p.id;el.dataset.label=L(p.label);el.dataset.icon=p.icon||'';el.dataset.className=p.className||'';el.dataset.tags=JSON.stringify(p.tags||[]);el.dataset.x=x;el.dataset.y=y;el.dataset.size=size;el.dataset.rotation=rotation;el.dataset.aspect=p.aspect||1;el.innerHTML=visualHTML(p);makeObjectInteractive(el);objectLayer.appendChild(el);applyObjectStyle(el);if(opt.select)selectObject(el);if(opt.commit)commitHistory();return el;}
 function addVector(v,opt={}){const el=document.createElement('div');el.className='creator-object is-vector';el.dataset.kind='vector';el.dataset.label=v.label||v.type;el.dataset.vectorType=v.type;el.dataset.vectorColor=v.color;el.dataset.vectorStroke=v.stroke;el.dataset.vectorPath=v.path||'';el.dataset.vectorFlip=v.flip||0;el.dataset.x=v.x;el.dataset.y=v.y;el.dataset.size=v.size;el.dataset.rotation=v.rotation||0;el.dataset.aspect=v.aspect||2;el.innerHTML=vectorSvg(v);makeObjectInteractive(el);objectLayer.appendChild(el);applyObjectStyle(el);if(opt.select)selectObject(el);if(opt.commit)commitHistory();return el;}
 function vectorSvg(v){const c=v.color,s=v.stroke||6;if(v.type==='freehand')return `<svg class="creator-object-icon" viewBox="0 0 100 100"><path d="${v.path||''}" fill="none" stroke="${c}" stroke-width="${s}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;if(v.type==='line')return `<svg class="creator-object-icon" viewBox="0 0 100 30"><line x1="4" y1="15" x2="96" y2="15" stroke="${c}" stroke-width="${s}" stroke-linecap="round"/></svg>`;if(v.type==='curve')return `<svg class="creator-object-icon" viewBox="0 0 100 60"><path d="M4 48 C24 2 55 58 96 12" fill="none" stroke="${c}" stroke-width="${s}" stroke-linecap="round"/></svg>`;if(v.type==='rect')return `<svg class="creator-object-icon" viewBox="0 0 100 100"><rect x="7" y="7" width="86" height="86" rx="5" fill="none" stroke="${c}" stroke-width="${s}"/></svg>`;return `<svg class="creator-object-icon" viewBox="0 0 100 100"><ellipse cx="50" cy="50" rx="43" ry="43" fill="none" stroke="${c}" stroke-width="${s}"/></svg>`;}
-function applyObjectStyle(el){const size=+el.dataset.size||68,aspect=+el.dataset.aspect||1;el.style.left=(+el.dataset.x*100)+'%';el.style.top=(+el.dataset.y*100)+'%';el.style.width=size+'px';el.style.height=Math.max(22,size/aspect)+'px';el.style.setProperty('--object-size',size+'px');el.style.setProperty('--object-rotation',(+(el.dataset.rotation)||0)+'deg');}
+function clearVehicleProjectedStyle(el){
+  if(el.dataset.vehicleProjected!=='1')return;
+  delete el.dataset.vehicleProjected;
+  el.style.transform='';el.style.transformOrigin='';el.style.marginLeft='';el.style.marginTop='';el.style.zIndex='';
+}
+function applyObjectStyle(el){
+  if(el.dataset.vehicleProjected==='1'&&el.dataset.installed==='1')return;
+  clearVehicleProjectedStyle(el);
+  const size=+el.dataset.size||68,aspect=+el.dataset.aspect||1;
+  el.style.left=(+el.dataset.x*100)+'%';el.style.top=(+el.dataset.y*100)+'%';el.style.width=size+'px';el.style.height=Math.max(22,size/aspect)+'px';
+  el.style.setProperty('--object-size',size+'px');el.style.setProperty('--object-rotation',(+(el.dataset.rotation)||0)+'deg');
+}
+function applyVehicleSurfaceProjection(el,pr){
+  if(!pr?.screenU||!pr?.screenV){applyObjectStyle(el);return;}
+  const sx=stage.clientWidth/templateCanvas.width,sy=stage.clientHeight/templateCanvas.height;
+  const ux=pr.screenU.x*sx,uy=pr.screenU.y*sy,vx=pr.screenV.x*sx,vy=pr.screenV.y*sy;
+  const uLen=Math.max(5,Math.hypot(ux,uy)),vLen=Math.max(5,Math.hypot(vx,vy));
+  const a=ux/uLen,b=uy/uLen,c=vx/vLen,d=vy/vLen;
+  const width=uLen*2,height=vLen*2;
+  el.dataset.vehicleProjected='1';
+  el.dataset.x=pr.cx/templateCanvas.width;el.dataset.y=pr.cy/templateCanvas.height;
+  el.dataset.size=width;el.dataset.aspect=width/height;el.dataset.rotation=pr.screenAngle||0;
+  el.style.left=(+el.dataset.x*100)+'%';el.style.top=(+el.dataset.y*100)+'%';
+  el.style.width=width+'px';el.style.height=height+'px';el.style.marginLeft=(-width/2)+'px';el.style.marginTop=(-height/2)+'px';
+  el.style.transformOrigin='50% 50%';
+  el.style.transform=`matrix(${a.toFixed(6)},${b.toFixed(6)},${c.toFixed(6)},${d.toFixed(6)},0,0)`;
+  el.style.setProperty('--object-size',width+'px');el.style.setProperty('--object-rotation','0deg');el.style.setProperty('--object-squash','1');
+  el.style.zIndex=String(200+Math.round((pr.depth||0)*20));
+}
 function objectTags(el){try{return JSON.parse(el.dataset.tags||'[]')}catch(_){return[]}}
-function makeObjectInteractive(el){el.addEventListener('pointerdown',e=>{if(testRunning)return;e.preventDefault();e.stopPropagation();if(tool==='eraser'){selectObject(el);deleteSelected();return}selectObject(el);const r=stage.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,startX=+el.dataset.x,startY=+el.dataset.y;el.setPointerCapture?.(e.pointerId);el.classList.add('dragging');const move=ev=>{el.dataset.installed='0';el.classList.remove('installed-part');el.dataset.x=clamp(startX+(ev.clientX-sx)/r.width,.02,.98);el.dataset.y=clamp(startY+(ev.clientY-sy)/r.height,.02,.98);applyObjectStyle(el)};const up=()=>{el.classList.remove('dragging');el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);softSnap(el);commitHistory()};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});}
+function makeObjectInteractive(el){el.addEventListener('pointerdown',e=>{if(testRunning)return;e.preventDefault();e.stopPropagation();if(tool==='eraser'){selectObject(el);deleteSelected();return}selectObject(el);const r=stage.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,startX=+el.dataset.x,startY=+el.dataset.y;el.setPointerCapture?.(e.pointerId);el.classList.add('dragging');const move=ev=>{el.dataset.installed='0';el.classList.remove('installed-part');clearVehicleProjectedStyle(el);el.dataset.x=clamp(startX+(ev.clientX-sx)/r.width,.02,.98);el.dataset.y=clamp(startY+(ev.clientY-sy)/r.height,.02,.98);applyObjectStyle(el)};const up=()=>{el.classList.remove('dragging');el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);softSnap(el);commitHistory()};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});}
 function selectObject(el){if(selectedObject)selectedObject.classList.remove('selected');selectedObject=el||null;if(selectedObject){selectedObject.classList.add('selected');$('selectedObjectLabel').textContent=selectedObject.dataset.label||t('Selected object','Objet sélectionné');$('objectSize').disabled=false;$('objectRotate').disabled=false;['shrinkObject','growObject','duplicateObject','sendBackObject','bringFrontObject','deleteObject'].forEach(id=>$(id).disabled=false);$('objectSize').value=clamp(+selectedObject.dataset.size||68,24,420);$('objectRotate').value=+(selectedObject.dataset.rotation||0);if(selectedObject.dataset.kind==='blueprint'){currentLibraryId=selectedObject.dataset.blueprintId;renderModes(missions[active],null)}}else{$('selectedObjectLabel').textContent=t('Select an object or drawn shape to edit it','Sélectionne un objet ou une forme à modifier');$('objectSize').disabled=true;$('objectRotate').disabled=true;['shrinkObject','growObject','duplicateObject','sendBackObject','bringFrontObject','deleteObject'].forEach(id=>$(id).disabled=true)}refreshLibraryCards();}
 
 
@@ -507,7 +542,7 @@ function vehicleTargetFor(el){
     const d=Math.hypot((+el.dataset.x)-tx,(+el.dataset.y)-ty);
     if(d<bestD){
       const cssPx=pr.sizePx/templateCanvas.width*stage.clientWidth;
-      best={...pr,x:tx,y:ty,distance:d,sizePx:cssPx,screenAspect:pr.screenAspect,rotation:0};
+      best={...pr,x:tx,y:ty,distance:d,sizePx:cssPx,screenAspect:pr.screenAspect,rotation:pr.screenAngle||0};
       bestD=d;
     }
   }
@@ -526,12 +561,17 @@ function syncInstalledVehiclePart(el){
   if(!sl){el.style.opacity='0';return}
   const pr=vehicleSlotProjection(sl);
   if(!pr){el.style.opacity='0';return}
-  el.dataset.x=pr.cx/templateCanvas.width;el.dataset.y=pr.cy/templateCanvas.height;
-  el.dataset.size=pr.sizePx/templateCanvas.width*stage.clientWidth;
-  el.dataset.aspect=sl.aspect||pr.screenAspect||1;el.dataset.rotation=0;
-  const squash=clamp(Math.abs(pr.facing),.18,1);
-  el.style.setProperty('--object-squash',String(squash));
-  el.style.opacity=pr.visible?'1':'0.10';el.style.pointerEvents='none';applyObjectStyle(el);
+  el.style.opacity=pr.visible?'1':'0.08';el.style.pointerEvents='none';
+  if(sl.partId==='wheel'){
+    clearVehicleProjectedStyle(el);
+    el.dataset.x=pr.cx/templateCanvas.width;el.dataset.y=pr.cy/templateCanvas.height;
+    el.dataset.size=pr.sizePx/templateCanvas.width*stage.clientWidth;
+    el.dataset.aspect=pr.screenAspect||sl.aspect||1;
+    el.dataset.rotation=Number.isFinite(pr.screenAngle)?pr.screenAngle:0;
+    el.style.setProperty('--object-squash','1');applyObjectStyle(el);
+  }else{
+    applyVehicleSurfaceProjection(el,pr);
+  }
 }
 function syncInstalledVehicleParts(){
   if(active!=='vehicle')return;
@@ -546,23 +586,24 @@ function tryVehicleSnap(el,announce=true){
   }
   const current=+el.dataset.size||68,targetPx=Math.max(24,target.sizePx||68);
   const sizeError=Math.abs(current-targetPx)/targetPx;
-  const proximityLimit=Math.max(.045,Math.min(.075,targetPx/stage.clientWidth*.34));
-  const near=target.distance<=proximityLimit,closeSize=sizeError<=.10;
+  const proximityLimit=Math.max(.045,Math.min(.082,targetPx/stage.clientWidth*.38));
+  const near=target.distance<=proximityLimit,closeSize=sizeError<=.11;
   if(near&&closeSize){
     el.dataset.installed='1';el.dataset.targetKey=target.key;el.classList.add('installed-part');
-    el.dataset.aspect=target.aspect||target.screenAspect||el.dataset.aspect||1;
+    el.dataset.aspect=target.screenAspect||target.aspect||el.dataset.aspect||1;
+    el.dataset.rotation=Number.isFinite(target.rotation)?target.rotation:(+el.dataset.rotation||0);
     el.style.setProperty('--object-squash','1');
     syncInstalledVehiclePart(el);
     renderTemplate('vehicle');
     selectObject(null);
     if(announce){
       const fitted=installedVehicleKeys().size,total=vehicleSlotDefinitions().filter(x=>x.required).length+vehicleInteriorSlots().filter(x=>x.required).length;
-      $('creatorCoach').textContent=t(`CLICK — puzzle piece fitted exactly. ${fitted} pieces are installed. Rotate the car and add the next one.`,`CLIC — pièce du puzzle parfaitement fixée. ${fitted} pièces sont installées. Tourne la voiture et ajoute la suivante.`);
+      $('creatorCoach').textContent=t(`CLICK — piece fitted to the vehicle. ${fitted} pieces are installed and will stay attached while you rotate the car.`,`CLIC — pièce fixée au véhicule. ${fitted} pièces sont installées et resteront attachées pendant la rotation.`);
       window.playTone?.(true);
     }
     return true;
   }
-  el.dataset.installed='0';el.dataset.targetKey='';el.classList.remove('installed-part');el.style.opacity='1';el.style.pointerEvents='auto';el.style.setProperty('--object-squash','1');
+  el.dataset.installed='0';el.dataset.targetKey='';el.classList.remove('installed-part');clearVehicleProjectedStyle(el);el.style.opacity='1';el.style.pointerEvents='auto';el.style.setProperty('--object-squash','1');applyObjectStyle(el);
   if(announce&&near&&!closeSize)$('creatorCoach').textContent=t('Correct area. Now resize the piece slowly until it covers the slot and clicks in.','Bonne zone. Redimensionne maintenant la pièce lentement jusqu’à ce qu’elle couvre l’emplacement et se fixe.');
   else if(announce&&closeSize&&!near)$('creatorCoach').textContent=t('The size is close. Move the piece nearer to its matching outline.','La taille est proche. Rapproche la pièce de son contour correspondant.');
   else if(announce)$('creatorCoach').textContent=t('Keep matching the outline: correct place + correct size = CLICK.','Continue à faire correspondre le contour : bonne place + bonne taille = CLIC.');
