@@ -227,7 +227,7 @@ const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLaye
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
 let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false;
 const STORAGE='cw_creator_projects_v18';
-const VEHICLE_PUZZLE_VERSION=6;
+const VEHICLE_PUZZLE_VERSION=8;
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
 function allParts(){if(!active)return[];return modesForMission(missions[active]).flatMap(m=>m.parts||[]);}
@@ -259,51 +259,65 @@ function vehicleProjectVector(v){
   return{x:q[0],depth:q[1],z:q[2]};
 }
 function vehicleSlot(key,partId,center,u,v,normal,opts={}){
-  return{key,partId,center,u,v,normal,aspect:opts.aspect||1,required:opts.required!==false,minFacing:opts.minFacing??.30,view:opts.view||'exterior',label:opts.label||partId};
+  return{key,partId,center,u,v,normal,shape:opts.shape||null,aspect:opts.aspect||1,required:opts.required!==false,minFacing:opts.minFacing??.30,view:opts.view||'exterior',label:opts.label||partId};
 }
-function vehicleSlotDefinitions(){
-  const p=vehicleProfile(),L=p.length,W=p.width,H=p.height,wb=p.wheelbase,r=p.wheelRadius,sides=[-1,1],slots=[];
-  const addSide=(sgn)=>{
-    const y=sgn*W*.515,n=[0,sgn,0];
-    slots.push(vehicleSlot(`wheel-front-${sgn>0?'r':'l'}`,'wheel',[-wb/2,y,.34],[r,0,0],[0,0,r],n,{aspect:1,minFacing:.40}));
-    slots.push(vehicleSlot(`wheel-rear-${sgn>0?'r':'l'}`,'wheel',[wb/2,y,.34],[r,0,0],[0,0,r],n,{aspect:1,minFacing:.40}));
-    slots.push(vehicleSlot(`door-${sgn>0?'r':'l'}`,'door',[.12*L,y,.61],[.16*L,0,0],[0,0,.30],n,{aspect:1.55,minFacing:.42}));
-    slots.push(vehicleSlot(`window-${sgn>0?'r':'l'}`,'window',[-.01*L,y,.91],[.14*L,0,0],[0,0,.20],n,{aspect:1.9,minFacing:.42}));
-    slots.push(vehicleSlot(`mirror-${sgn>0?'r':'l'}`,'mirror',[-.18*L,sgn*W*.60,.83],[.11,0,0],[0,0,.08],n,{aspect:1.7,minFacing:.36,required:false}));
-  };
-  sides.forEach(addSide);
-  slots.push(vehicleSlot('windscreen','windscreen',[-.23*L,0,.89],[0,W*.42,0],[.075*L,0,.23],[-.55,0,.75],{aspect:1.75,minFacing:.22}));
-  slots.push(vehicleSlot('rear-window','rear-window',[.25*L,0,.89],[0,W*.39,0],[-.07*L,0,.20],[.55,0,.75],{aspect:1.7,minFacing:.22}));
-  slots.push(vehicleSlot('roof','roof',[.05*L,0,H*.97],[.19*L,0,0],[0,W*.39,0],[0,0,1],{aspect:2.5,minFacing:.22}));
-  slots.push(vehicleSlot('hood','hood',[-.36*L,0,.66],[.13*L,0,.02],[0,W*.38,0],[0,0,1],{aspect:2.1,minFacing:.16,required:false}));
-  slots.push(vehicleSlot('trunk','trunk',[.40*L,0,.60],[.095*L,0,.02],[0,W*.36,0],[0,0,1],{aspect:2.0,minFacing:.16,required:false}));
-  for(const sgn of sides){
-    slots.push(vehicleSlot(`headlight-${sgn>0?'r':'l'}`,'headlight',[-.475*L,sgn*W*.34,.54],[0,W*.18,0],[0,0,.095],[-1,0,.12],{aspect:2.2,minFacing:.35,required:false}));
-    slots.push(vehicleSlot(`taillight-${sgn>0?'r':'l'}`,'taillight',[.475*L,sgn*W*.34,.52],[0,W*.17,0],[0,0,.09],[1,0,.12],{aspect:2,minFacing:.35,required:false}));
-  }
-  slots.push(vehicleSlot('front-bumper','bumper',[-.495*L,0,.32],[0,W*.44,0],[0,0,.16],[-1,0,0],{aspect:3.1,minFacing:.48}));
-  slots.push(vehicleSlot('rear-bumper','rear-bumper',[.495*L,0,.31],[0,W*.43,0],[0,0,.15],[1,0,0],{aspect:3.1,minFacing:.48}));
-  return slots;
-}
+/*
+  The Sport Car is the reference puzzle car for this pass.  Every major exterior
+  component below owns one puzzle contour.  The very same contour is used for
+  the dashed blueprint slot, the palette piece and the final installed panel.
+  This keeps the activity behaving like a wooden peg puzzle rather than stickers.
+*/
 function vehiclePartShape(partId){
   const shapes={
-    door:[[-1,-.76],[-.78,-1],[.82,-.92],[1,.74],[.72,1],[-.88,.88]],
-    window:[[-1,.82],[-.72,-.92],[.78,-1],[1,.62],[.78,.92],[-.82,1]],
-    windscreen:[[-.92,.88],[-.72,-.88],[.78,-.98],[.96,.82],[.72,1],[-.72,.98]],
-    'rear-window':[[-.96,.78],[-.74,-.94],[.72,-.88],[.94,.84],[.68,1],[-.72,.96]],
-    roof:[[-.98,.32],[-.72,-.72],[-.28,-1],[.42,-.94],[.92,-.38],[1,.34],[.70,.82],[-.56,.88]],
-    hood:[[-1,.60],[-.78,-.70],[-.28,-1],[.54,-.90],[1,.48],[.72,.92],[-.60,.90]],
-    trunk:[[-1,.48],[-.68,-.78],[.10,-1],[.88,-.72],[1,.54],[.58,.88],[-.62,.90]],
-    mirror:[[-1,.18],[-.56,-.72],[.28,-1],[1,-.24],[.72,.54],[-.30,.92]],
-    headlight:[[-1,.30],[-.56,-.62],[.18,-.94],[1,-.42],[.74,.54],[-.20,.86]],
-    taillight:[[-1,-.36],[-.54,-.86],[.38,-.72],[1,.02],[.54,.70],[-.34,.86]],
-    bumper:[[-1,-.24],[-.68,-.72],[.22,-.92],[1,-.40],[.86,.40],[.30,.78],[-.62,.72]],
-    'rear-bumper':[[-1,-.38],[-.30,-.86],[.60,-.70],[1,-.20],[.66,.66],[-.20,.86],[-.92,.46]]
+    door:[[-1,-.94],[-.98,.44],[-.66,.96],[.68,.94],[.98,.54],[1,-.90]],
+    window:[[-1,-.78],[-.72,.90],[.18,1],[.92,.58],[1,-.70],[.62,-.96],[-.62,-.94]],
+    windscreen:[[-.96,-.82],[-.72,.96],[.72,.96],[.96,-.82],[.68,-1],[-.68,-1]],
+    'rear-window':[[-.96,-.78],[-.70,.96],[.68,.96],[.96,-.76],[.66,-1],[-.66,-1]],
+    roof:[[-1,-.74],[-.62,-1],[.66,-.94],[1,-.62],[.92,.70],[.58,1],[-.64,.96],[-.98,.62]],
+    hood:[[-1,-.72],[-.74,-1],[.72,-.92],[1,-.54],[.88,.68],[.56,.96],[-.66,.94],[-.96,.60]],
+    trunk:[[-1,-.62],[-.68,-.96],[.66,-.92],[1,-.58],[.90,.66],[.58,.94],[-.66,.92],[-.96,.58]],
+    mirror:[[-1,-.12],[-.66,-.72],[.16,-1],[1,-.34],[.82,.42],[-.18,.86],[-.82,.54]],
+    headlight:[[-1,-.48],[-.66,-.90],[.34,-.78],[1,-.18],[.70,.62],[-.38,.84]],
+    taillight:[[-1,-.34],[-.60,-.82],[.34,-.72],[1,-.14],[.68,.58],[-.34,.82]],
+    bumper:[[-1,-.42],[-.72,-.82],[.60,-.80],[1,-.36],[.90,.42],[.48,.72],[-.66,.70]],
+    'rear-bumper':[[-1,-.38],[-.62,-.76],[.66,-.72],[1,-.30],[.86,.44],[.40,.72],[-.70,.68]],
+    dashboard:[[-1,-.46],[-.78,-.82],[.74,-.78],[1,-.40],[.88,.56],[.52,.82],[-.60,.84],[-.92,.52]],
+    'driver-seat':[[-.56,-1],[.34,-1],[.54,-.58],[.46,-.06],[.86,.56],[.66,1],[-.66,1],[-.86,.58],[-.46,-.06]],
+    seat:[[-.56,-1],[.34,-1],[.54,-.58],[.46,-.06],[.86,.56],[.66,1],[-.66,1],[-.86,.58],[-.46,-.06]]
   };
   return shapes[partId]||[[-1,-1],[1,-1],[1,1],[-1,1]];
 }
+function vehicleSlotDefinitions(){
+  const p=vehicleProfile(),L=p.length,W=p.width,H=p.height,wb=p.wheelbase,r=p.wheelRadius,sides=[-1,1],slots=[];
+  const sport=p.id==='sport';
+  /* Side pieces: proportions are tied to the actual cabin/body outline. */
+  const sideY=W*.505;
+  const doorCX=sport?.28:.34,doorHalf=sport?.61:.66,doorZ=sport?.57:.62,doorHalfZ=sport?.27:.29;
+  const winCX=sport?.02:.08,winHalf=sport?.49:.53,winZ=sport?.91:1.03,winHalfZ=sport?.17:.20;
+  for(const sgn of sides){
+    const y=sgn*sideY,n=[0,sgn,0];
+    slots.push(vehicleSlot(`wheel-front-${sgn>0?'r':'l'}`,'wheel',[-wb/2,y,.34],[r,0,0],[0,0,r],n,{aspect:1,minFacing:.40}));
+    slots.push(vehicleSlot(`wheel-rear-${sgn>0?'r':'l'}`,'wheel',[wb/2,y,.34],[r,0,0],[0,0,r],n,{aspect:1,minFacing:.40}));
+    slots.push(vehicleSlot(`door-${sgn>0?'r':'l'}`,'door',[doorCX,y,doorZ],[doorHalf,0,0],[0,0,doorHalfZ],n,{aspect:2.0,minFacing:.40,shape:vehiclePartShape('door')}));
+    slots.push(vehicleSlot(`window-${sgn>0?'r':'l'}`,'window',[winCX,y*.985,winZ],[winHalf,0,0],[0,0,winHalfZ],n,{aspect:2.7,minFacing:.40,shape:vehiclePartShape('window')}));
+    slots.push(vehicleSlot(`mirror-${sgn>0?'r':'l'}`,'mirror',[-.58,sgn*W*.575,.84],[.105,0,0],[0,0,.065],n,{aspect:1.65,minFacing:.30,shape:vehiclePartShape('mirror')}));
+  }
+  /* Glass and top panels meet at the same cabin break-points used by the wireframe. */
+  slots.push(vehicleSlot('windscreen','windscreen',[-.47,0,sport?.94:1.07],[0,W*.405,0],[.255,0,.175],[-.58,0,.80],{aspect:1.85,minFacing:.16,shape:vehiclePartShape('windscreen')}));
+  slots.push(vehicleSlot('rear-window','rear-window',[.63,0,sport?.93:1.05],[0,W*.385,0],[-.255,0,.17],[.58,0,.80],{aspect:1.82,minFacing:.16,shape:vehiclePartShape('rear-window')}));
+  slots.push(vehicleSlot('roof','roof',[.10,0,H*.985],[sport?.47:.52,0,0],[0,W*.37,0],[0,0,1],{aspect:1.35,minFacing:.10,shape:vehiclePartShape('roof')}));
+  slots.push(vehicleSlot('hood','hood',[-L*.325,0,sport?.67:.72],[sport?.30*L:.29*L,0,.015],[0,W*.39,0],[0,0,1],{aspect:1.75,minFacing:.08,shape:vehiclePartShape('hood')}));
+  slots.push(vehicleSlot('trunk','trunk',[L*.33,0,sport?.63:.69],[sport?.205*L:.20*L,0,.015],[0,W*.37,0],[0,0,1],{aspect:1.45,minFacing:.08,shape:vehiclePartShape('trunk')}));
+  for(const sgn of sides){
+    slots.push(vehicleSlot(`headlight-${sgn>0?'r':'l'}`,'headlight',[-L*.465,sgn*W*.31,.53],[0,W*.155,0],[0,0,.075],[-1,0,.15],{aspect:2.15,minFacing:.26,shape:vehiclePartShape('headlight')}));
+    slots.push(vehicleSlot(`taillight-${sgn>0?'r':'l'}`,'taillight',[L*.465,sgn*W*.31,.50],[0,W*.145,0],[0,0,.072],[1,0,.15],{aspect:2.0,minFacing:.26,shape:vehiclePartShape('taillight')}));
+  }
+  slots.push(vehicleSlot('front-bumper','bumper',[-L*.49,0,.31],[0,W*.43,0],[0,0,.13],[-1,0,0],{aspect:3.3,minFacing:.38,shape:vehiclePartShape('bumper')}));
+  slots.push(vehicleSlot('rear-bumper','rear-bumper',[L*.49,0,.30],[0,W*.42,0],[0,0,.125],[1,0,0],{aspect:3.3,minFacing:.38,shape:vehiclePartShape('rear-bumper')}));
+  return slots;
+}
 function vehicleSlotShapePoints(slot){
-  return vehiclePartShape(slot.partId).map(([a,b])=>[
+  return (slot.shape||vehiclePartShape(slot.partId)).map(([a,b])=>[
     slot.center[0]+slot.u[0]*a+slot.v[0]*b,
     slot.center[1]+slot.u[1]*a+slot.v[1]*b,
     slot.center[2]+slot.u[2]*a+slot.v[2]*b
@@ -331,10 +345,10 @@ function drawInstalledVehiclePanel(proj){
 
 function vehicleInteriorSlots(){
   return[
-    {key:'dashboard',partId:'dashboard',x:.39,y:.39,size:.19,aspect:2.4,required:true},
+    {key:'dashboard',partId:'dashboard',x:.39,y:.39,size:.19,aspect:2.4,shape:vehiclePartShape('dashboard'),required:true},
     {key:'steering',partId:'steering',x:.29,y:.50,size:.075,aspect:1,required:true},
-    {key:'driver-seat',partId:'driver-seat',x:.40,y:.65,size:.095,aspect:.72,required:true},
-    {key:'passenger-seat',partId:'seat',x:.59,y:.65,size:.095,aspect:.72,required:true}
+    {key:'driver-seat',partId:'driver-seat',x:.40,y:.65,size:.095,aspect:.72,shape:vehiclePartShape('driver-seat'),required:true},
+    {key:'passenger-seat',partId:'seat',x:.59,y:.65,size:.095,aspect:.72,shape:vehiclePartShape('seat'),required:true}
   ];
 }
 function installedVehicleKeys(){
@@ -438,7 +452,9 @@ function drawVehicleInterior(){
     const x=sl.x*W,y=sl.y*H,w=sl.size*W,h=w/sl.aspect,done=installed.has(sl.key);
     tctx.save();tctx.strokeStyle=done?'rgba(68,229,173,.18)':'rgba(164,239,255,.58)';tctx.fillStyle=done?'rgba(68,229,173,.04)':'rgba(93,228,255,.025)';
     tctx.lineWidth=2;tctx.setLineDash(done?[]:[7,6]);tctx.beginPath();
-    if(sl.partId==='steering')tctx.arc(x,y,w/2,0,Math.PI*2);else tctx.roundRect(x-w/2,y-h/2,w,h,12);
+    if(sl.partId==='steering')tctx.arc(x,y,w/2,0,Math.PI*2);
+    else if(sl.shape){sl.shape.forEach(([a,b],i)=>{const px=x+a*w/2,py=y+b*h/2;i?tctx.lineTo(px,py):tctx.moveTo(px,py)});tctx.closePath();}
+    else tctx.roundRect(x-w/2,y-h/2,w,h,12);
     tctx.fill();tctx.stroke();tctx.restore();
   });
 }
@@ -498,10 +514,41 @@ function setVehicleView(view){
 }
 function renderLibrary(m){const panel=$('creatorLibraryPanel'),host=$('creatorLibrary');if(!m.library){panel.hidden=true;return}panel.hidden=false;$('creatorModeStep').textContent='2 • '+t('CHOOSE A DESIGN MODE','CHOISIS UN MODE');$('creatorDesignStep').textContent='3 • '+t('YOUR DESIGN','TON DESIGN');host.innerHTML='';m.library.forEach(item=>{const b=document.createElement('button');b.type='button';b.className='creator-library-card';b.dataset.libraryId=item.id;b.dataset.status=active==='vehicle'?t('✓ selected','✓ sélectionné'):t('✓ blueprint added','✓ plan ajouté');b.innerHTML=`<img src="${item.img}" alt="${item.name}"><span><b>${item.name}</b><small>${item.subtitle}</small></span>`;b.onclick=()=>chooseLibrary(item);host.appendChild(b)});refreshLibraryCards();}
 function refreshLibraryCards(){document.querySelectorAll('.creator-library-card').forEach(card=>{const exists=active==='vehicle'?card.dataset.libraryId===currentLibraryId:[...objectLayer.children].some(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===card.dataset.libraryId);card.classList.toggle('active',exists)});}
-function chooseLibrary(item){currentLibraryId=item.id;if(active==='vehicle'){vehicleYaw=0;vehiclePitch=.10;vehicleViewMode='left';renderTemplate('vehicle');refreshLibraryCards();updateVehicleViewUI();renderModes(missions[active],activeMode);commitHistory();return}const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
+function chooseLibrary(item){if(active==='vehicle'){
+  const changed=!!currentLibraryId&&currentLibraryId!==item.id;
+  if(changed){[...objectLayer.children].filter(o=>o.dataset.kind==='part').forEach(o=>o.remove());selectObject(null);}
+  currentLibraryId=item.id;vehicleYaw=0;vehiclePitch=.10;vehicleViewMode='left';renderTemplate('vehicle');refreshLibraryCards();updateVehicleViewUI();renderModes(missions[active],activeMode);commitHistory();return
+}currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
 
 function renderModes(m,preferred){const modes=modesForMission(m);if(!modes.length)return;activeMode=(preferred&&modes.some(x=>x.id===preferred))?preferred:(activeMode&&modes.some(x=>x.id===activeMode)?activeMode:modes[0].id);const host=$('creatorModes');host.innerHTML='';modes.forEach(md=>{const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'');b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${L(md.help)}</small>`;b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);commitHistory()};host.appendChild(b)});const selected=modes.find(x=>x.id===activeMode);$('creatorModeHelp').textContent=L(selected.help);renderComponents(selected);}
-function renderComponents(md){const host=$('creatorComponents');host.innerHTML=`<div class="creator-palette-title"><b>${t('Parts for','Pièces pour')} ${L(md.label)}</b><small>${t('Tap a piece, then move, resize and rotate it.','Touche une pièce puis déplace, redimensionne et tourne-la.')}</small></div>`;(md.parts||[]).forEach(p=>{const b=document.createElement('button');b.type='button';b.className='creator-component';b.innerHTML=`<span>${paletteVisual(p)}</span><small>${L(p.label)}</small>`;b.onclick=()=>addObject(p,.5,.5,p.defaultSize||58,0,{commit:true,select:true});host.appendChild(b)});}
+function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots()];}
+function vehiclePartRequirement(id){return vehicleAllPuzzleSlots().filter(s=>s.partId===id).length;}
+function vehicleInstalledPartCount(id){return [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.partId===id&&o.dataset.installed==='1'&&o.dataset.targetKey).length;}
+function vehiclePartComplete(id){const need=vehiclePartRequirement(id);return need>0&&vehicleInstalledPartCount(id)>=need;}
+function refreshVehicleComponentButtons(){
+  if(active!=='vehicle')return;
+  document.querySelectorAll('#creatorComponents .creator-component[data-part-id]').forEach(b=>{
+    const id=b.dataset.partId,need=vehiclePartRequirement(id),done=vehicleInstalledPartCount(id),complete=need>0&&done>=need;
+    b.disabled=complete;b.classList.toggle('is-complete',complete);b.setAttribute('aria-disabled',complete?'true':'false');
+    const counter=b.querySelector('[data-part-counter]');if(counter&&need)counter.textContent=complete?t(`✓ ${done}/${need} fitted`,`✓ ${done}/${need} fixé${need>1?'s':''}`):`${done}/${need}`;
+  });
+}
+function addPalettePart(p){
+  if(active==='vehicle'&&vehiclePartComplete(p.id))return;
+  const el=addObject(p,.5,.5,p.defaultSize||58,0,{commit:false,select:true});
+  if(active==='vehicle'){
+    const target=vehicleTargetFor(el);
+    if(target){
+      el.dataset.targetHintKey=target.key||'';
+      el.dataset.aspect=target.screenAspect||target.aspect||p.aspect||1;
+      /* Start slightly smaller than the hole so the child still performs the puzzle fit. */
+      const startSize=Math.max(28,Math.min(p.defaultSize||58,(target.sizePx||p.defaultSize||58)*.78));
+      el.dataset.size=startSize;applyObjectStyle(el);
+    }
+  }
+  commitHistory();return el;
+}
+function renderComponents(md){const host=$('creatorComponents');host.innerHTML=`<div class="creator-palette-title"><b>${t('Parts for','Pièces pour')} ${L(md.label)}</b><small>${t('Choose the matching puzzle piece. When every required copy is fitted, its button locks.','Choisis la pièce de puzzle correspondante. Quand tous les exemplaires requis sont fixés, son bouton se verrouille.')}</small></div>`;(md.parts||[]).forEach(p=>{const b=document.createElement('button');b.type='button';b.className='creator-component';b.dataset.partId=p.id;const need=active==='vehicle'?vehiclePartRequirement(p.id):0,done=active==='vehicle'?vehicleInstalledPartCount(p.id):0;b.innerHTML=`<span>${paletteVisual(p)}</span><small>${L(p.label)}${need?` <em data-part-counter>${done}/${need}</em>`:''}</small>`;b.onclick=()=>addPalettePart(p);host.appendChild(b)});refreshVehicleComponentButtons();}
 function paletteVisual(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;if(p.className==='park-bench')return '<span class="creator-mini-bench"><i></i><i></i><i></i></span>';if(p.className==='shelf')return '▤';if(p.className==='sofa')return '🛋️';if(p.className==='fluorescent')return '▬';if(p.className==='chassis')return '▰';if(p.className==='amphibious')return '⛴️';if(p.className==='wing')return '🪽';return p.icon||'◆';}
 
 function renderPlan(m,saved={}){const host=$('creatorPlanFields');host.innerHTML='';m.prompts.forEach((q,i)=>{const l=document.createElement('label');l.textContent=L(q);const inp=document.createElement('input');inp.dataset.plan=i;inp.value=saved.plan?.[i]||'';l.appendChild(inp);host.appendChild(l)});$('creatorNotes').value=saved.notes||'';}
@@ -515,9 +562,12 @@ function vehiclePartSvg(id){
     const handle=id==='door'?'<path d="M82 37h13" stroke="#33495b" stroke-width="4" stroke-linecap="round"/>':'';
     return `<svg ${common}><polygon points="${pts}" fill="${style.fill}" stroke="#eef8ff" stroke-width="4" stroke-linejoin="round"/>${handle}</svg>`;
   }
-  if(id==='dashboard')return `<svg ${common}><path d="M7 30 Q55 11 113 28 L106 62 Q59 53 15 63 Z" fill="#475766" stroke="#dfeaf1" stroke-width="4"/><rect x="45" y="32" width="28" height="14" rx="3" fill="#5de4ff"/></svg>`;
+  if(['dashboard','driver-seat','seat'].includes(id)){
+    const pts=vehiclePartShape(id).map(([a,b])=>`${(60+a*52).toFixed(1)},${(40+b*31).toFixed(1)}`).join(' ');
+    const fill=id==='dashboard'?'#475766':'#596a79';
+    return `<svg ${common}><polygon points="${pts}" fill="${fill}" stroke="#e5edf3" stroke-width="4" stroke-linejoin="round"/></svg>`;
+  }
   if(id==='steering')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="none" stroke="#dce6ee" stroke-width="8"/><circle cx="50" cy="50" r="12" fill="#455666"/><path d="M50 50L25 27M50 50l25-23M50 50v35" stroke="#65798a" stroke-width="7"/></svg>`;
-  if(id==='driver-seat'||id==='seat')return `<svg ${common}><path d="M39 8 Q68 7 75 27 L72 50 L91 67 L30 67 L35 48 L31 25 Q32 12 39 8Z" fill="#596a79" stroke="#e5edf3" stroke-width="4"/><path d="M38 36h33" stroke="#9fb2c1" stroke-width="3"/></svg>`;
   return '';
 }
 function visualHTML(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;switch(p.className){case'park-bench':return '<span class="creator-object-icon creator-visual creator-bench-visual"><i></i><i></i><i></i><i></i></span>';case'shelf':return '<span class="creator-object-icon creator-visual creator-shelf-visual"></span>';case'sofa':return '<span class="creator-object-icon creator-visual creator-sofa-visual"></span>';case'fluorescent':return '<span class="creator-object-icon creator-visual creator-fluorescent-visual"></span>';case'tvstand':return '<span class="creator-object-icon creator-visual creator-tvstand-visual"></span>';case'settop':return '<span class="creator-object-icon creator-visual creator-settop-visual"></span>';case'chassis':return '<span class="creator-object-icon creator-visual creator-chassis-visual"></span>';case'amphibious':return '<span class="creator-object-icon creator-visual creator-amphibious-visual"></span>';case'wing':return '<span class="creator-object-icon creator-visual creator-wing-visual"></span>';case'toilet':return '<span class="creator-object-icon creator-toilet-visual"></span>';default:return `<span class="creator-object-icon">${p.icon||'◆'}</span>`;}}
@@ -557,7 +607,7 @@ function applyVehicleSurfaceProjection(el,pr){
   el.style.zIndex=String(200+Math.round((pr.depth||0)*20));
 }
 function objectTags(el){try{return JSON.parse(el.dataset.tags||'[]')}catch(_){return[]}}
-function makeObjectInteractive(el){el.addEventListener('pointerdown',e=>{if(testRunning)return;e.preventDefault();e.stopPropagation();if(tool==='eraser'){selectObject(el);deleteSelected();return}selectObject(el);const r=stage.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,startX=+el.dataset.x,startY=+el.dataset.y;el.setPointerCapture?.(e.pointerId);el.classList.add('dragging');const move=ev=>{el.dataset.installed='0';el.classList.remove('installed-part');clearVehicleProjectedStyle(el);el.dataset.x=clamp(startX+(ev.clientX-sx)/r.width,.02,.98);el.dataset.y=clamp(startY+(ev.clientY-sy)/r.height,.02,.98);applyObjectStyle(el)};const up=()=>{el.classList.remove('dragging');el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);softSnap(el);commitHistory()};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});}
+function makeObjectInteractive(el){el.addEventListener('pointerdown',e=>{if(testRunning||el.dataset.installed==='1')return;e.preventDefault();e.stopPropagation();if(tool==='eraser'){selectObject(el);deleteSelected();return}selectObject(el);const r=stage.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,startX=+el.dataset.x,startY=+el.dataset.y;el.setPointerCapture?.(e.pointerId);el.classList.add('dragging');const move=ev=>{el.dataset.installed='0';el.classList.remove('installed-part');clearVehicleProjectedStyle(el);el.dataset.x=clamp(startX+(ev.clientX-sx)/r.width,.02,.98);el.dataset.y=clamp(startY+(ev.clientY-sy)/r.height,.02,.98);applyObjectStyle(el)};const up=()=>{el.classList.remove('dragging');el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);softSnap(el);commitHistory()};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});}
 function selectObject(el){if(selectedObject)selectedObject.classList.remove('selected');selectedObject=el||null;if(selectedObject){selectedObject.classList.add('selected');$('selectedObjectLabel').textContent=selectedObject.dataset.label||t('Selected object','Objet sélectionné');$('objectSize').disabled=false;$('objectRotate').disabled=false;['shrinkObject','growObject','duplicateObject','sendBackObject','bringFrontObject','deleteObject'].forEach(id=>$(id).disabled=false);$('objectSize').value=clamp(+selectedObject.dataset.size||68,24,420);$('objectRotate').value=+(selectedObject.dataset.rotation||0);if(selectedObject.dataset.kind==='blueprint'){currentLibraryId=selectedObject.dataset.blueprintId;renderModes(missions[active],null)}}else{$('selectedObjectLabel').textContent=t('Select an object or drawn shape to edit it','Sélectionne un objet ou une forme à modifier');$('objectSize').disabled=true;$('objectRotate').disabled=true;['shrinkObject','growObject','duplicateObject','sendBackObject','bringFrontObject','deleteObject'].forEach(id=>$(id).disabled=true)}refreshLibraryCards();}
 
 
@@ -642,6 +692,7 @@ function tryVehicleSnap(el,announce=true){
     syncInstalledVehiclePart(el);
     renderTemplate('vehicle');
     selectObject(null);
+    refreshVehicleComponentButtons();
     if(announce){
       const fitted=installedVehicleKeys().size,total=vehicleSlotDefinitions().filter(x=>x.required).length+vehicleInteriorSlots().filter(x=>x.required).length;
       $('creatorCoach').textContent=t(`CLICK — piece fitted to the vehicle. ${fitted} pieces are installed and will stay attached while you rotate the car.`,`CLIC — pièce fixée au véhicule. ${fitted} pièces sont installées et resteront attachées pendant la rotation.`);
@@ -706,7 +757,7 @@ function restoreObjects(items=[]){
       if(d.installed&&d.targetKey){el.dataset.installed='1';el.dataset.targetKey=d.targetKey;el.classList.add('installed-part');}
     }
   });
-  if(active==='vehicle'){renderTemplate('vehicle');syncInstalledVehicleParts();}
+  if(active==='vehicle'){renderTemplate('vehicle');syncInstalledVehicleParts();refreshVehicleComponentButtons();}
   refreshLibraryCards();
 }
 function snapshot(){return{drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode};}
@@ -740,10 +791,10 @@ function startTest(){if(!active)return;
 function stopTest(showMessage=true){if(!testRunning&&showMessage)return;testRunning=false;stage.classList.remove('testing','test-active');$('stopCreationTest').hidden=true;simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();if(active==='vehicle')renderTemplate('vehicle');if(showMessage){$('creatorCoach').textContent=t('Test stopped. Adjust any part, resize it or add something new, then test again.','Test arrêté. Modifie une pièce, redimensionne-la ou ajoute un élément puis reteste.');$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Test stopped — back to edit mode','Test arrêté — retour au mode édition')}</b><p>${t('Build → Test → Stop → Improve → Test again.','Construis → Teste → Arrête → Améliore → Reteste.')}</p></div></div>`;}}
 function roomCollisionReport(){const objects=[...objectLayer.children].filter(o=>o.dataset.kind==='part'),large=objects.filter(o=>objectTags(o).includes('collision-large')),issues=[];for(let i=0;i<large.length;i++){for(let j=i+1;j<large.length;j++){const a=large[i].getBoundingClientRect(),b=large[j].getBoundingClientRect();const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left)),h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));const overlap=w*h,small=Math.min(a.width*a.height,b.width*b.height);if(small&&overlap/small>.28)issues.push(`${large[i].dataset.label} / ${large[j].dataset.label}`)}}return issues.length?t(`Furniture collision found: ${issues[0]}. Move one object so the room remains usable.`,`Collision de mobilier : ${issues[0]}. Déplace un objet pour garder la pièce utilisable.`):t('Room simulation is running. Lighting is switched on and no major furniture collision was detected.','La simulation de la pièce est en cours. L’éclairage est allumé et aucune collision importante n’a été détectée.');}
 
-function setObjectSize(v,commit=false){if(!selectedObject)return;selectedObject.dataset.size=clamp(v,24,420);selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
-function setObjectRotation(v,commit=false){if(!selectedObject)return;selectedObject.dataset.rotation=v;selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
-function duplicateSelected(){if(!selectedObject)return;const d=objectData().find((_,i)=>objectLayer.children[i]===selectedObject);if(!d)return;let copy;if(d.kind==='blueprint'){const item=(missions[active].library||[]).find(x=>x.id===d.blueprintId);copy=addBlueprint(item,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}else if(d.kind==='vector')copy=addVector({type:d.vectorType,color:d.vectorColor,stroke:d.vectorStroke,path:d.vectorPath,x:clamp(d.x+.05,.02,.98),y:clamp(d.y+.05,.02,.98),size:d.size,aspect:d.aspect,rotation:d.rotation,label:d.label},{select:true});else{const p=findPart(d.partId)||part(d.partId,d.icon,d.label,d.label,JSON.parse(d.tags||'[]'),d.className);copy=addObject(p,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}commitHistory();return copy;}
-function deleteSelected(){if(!selectedObject)return;selectedObject.remove();selectedObject=null;selectObject(null);refreshLibraryCards();commitHistory();}
+function setObjectSize(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.size=clamp(v,24,420);selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
+function setObjectRotation(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.rotation=v;selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
+function duplicateSelected(){if(!selectedObject||selectedObject.dataset.installed==='1')return;const d=objectData().find((_,i)=>objectLayer.children[i]===selectedObject);if(!d)return;let copy;if(d.kind==='blueprint'){const item=(missions[active].library||[]).find(x=>x.id===d.blueprintId);copy=addBlueprint(item,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}else if(d.kind==='vector')copy=addVector({type:d.vectorType,color:d.vectorColor,stroke:d.vectorStroke,path:d.vectorPath,x:clamp(d.x+.05,.02,.98),y:clamp(d.y+.05,.02,.98),size:d.size,aspect:d.aspect,rotation:d.rotation,label:d.label},{select:true});else{const p=findPart(d.partId)||part(d.partId,d.icon,d.label,d.label,JSON.parse(d.tags||'[]'),d.className);copy=addObject(p,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}commitHistory();return copy;}
+function deleteSelected(){if(!selectedObject)return;if(selectedObject.dataset.installed==='1'){$('creatorCoach').textContent=t('That piece is already fitted into the car and is locked in place.','Cette pièce est déjà fixée dans la voiture et verrouillée.');return}selectedObject.remove();selectedObject=null;selectObject(null);refreshLibraryCards();refreshVehicleComponentButtons();commitHistory();}
 function layerSelected(front){if(!selectedObject)return;front?objectLayer.appendChild(selectedObject):objectLayer.insertBefore(selectedObject,objectLayer.firstChild);commitHistory();}
 
 // Controls
