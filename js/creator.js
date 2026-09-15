@@ -42,9 +42,24 @@ const marsLibrary=[
 ];
 
 const vehicleModes=[
- mode('body','🚘','Body & movement','Carrosserie et mouvement','Build a normal road car first: body, interior and road-running parts.','Construis d’abord une voiture normale : carrosserie, intérieur et éléments routiers.',[
-  part('car-body','🚙','Body shell','Carrosserie',['movement'],'car-body'),part('chassis','', 'Chassis','Châssis',['movement'],'chassis'),part('roof','', 'Roof panel','Panneau de toit',['movement'],'',{aspect:2.6,defaultSize:150}),part('door','', 'Car door','Porte de voiture',['passenger'],'',{aspect:1.45,defaultSize:110}),part('window','', 'Side window','Vitre latérale',['passenger'],'',{aspect:1.75,defaultSize:105}),part('windscreen','', 'Windscreen','Pare-brise',['passenger'],'',{aspect:1.9,defaultSize:145}),
-  part('wheel','', 'Wheel / tyre','Roue / pneu',['movement','wheel'],'',{aspect:1,defaultSize:92}),part('headlight','', 'Headlight','Phare',['safety'],'',{aspect:2.2,defaultSize:82}),part('mirror','', 'Side mirror','Rétroviseur',['safety'],'',{aspect:1.55,defaultSize:58}),part('bumper','', 'Front bumper','Pare-chocs avant',['safety'],'',{aspect:3,defaultSize:145}),part('steering','◉','Steering wheel','Volant',['passenger']),part('driver-seat','💺','Driver seat','Siège conducteur',['passenger']),part('seat','💺','Passenger seat','Siège passager',['passenger']),part('dashboard','▤','Dashboard','Tableau de bord',['passenger'])
+ mode('body','🚘','Body & movement','Carrosserie et mouvement','Build the car like a peg puzzle: choose a real vehicle part, move it near its matching slot, resize it carefully and let it click into place.','Construis la voiture comme un puzzle : choisis une vraie pièce, rapproche-la de son emplacement, redimensionne-la avec précision puis laisse-la se fixer.',[
+  part('wheel','', 'Wheel / tyre','Roue / pneu',['movement','wheel'],'',{aspect:1,defaultSize:74}),
+  part('door','', 'Car door','Porte de voiture',['passenger'],'',{aspect:1.55,defaultSize:96}),
+  part('window','', 'Side window','Vitre latérale',['passenger'],'',{aspect:1.9,defaultSize:90}),
+  part('windscreen','', 'Windscreen','Pare-brise',['passenger'],'',{aspect:1.75,defaultSize:104}),
+  part('rear-window','', 'Rear window','Lunette arrière',['passenger'],'',{aspect:1.7,defaultSize:92}),
+  part('roof','', 'Roof panel','Panneau de toit',['movement'],'',{aspect:2.5,defaultSize:116}),
+  part('mirror','', 'Side mirror','Rétroviseur',['safety'],'',{aspect:1.7,defaultSize:48}),
+  part('headlight','', 'Headlight','Phare',['safety'],'',{aspect:2.2,defaultSize:58}),
+  part('taillight','', 'Rear light','Feu arrière',['safety'],'',{aspect:2.0,defaultSize:52}),
+  part('bumper','', 'Front bumper','Pare-chocs avant',['safety'],'',{aspect:3.1,defaultSize:112}),
+  part('rear-bumper','', 'Rear bumper','Pare-chocs arrière',['safety'],'',{aspect:3.1,defaultSize:108}),
+  part('hood','', 'Bonnet / hood','Capot',['movement'],'',{aspect:2.1,defaultSize:112}),
+  part('trunk','', 'Boot / trunk lid','Coffre',['movement'],'',{aspect:2.0,defaultSize:94}),
+  part('steering','◉','Steering wheel','Volant',['passenger'],'',{aspect:1,defaultSize:54}),
+  part('driver-seat','💺','Driver seat','Siège conducteur',['passenger'],'',{aspect:.72,defaultSize:68}),
+  part('seat','💺','Passenger seat','Siège passager',['passenger'],'',{aspect:.72,defaultSize:68}),
+  part('dashboard','▤','Dashboard','Tableau de bord',['passenger'],'',{aspect:2.4,defaultSize:110})
  ]),
  mode('power','⚡','Power system','Système d’énergie','Choose what powers and drives the vehicle.','Choisis ce qui alimente et propulse le véhicule.',[
   part('petrol-engine','⚙️','Petrol engine','Moteur essence',['power']),part('diesel-engine','⚙️','Diesel engine','Moteur diesel',['power']),part('electric-motor','⚡','Electric motor','Moteur électrique',['power']),part('battery','🔋','Battery','Batterie',['power']),part('charge-port','🔌','Charging port','Prise de recharge',['power']),part('hybrid','♻️','Hybrid system','Système hybride',['power']),part('fuel-tank','⛽','Fuel tank','Réservoir',['power']),part('exhaust','〽','Exhaust','Échappement',['power']),part('solar','☀️','Solar assist','Assistance solaire',['power'])
@@ -212,6 +227,7 @@ const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLaye
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
 let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false;
 const STORAGE='cw_creator_projects_v18';
+const VEHICLE_PUZZLE_VERSION=4;
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
 function allParts(){if(!active)return[];return modesForMission(missions[active]).flatMap(m=>m.parts||[]);}
@@ -222,45 +238,208 @@ function loadStore(){try{return JSON.parse(localStorage.getItem(STORAGE)||'{}')}
 function renderColours(){const host=$('creatorColors');host.innerHTML='';colours.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='creator-color'+(c===colour?' active':'');b.style.background=c;b.title=c;b.onclick=()=>{colour=c;renderColours()};host.appendChild(b)});}
 function setTool(next){tool=next;document.querySelectorAll('.creator-toolbar .creator-tool[id^="tool"]').forEach(b=>b.classList.remove('active'));const map={select:'toolSelect',pen:'toolPen',eraser:'toolEraser',line:'toolLine',curve:'toolCurve',rect:'toolRect',circle:'toolCircle'};$(map[next])?.classList.add('active');canvas.style.cursor=next==='select'?'default':'crosshair';}
 
-function vehicleProfile(){return currentLibraryId==='vehicle-executive'?{id:'executive',length:5.05,width:1.92,height:1.46,wheelbase:2.96,wheelRadius:.39,doors:2,roofStart:-.78,roofEnd:1.08}:{id:'sport',length:4.55,width:1.98,height:1.22,wheelbase:2.72,wheelRadius:.39,doors:1,roofStart:-.55,roofEnd:.72};}
-const vehicleBlueprintAssets={
- 'vehicle-sport':AS+'vehicle-sport-blueprint.png',
- 'vehicle-executive':AS+'vehicle-executive-blueprint.png'
-};
-const vehicleBlueprintCache={};
-function getVehicleBlueprintImage(){const key=currentLibraryId||'vehicle-sport',src=vehicleBlueprintAssets[key];if(!src)return null;let img=vehicleBlueprintCache[key];if(!img){img=new Image();img.decoding='async';img.onload=()=>{if(active==='vehicle')drawVehicleBlueprint()};img.src=src;vehicleBlueprintCache[key]=img}return img;}
-function vehicleBlueprintFrame(){const cw=templateCanvas.width,ch=templateCanvas.height,img=getVehicleBlueprintImage();if(!img||!img.complete||!img.naturalWidth)return null;const base=Math.min(cw/img.naturalWidth,ch/img.naturalHeight),fit=.68,scale=base*fit,w=img.naturalWidth*scale,h=img.naturalHeight*scale;return{cw,ch,w,h,x:(cw-w)/2,y:(ch-h)/2,fit};}
-function mapVehicleTarget(t){const f=vehicleBlueprintFrame();if(!f)return t;return{...t,x:.5+(t.x-.5)*f.fit,y:.5+(t.y-.5)*f.fit,size:t.size*f.fit};}
-function drawPhotoMatchedVehicleBlueprint(){const img=getVehicleBlueprintImage(),f=vehicleBlueprintFrame();if(!img||!f)return false;tctx.save();tctx.globalAlpha=.72;tctx.drawImage(img,f.x,f.y,f.w,f.h);/* puzzle slots */const targets=vehicleBuildTargets(true);tctx.strokeStyle='rgba(180,244,255,.48)';tctx.fillStyle='rgba(93,228,255,.035)';tctx.lineWidth=2;tctx.setLineDash([7,6]);Object.entries(targets).forEach(([id,list])=>list.forEach(slot=>{const x=slot.x*f.cw,y=slot.y*f.ch,w=slot.size*f.cw,h=Math.max(24,w/(slot.aspect||1));tctx.beginPath();if(id==='wheel'){tctx.arc(x,y,w/2,0,Math.PI*2)}else{tctx.roundRect(x-w/2,y-h/2,w,h,Math.min(14,h*.3))}tctx.fill();tctx.stroke()}));tctx.setLineDash([]);tctx.globalAlpha=.18;tctx.strokeStyle='rgba(132,222,255,.7)';tctx.beginPath();tctx.moveTo(f.x,f.y+f.h*.92);tctx.lineTo(f.x+f.w,f.y+f.h*.92);tctx.stroke();tctx.restore();return true;}
-function rotateVehiclePoint(p,yaw,pitch){const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);const x=p[0]*cy-p[1]*sy,y=p[0]*sy+p[1]*cy,z=p[2];return[x,y*cp-z*sp,y*sp+z*cp];}
-function drawProjectedPath(points,project,close=false,dash=[]){if(!points.length)return;tctx.beginPath();points.forEach((p,i)=>{const q=project(p);i?tctx.lineTo(q.x,q.y):tctx.moveTo(q.x,q.y)});if(close)tctx.closePath();tctx.setLineDash(dash);tctx.stroke();tctx.setLineDash([]);}
-function vehicleBlueprintGeometry(profile){const L=profile.length,W=profile.width,H=profile.height,wb=profile.wheelbase,r=profile.wheelRadius;const y=W/2;
-  const side=[[-L/2,-y,.31],[-L*.46,-y,.47],[-L*.33,-y,.60],[profile.roofStart,-y*.92,.72],[-L*.12,-y*.88,H*.97],[L*.28,-y*.88,H],[profile.roofEnd,-y*.90,.78],[L*.46,-y,.56],[L/2,-y,.38],[L*.48,-y,.25],[-L*.47,-y,.25]];
-  const side2=side.map(p=>[p[0],-p[1],p[2]]);
-  const roofL=[[-L*.12,-y*.82,H*.96],[L*.28,-y*.82,H*.99],[profile.roofEnd,-y*.84,.79]];const roofR=roofL.map(p=>[p[0],-p[1],p[2]]);
-  const edges=[];edges.push(side,side2,roofL,roofR);
-  [0,2,3,4,5,6,7,8,9].forEach(i=>edges.push([side[i],side2[i]]));
-  // bonnet / boot / belt lines
-  edges.push([[-L*.45,-y,.53],[-L*.18,-y*.97,.69],[L*.37,-y*.97,.72],[L*.46,-y,.53]]);
-  edges.push([[-L*.45,y,.53],[-L*.18,y*.97,.69],[L*.37,y*.97,.72],[L*.46,y,.53]]);
-  // windows and door targets on both sides
-  const doorXs=profile.doors===2?[-.37,.26]:[-.08];
-  for(const s of [-1,1]){const yy=s*y*1.008;edges.push([[-L*.14,yy,H*.88],[L*.28,yy,H*.91],[profile.roofEnd*.92,yy,.79]]);for(const dx of doorXs){const x=dx*L;edges.push([[x,yy,.34],[x,yy,.73]]);}edges.push([[-wb/2-r*.15,yy,.30],[-wb/2,yy,.78],[-wb/2+r*.15,yy,.30]],[[wb/2-r*.15,yy,.30],[wb/2,yy,.78],[wb/2+r*.15,yy,.30]]);}
-  // headlight / tail / bumper target strokes
-  edges.push([[-L*.49,-y*.82,.52],[-L*.39,-y*.88,.56]],[[-L*.49,y*.82,.52],[-L*.39,y*.88,.56]],[[L*.42,-y*.88,.52],[L*.49,-y*.82,.48]],[[L*.42,y*.88,.52],[L*.49,y*.82,.48]]);
-  // mirrors target points
-  edges.push([[-L*.13,-y*1.08,.73],[-L*.08,-y*1.16,.72]],[[-L*.13,y*1.08,.73],[-L*.08,y*1.16,.72]]);
-  const wheels=[];for(const wx of [-wb/2,wb/2])for(const sy of [-1,1]){const pts=[];for(let i=0;i<=36;i++){const a=i/36*Math.PI*2;pts.push([wx,sy*y*1.02,.28+Math.cos(a)*r,Math.sin(a)*r]);}wheels.push(pts.map(p=>[p[0],p[1]+p[3]*.12,p[2]]));}
-  return{edges,wheels};}
-function drawVehicleInterior(profile){const W=800,H=450;tctx.save();tctx.strokeStyle='rgba(132,222,255,.72)';tctx.lineWidth=3;tctx.setLineDash([]);tctx.translate(W/2,H/2);const L=520,B=250;tctx.beginPath();tctx.roundRect(-L/2,-B/2,L,B,82);tctx.stroke();tctx.strokeRect(-210,-105,120,210);tctx.strokeRect(-75,-105,130,210);tctx.strokeRect(75,-105,130,210);tctx.beginPath();tctx.arc(-168,0,37,0,Math.PI*2);tctx.stroke();tctx.strokeRect(-150,-42,42,84);tctx.strokeRect(-92,-34,24,68);const seat=(x,y)=>{tctx.beginPath();tctx.roundRect(x-44,y-40,88,80,26);tctx.stroke();tctx.strokeRect(x-34,y+38,68,52)};seat(-5,-63);seat(112,-63);seat(-5,63);seat(112,63);tctx.fillStyle='rgba(132,222,255,.7)';tctx.font='700 13px system-ui';tctx.fillText('dashboard target',-220,-115);tctx.fillText('seat targets',40,116);tctx.restore();}
-function drawVehicleBlueprint(){if(!templateOn)return;const profile=vehicleProfile();if(vehicleViewMode==='interior'){drawVehicleInterior(profile);return}/* Build Pack 18 vehicle step: exterior blueprint is derived from the exact selected vehicle artwork so the guide and car match. */if(drawPhotoMatchedVehicleBlueprint())return;}
-function renderTemplate(id){tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);if(!templateOn)return;if(id==='vehicle'){drawVehicleBlueprint();return}tctx.save();tctx.strokeStyle='rgba(132,222,255,.30)';tctx.fillStyle='rgba(92,124,255,.06)';tctx.lineWidth=4;tctx.setLineDash([12,10]);if(id==='room'){tctx.strokeRect(120,70,560,320);tctx.strokeRect(140,92,250,120);tctx.strokeRect(420,92,230,120);tctx.beginPath();tctx.moveTo(400,70);tctx.lineTo(400,390);tctx.stroke()}else if(id==='park'){tctx.beginPath();tctx.moveTo(70,330);tctx.bezierCurveTo(220,210,330,410,480,250);tctx.bezierCurveTo(590,140,680,220,755,120);tctx.stroke();tctx.beginPath();tctx.ellipse(610,315,105,65,0,0,Math.PI*2);tctx.stroke()}tctx.restore();}
-function updateBlueprintVisibility(){stage.classList.toggle('blueprints-off',!templateOn);$('toggleTemplate').textContent=templateOn?t('👻 Blueprint on','👻 Plan activé'):t('👻 Blueprint off','👻 Plan désactivé');}
-function vehicleAngleLabel(){if(vehicleViewMode==='interior')return t('Interior view','Vue intérieure');const yaw=((vehicleYaw*180/Math.PI)%360+360)%360,pitch=vehiclePitch*180/Math.PI;return `${t('Free rotate','Rotation libre')} · ${Math.round(yaw)}° ${t('side','latéral')} · ${Math.round(pitch)}° ${t('tilt','inclinaison')}`;}
-function applyVehicleOrbitTransform(){if(active!=='vehicle'){stage.classList.remove('vehicle-3d-view');return}stage.classList.add('vehicle-3d-view');const yawDeg=vehicleYaw*180/Math.PI,pitchDeg=vehiclePitch*180/Math.PI;stage.style.setProperty('--vehicle-yaw',yawDeg+'deg');stage.style.setProperty('--vehicle-pitch',pitchDeg+'deg');}
-function updateVehicleViewUI(){const panel=$('vehicleViewControls');if(panel)panel.hidden=active!=='vehicle';document.querySelectorAll('[data-vehicle-view]').forEach(b=>b.classList.toggle('active',b.dataset.vehicleView===vehicleViewMode));const s=$('vehicleOrbitStatus');if(s)s.textContent=active==='vehicle'?vehicleAngleLabel():'';applyVehicleOrbitTransform();}
-function setVehicleView(view){vehicleViewMode=view;if(view==='left'){vehicleYaw=0;vehiclePitch=.04}else if(view==='right'){vehicleYaw=.62;vehiclePitch=.04}else if(view==='front'){vehicleYaw=-.52;vehiclePitch=.02}else if(view==='rear'){vehicleYaw=.52;vehiclePitch=.02}else if(view==='top'){vehicleYaw=0;vehiclePitch=-.62}else if(view==='orbit'&&Math.abs(vehiclePitch)>.72){vehiclePitch=.10}renderTemplate('vehicle');updateVehicleViewUI();commitHistory();}
 
+function vehicleProfile(){
+  return currentLibraryId==='vehicle-executive'
+    ?{id:'executive',length:5.02,width:1.88,height:1.45,wheelbase:2.93,wheelRadius:.38,cabinFront:-.92,cabinRear:1.18,bodyZ:.30,roofZ:1.42}
+    :{id:'sport',length:4.58,width:1.96,height:1.20,wheelbase:2.72,wheelRadius:.39,cabinFront:-.70,cabinRear:.92,bodyZ:.27,roofZ:1.17};
+}
+function rotateVehiclePoint(p,yaw,pitch){
+  const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+  const x=p[0]*cy-p[1]*sy,depth=p[0]*sy+p[1]*cy,z=p[2];
+  return [x,depth*cp-z*sp,depth*sp+z*cp];
+}
+function vehicleProjectPoint(p){
+  const q=rotateVehiclePoint(p,vehicleYaw,vehiclePitch),D=7.8,scale=currentLibraryId==='vehicle-executive'?76:81;
+  const persp=clamp(D/(D-q[1]),.62,1.58);
+  return{x:400+q[0]*scale*persp,y:282-q[2]*scale*persp,depth:q[1],persp};
+}
+function vehicleProjectVector(v){
+  const q=rotateVehiclePoint(v,vehicleYaw,vehiclePitch);
+  return{x:q[0],depth:q[1],z:q[2]};
+}
+function vehicleSlot(key,partId,center,u,v,normal,opts={}){
+  return{key,partId,center,u,v,normal,aspect:opts.aspect||1,required:opts.required!==false,minFacing:opts.minFacing??.30,view:opts.view||'exterior',label:opts.label||partId};
+}
+function vehicleSlotDefinitions(){
+  const p=vehicleProfile(),L=p.length,W=p.width,H=p.height,wb=p.wheelbase,r=p.wheelRadius,sides=[-1,1],slots=[];
+  const addSide=(sgn)=>{
+    const y=sgn*W*.515,n=[0,sgn,0];
+    slots.push(vehicleSlot(`wheel-front-${sgn>0?'r':'l'}`,'wheel',[-wb/2,y,.34],[r,0,0],[0,0,r],n,{aspect:1,minFacing:.40}));
+    slots.push(vehicleSlot(`wheel-rear-${sgn>0?'r':'l'}`,'wheel',[wb/2,y,.34],[r,0,0],[0,0,r],n,{aspect:1,minFacing:.40}));
+    slots.push(vehicleSlot(`door-${sgn>0?'r':'l'}`,'door',[.12*L,y,.61],[.16*L,0,0],[0,0,.30],n,{aspect:1.55,minFacing:.42}));
+    slots.push(vehicleSlot(`window-${sgn>0?'r':'l'}`,'window',[-.01*L,y,.91],[.14*L,0,0],[0,0,.20],n,{aspect:1.9,minFacing:.42}));
+    slots.push(vehicleSlot(`mirror-${sgn>0?'r':'l'}`,'mirror',[-.18*L,sgn*W*.60,.83],[.11,0,0],[0,0,.08],n,{aspect:1.7,minFacing:.36,required:false}));
+  };
+  sides.forEach(addSide);
+  slots.push(vehicleSlot('windscreen','windscreen',[-.23*L,0,.89],[0,W*.42,0],[.075*L,0,.23],[-.55,0,.75],{aspect:1.75,minFacing:.22}));
+  slots.push(vehicleSlot('rear-window','rear-window',[.25*L,0,.89],[0,W*.39,0],[-.07*L,0,.20],[.55,0,.75],{aspect:1.7,minFacing:.22}));
+  slots.push(vehicleSlot('roof','roof',[.05*L,0,H*.97],[.19*L,0,0],[0,W*.39,0],[0,0,1],{aspect:2.5,minFacing:.22}));
+  slots.push(vehicleSlot('hood','hood',[-.36*L,0,.66],[.13*L,0,.02],[0,W*.38,0],[0,0,1],{aspect:2.1,minFacing:.16,required:false}));
+  slots.push(vehicleSlot('trunk','trunk',[.40*L,0,.60],[.095*L,0,.02],[0,W*.36,0],[0,0,1],{aspect:2.0,minFacing:.16,required:false}));
+  for(const sgn of sides){
+    slots.push(vehicleSlot(`headlight-${sgn>0?'r':'l'}`,'headlight',[-.475*L,sgn*W*.34,.54],[0,W*.18,0],[0,0,.095],[-1,0,.12],{aspect:2.2,minFacing:.35,required:false}));
+    slots.push(vehicleSlot(`taillight-${sgn>0?'r':'l'}`,'taillight',[.475*L,sgn*W*.34,.52],[0,W*.17,0],[0,0,.09],[1,0,.12],{aspect:2,minFacing:.35,required:false}));
+  }
+  slots.push(vehicleSlot('front-bumper','bumper',[-.495*L,0,.32],[0,W*.44,0],[0,0,.16],[-1,0,0],{aspect:3.1,minFacing:.48}));
+  slots.push(vehicleSlot('rear-bumper','rear-bumper',[.495*L,0,.31],[0,W*.43,0],[0,0,.15],[1,0,0],{aspect:3.1,minFacing:.48}));
+  return slots;
+}
+function vehicleInteriorSlots(){
+  return[
+    {key:'dashboard',partId:'dashboard',x:.39,y:.39,size:.19,aspect:2.4,required:true},
+    {key:'steering',partId:'steering',x:.29,y:.50,size:.075,aspect:1,required:true},
+    {key:'driver-seat',partId:'driver-seat',x:.40,y:.65,size:.095,aspect:.72,required:true},
+    {key:'passenger-seat',partId:'seat',x:.59,y:.65,size:.095,aspect:.72,required:true}
+  ];
+}
+function installedVehicleKeys(){
+  return new Set([...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.installed==='1'&&o.dataset.targetKey).map(o=>o.dataset.targetKey));
+}
+function vehicleSlotProjection(slot){
+  if(slot.view==='interior')return null;
+  const c=vehicleProjectPoint(slot.center);
+  const corners=[
+    [slot.center[0]-slot.u[0]-slot.v[0],slot.center[1]-slot.u[1]-slot.v[1],slot.center[2]-slot.u[2]-slot.v[2]],
+    [slot.center[0]+slot.u[0]-slot.v[0],slot.center[1]+slot.u[1]-slot.v[1],slot.center[2]+slot.u[2]-slot.v[2]],
+    [slot.center[0]+slot.u[0]+slot.v[0],slot.center[1]+slot.u[1]+slot.v[1],slot.center[2]+slot.u[2]+slot.v[2]],
+    [slot.center[0]-slot.u[0]+slot.v[0],slot.center[1]-slot.u[1]+slot.v[1],slot.center[2]-slot.u[2]+slot.v[2]]
+  ].map(vehicleProjectPoint);
+  const xs=corners.map(q=>q.x),ys=corners.map(q=>q.y);
+  const w=Math.max(10,Math.max(...xs)-Math.min(...xs)),h=Math.max(10,Math.max(...ys)-Math.min(...ys));
+  const n=vehicleProjectVector(slot.normal),facing=n.depth;
+  return{...slot,cx:c.x,cy:c.y,w,h,sizePx:Math.max(w,h*slot.aspect),screenAspect:clamp(w/h,.35,3.8),facing,visible:facing>=slot.minFacing,corners};
+}
+function vehicleMainEdges(){
+  const p=vehicleProfile(),L=p.length,W=p.width,H=p.height,y=W*.49;
+  const z0=p.bodyZ;
+  const sport=p.id==='sport';
+  const side=[
+    [-L*.50,-y,z0],[-L*.47,-y,z0+.19],[-L*.38,-y,z0+.36],[-L*.18,-y,z0+.44],
+    [p.cabinFront,-y*.93,sport?H*.78:H*.73],[-L*.04,-y*.91,H*.98],[p.cabinRear*.42,-y*.91,H],
+    [p.cabinRear,-y*.93,sport?H*.72:H*.78],[L*.43,-y,z0+.35],[L*.50,-y,z0+.16],[L*.48,-y,z0],[-L*.46,-y,z0]
+  ];
+  const side2=side.map(v=>[v[0],-v[1],v[2]]);
+  const edges=[side,side2];
+  [0,2,3,4,5,6,7,8,9,10].forEach(i=>edges.push([side[i],side2[i]]));
+  edges.push([[-L*.45,-y,z0+.35],[-L*.18,-y,z0+.45],[p.cabinFront,-y*.93,H*.76]]);
+  edges.push([[-L*.45,y,z0+.35],[-L*.18,y,z0+.45],[p.cabinFront,y*.93,H*.76]]);
+  edges.push([[p.cabinRear,-y*.93,H*.72],[L*.42,-y,z0+.35]]);
+  edges.push([[p.cabinRear,y*.93,H*.72],[L*.42,y,z0+.35]]);
+  edges.push([[-L*.42,-y*.96,z0+.26],[L*.42,-y*.96,z0+.26]]);
+  edges.push([[-L*.42,y*.96,z0+.26],[L*.42,y*.96,z0+.26]]);
+  return edges;
+}
+function drawProjectedPath(points,project=vehicleProjectPoint,close=false,dash=[]){
+  if(!points.length)return;
+  tctx.beginPath();
+  points.forEach((p,i)=>{const q=project(p);i?tctx.lineTo(q.x,q.y):tctx.moveTo(q.x,q.y)});
+  if(close)tctx.closePath();
+  tctx.setLineDash(dash);tctx.stroke();tctx.setLineDash([]);
+}
+function drawVehicleWheelGuide(slot,proj,installed){
+  const pts=[];for(let i=0;i<=44;i++){const a=i/44*Math.PI*2;pts.push([
+    slot.center[0]+slot.u[0]*Math.cos(a)+slot.v[0]*Math.sin(a),
+    slot.center[1]+slot.u[1]*Math.cos(a)+slot.v[1]*Math.sin(a),
+    slot.center[2]+slot.u[2]*Math.cos(a)+slot.v[2]*Math.sin(a)
+  ])}
+  tctx.save();
+  tctx.strokeStyle=installed?'rgba(92,239,185,.25)':'rgba(159,236,255,.62)';
+  tctx.lineWidth=installed?1.4:2.2;tctx.setLineDash(installed?[]:[8,6]);drawProjectedPath(pts);tctx.restore();
+}
+function drawVehicleSlotGuide(slot,proj,installed){
+  if(slot.partId==='wheel'){drawVehicleWheelGuide(slot,proj,installed);return}
+  tctx.save();tctx.beginPath();proj.corners.forEach((q,i)=>i?tctx.lineTo(q.x,q.y):tctx.moveTo(q.x,q.y));tctx.closePath();
+  if(installed){tctx.fillStyle='rgba(68,229,173,.055)';tctx.strokeStyle='rgba(68,229,173,.16)';tctx.setLineDash([]);tctx.lineWidth=1.2}
+  else{tctx.fillStyle='rgba(93,228,255,.025)';tctx.strokeStyle='rgba(164,239,255,.58)';tctx.setLineDash([7,6]);tctx.lineWidth=2}
+  tctx.fill();tctx.stroke();tctx.restore();
+}
+function drawVehicleWireframe(){
+  const edges=vehicleMainEdges();
+  tctx.save();
+  if(testRunning){
+    const nearSide=edges[1];
+    tctx.beginPath();
+    nearSide.forEach((pt,i)=>{const q=vehicleProjectPoint(pt);i?tctx.lineTo(q.x,q.y):tctx.moveTo(q.x,q.y)});
+    tctx.closePath();tctx.fillStyle='rgba(46,156,235,.24)';tctx.fill();
+  }
+  tctx.lineCap='round';tctx.lineJoin='round';tctx.strokeStyle='rgba(88,225,255,.76)';tctx.lineWidth=2.1;
+  edges.forEach(e=>drawProjectedPath(e));
+  tctx.strokeStyle='rgba(88,225,255,.20)';tctx.lineWidth=1;
+  const p=vehicleProfile(),L=p.length,W=p.width;
+  [[-.44,.24],[-.18,.44],[.12,.52],[.37,.36]].forEach(([xf,z])=>drawProjectedPath([[xf*L,-W*.48,z],[xf*L,W*.48,z]]));
+  tctx.restore();
+}
+function drawVehicleGround(){
+  tctx.save();tctx.strokeStyle='rgba(93,228,255,.12)';tctx.lineWidth=1.2;tctx.setLineDash([8,8]);
+  tctx.beginPath();tctx.ellipse(400,305,205,25,0,0,Math.PI*2);tctx.stroke();tctx.restore();
+}
+function drawVehicleInterior(){
+  const installed=installedVehicleKeys(),W=800,H=450;
+  tctx.save();tctx.strokeStyle='rgba(132,222,255,.74)';tctx.lineWidth=2.4;tctx.translate(W/2,H/2);
+  tctx.beginPath();tctx.roundRect(-205,-112,410,224,72);tctx.stroke();
+  tctx.beginPath();tctx.moveTo(-130,-95);tctx.lineTo(-130,95);tctx.moveTo(30,-95);tctx.lineTo(30,95);tctx.stroke();
+  tctx.restore();
+  const slots=vehicleInteriorSlots();
+  slots.forEach(sl=>{
+    const x=sl.x*W,y=sl.y*H,w=sl.size*W,h=w/sl.aspect,done=installed.has(sl.key);
+    tctx.save();tctx.strokeStyle=done?'rgba(68,229,173,.18)':'rgba(164,239,255,.58)';tctx.fillStyle=done?'rgba(68,229,173,.04)':'rgba(93,228,255,.025)';
+    tctx.lineWidth=2;tctx.setLineDash(done?[]:[7,6]);tctx.beginPath();
+    if(sl.partId==='steering')tctx.arc(x,y,w/2,0,Math.PI*2);else tctx.roundRect(x-w/2,y-h/2,w,h,12);
+    tctx.fill();tctx.stroke();tctx.restore();
+  });
+}
+function drawVehicleBlueprint(){
+  if(!templateOn)return;
+  if(vehicleViewMode==='interior'){drawVehicleInterior();syncInstalledVehicleParts();return}
+  drawVehicleGround();drawVehicleWireframe();
+  const installed=installedVehicleKeys();
+  vehicleSlotDefinitions().map(vehicleSlotProjection).filter(Boolean).sort((a,b)=>a.depth-b.depth).forEach(proj=>{
+    if(!proj.visible)return;
+    drawVehicleSlotGuide(proj,proj,installed.has(proj.key));
+  });
+  tctx.save();tctx.fillStyle='rgba(145,236,255,.66)';tctx.font='700 13px system-ui';tctx.textAlign='center';
+  tctx.fillText(t('Drag the blueprint to rotate it freely. Fit one puzzle piece at a time.','Fais glisser le plan pour le tourner librement. Place une pièce du puzzle à la fois.'),400,425);
+  tctx.restore();
+  syncInstalledVehicleParts();
+}
+function renderTemplate(id){
+  tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);
+  if(!templateOn)return;
+  if(id==='vehicle'){drawVehicleBlueprint();return}
+  tctx.save();tctx.strokeStyle='rgba(132,222,255,.30)';tctx.fillStyle='rgba(92,124,255,.06)';tctx.lineWidth=4;tctx.setLineDash([12,10]);
+  if(id==='room'){tctx.strokeRect(120,70,560,320);tctx.strokeRect(140,92,250,120);tctx.strokeRect(420,92,230,120);tctx.beginPath();tctx.moveTo(400,70);tctx.lineTo(400,390);tctx.stroke()}
+  else if(id==='park'){tctx.beginPath();tctx.moveTo(70,330);tctx.bezierCurveTo(220,210,330,410,480,250);tctx.bezierCurveTo(590,140,680,220,755,120);tctx.stroke();tctx.beginPath();tctx.ellipse(610,315,105,65,0,0,Math.PI*2);tctx.stroke()}
+  tctx.restore();
+}
+function updateBlueprintVisibility(){
+  stage.classList.toggle('blueprints-off',!templateOn);
+  $('toggleTemplate').textContent=templateOn?t('👻 Blueprint on','👻 Plan activé'):t('👻 Blueprint off','👻 Plan désactivé');
+}
+function vehicleAngleLabel(){
+  if(vehicleViewMode==='interior')return t('Interior puzzle view','Vue puzzle intérieure');
+  const yaw=((vehicleYaw*180/Math.PI)%360+360)%360,pitch=vehiclePitch*180/Math.PI;
+  return `${t('Free 3D rotate','Rotation 3D libre')} · ${Math.round(yaw)}° · ${Math.round(pitch)}°`;
+}
+function applyVehicleOrbitTransform(){
+  stage.classList.toggle('vehicle-3d-view',active==='vehicle');
+}
+function updateVehicleViewUI(){
+  const panel=$('vehicleViewControls');if(panel)panel.hidden=active!=='vehicle';
+  document.querySelectorAll('[data-vehicle-view]').forEach(b=>b.classList.toggle('active',b.dataset.vehicleView===vehicleViewMode));
+  const status=$('vehicleOrbitStatus');if(status)status.textContent=active==='vehicle'?vehicleAngleLabel():'';
+  applyVehicleOrbitTransform();
+}
+function setVehicleView(view){
+  vehicleViewMode=view;
+  if(view==='left'){vehicleYaw=0;vehiclePitch=.06}
+  else if(view==='right'){vehicleYaw=Math.PI;vehiclePitch=.06}
+  else if(view==='front'){vehicleYaw=-Math.PI/2;vehiclePitch=.03}
+  else if(view==='rear'){vehicleYaw=Math.PI/2;vehiclePitch=.03}
+  else if(view==='top'){vehicleYaw=0;vehiclePitch=-.95}
+  else if(view==='orbit'&&Math.abs(vehiclePitch)>.98){vehiclePitch=.12}
+  renderTemplate('vehicle');updateVehicleViewUI();commitHistory();
+}
 function renderLibrary(m){const panel=$('creatorLibraryPanel'),host=$('creatorLibrary');if(!m.library){panel.hidden=true;return}panel.hidden=false;$('creatorModeStep').textContent='2 • '+t('CHOOSE A DESIGN MODE','CHOISIS UN MODE');$('creatorDesignStep').textContent='3 • '+t('YOUR DESIGN','TON DESIGN');host.innerHTML='';m.library.forEach(item=>{const b=document.createElement('button');b.type='button';b.className='creator-library-card';b.dataset.libraryId=item.id;b.dataset.status=active==='vehicle'?t('✓ selected','✓ sélectionné'):t('✓ blueprint added','✓ plan ajouté');b.innerHTML=`<img src="${item.img}" alt="${item.name}"><span><b>${item.name}</b><small>${item.subtitle}</small></span>`;b.onclick=()=>chooseLibrary(item);host.appendChild(b)});refreshLibraryCards();}
 function refreshLibraryCards(){document.querySelectorAll('.creator-library-card').forEach(card=>{const exists=active==='vehicle'?card.dataset.libraryId===currentLibraryId:[...objectLayer.children].some(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===card.dataset.libraryId);card.classList.toggle('active',exists)});}
 function chooseLibrary(item){currentLibraryId=item.id;if(active==='vehicle'){vehicleYaw=0;vehiclePitch=.10;vehicleViewMode='left';renderTemplate('vehicle');refreshLibraryCards();updateVehicleViewUI();renderModes(missions[active],activeMode);commitHistory();return}const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
@@ -271,7 +450,25 @@ function paletteVisual(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)retu
 
 function renderPlan(m,saved={}){const host=$('creatorPlanFields');host.innerHTML='';m.prompts.forEach((q,i)=>{const l=document.createElement('label');l.textContent=L(q);const inp=document.createElement('input');inp.dataset.plan=i;inp.value=saved.plan?.[i]||'';l.appendChild(inp);host.appendChild(l)});$('creatorNotes').value=saved.notes||'';}
 
-function vehiclePartSvg(id){const common='class="creator-object-icon creator-vehicle-part" viewBox="0 0 120 80" aria-hidden="true"';if(id==='wheel')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#232a35" stroke="#c8d3df" stroke-width="4"/><circle cx="50" cy="50" r="31" fill="#aeb9c5" stroke="#e7eef5" stroke-width="3"/><circle cx="50" cy="50" r="8" fill="#303b48"/>${[0,72,144,216,288].map(a=>`<rect x="47" y="17" width="6" height="30" rx="3" fill="#455667" transform="rotate(${a} 50 50)"/>`).join('')}</svg>`;if(id==='windscreen')return `<svg ${common}><path d="M18 64 L34 17 Q61 7 95 22 L108 63 Z" fill="rgba(173,220,239,.62)" stroke="#dff7ff" stroke-width="4"/></svg>`;if(id==='window')return `<svg ${common}><path d="M11 63 L25 20 Q50 9 99 21 L108 62 Z" fill="rgba(173,220,239,.58)" stroke="#dff7ff" stroke-width="4"/></svg>`;if(id==='roof')return `<svg ${common}><path d="M8 57 Q28 16 59 13 Q88 14 113 55" fill="rgba(217,229,240,.88)" stroke="#f1f7fb" stroke-width="4"/></svg>`;if(id==='door')return `<svg ${common}><path d="M22 11 Q66 6 103 22 L100 68 Q62 74 20 65 Z" fill="#91a8bb" stroke="#eef6fb" stroke-width="4"/><path d="M79 25h12" stroke="#34495b" stroke-width="4" stroke-linecap="round"/></svg>`;if(id==='mirror')return `<svg ${common}><path d="M19 46 Q36 20 74 25 Q92 30 104 43 Q81 62 38 59 Z" fill="#9fb4c5" stroke="#eef6fb" stroke-width="4"/><path d="M19 48L8 63" stroke="#66798a" stroke-width="7"/></svg>`;if(id==='headlight')return `<svg ${common}><path d="M8 53 Q39 13 108 28 Q94 58 27 66 Z" fill="#dff7ff" stroke="#f8fdff" stroke-width="4"/><path d="M32 48 Q55 29 90 34" stroke="#78dfff" stroke-width="5"/></svg>`;if(id==='bumper')return `<svg ${common}><path d="M5 35 Q29 20 56 23 Q88 22 115 36 L103 61 Q74 70 17 61 Z" fill="#a4b3c1" stroke="#eef6fb" stroke-width="4"/></svg>`;return ''}
+function vehiclePartSvg(id){
+  const common='class="creator-object-icon creator-vehicle-part" viewBox="0 0 120 80" aria-hidden="true"';
+  if(id==='wheel')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="#202733" stroke="#d7e4ee" stroke-width="4"/><circle cx="50" cy="50" r="31" fill="#b8c4cf" stroke="#f4f8fb" stroke-width="3"/><circle cx="50" cy="50" r="8" fill="#303b48"/>${[0,72,144,216,288].map(a=>`<rect x="47" y="17" width="6" height="30" rx="3" fill="#4a5b69" transform="rotate(${a} 50 50)"/>`).join('')}</svg>`;
+  if(id==='door')return `<svg ${common}><path d="M15 18 Q55 7 104 18 L100 67 Q56 73 18 63 Z" fill="#8da6bb" stroke="#eef8ff" stroke-width="4"/><path d="M80 29h13" stroke="#33495b" stroke-width="4" stroke-linecap="round"/></svg>`;
+  if(id==='window')return `<svg ${common}><path d="M10 61 L25 19 Q55 8 105 22 L108 60 Z" fill="rgba(158,213,237,.68)" stroke="#e8fbff" stroke-width="4"/></svg>`;
+  if(id==='windscreen')return `<svg ${common}><path d="M16 65 L38 14 Q65 6 103 24 L110 65 Z" fill="rgba(165,220,240,.70)" stroke="#ecfbff" stroke-width="4"/></svg>`;
+  if(id==='rear-window')return `<svg ${common}><path d="M12 25 Q52 7 92 16 L110 63 L21 63 Z" fill="rgba(165,220,240,.66)" stroke="#ecfbff" stroke-width="4"/></svg>`;
+  if(id==='roof')return `<svg ${common}><path d="M7 57 Q28 17 61 13 Q92 15 114 55 L104 64 L16 64 Z" fill="#c6d2dc" stroke="#f5f9fc" stroke-width="4"/></svg>`;
+  if(id==='mirror')return `<svg ${common}><path d="M15 46 Q35 20 73 25 Q91 30 105 42 Q81 61 38 58 Z" fill="#a7b8c7" stroke="#f1f8fc" stroke-width="4"/><path d="M17 48L7 62" stroke="#66798a" stroke-width="7"/></svg>`;
+  if(id==='headlight')return `<svg ${common}><path d="M8 53 Q39 13 108 28 Q94 58 27 66 Z" fill="#dff8ff" stroke="#ffffff" stroke-width="4"/><path d="M31 49 Q56 29 91 34" stroke="#61dfff" stroke-width="5"/></svg>`;
+  if(id==='taillight')return `<svg ${common}><path d="M10 31 Q53 15 108 33 L98 59 Q51 62 17 52 Z" fill="#ff596f" stroke="#ffd6dd" stroke-width="4"/><path d="M31 42h48" stroke="#ffb4bf" stroke-width="4"/></svg>`;
+  if(id==='bumper'||id==='rear-bumper')return `<svg ${common}><path d="M5 35 Q31 20 58 23 Q89 22 115 36 L103 61 Q74 70 17 61 Z" fill="#aab9c6" stroke="#f0f7fb" stroke-width="4"/></svg>`;
+  if(id==='hood')return `<svg ${common}><path d="M9 58 Q24 20 58 14 Q93 18 111 57 L95 65 L23 65 Z" fill="#b7c6d1" stroke="#f3f8fb" stroke-width="4"/></svg>`;
+  if(id==='trunk')return `<svg ${common}><path d="M13 26 Q51 11 99 20 L110 58 Q65 68 20 58 Z" fill="#b3c2cf" stroke="#f3f8fb" stroke-width="4"/></svg>`;
+  if(id==='dashboard')return `<svg ${common}><path d="M7 30 Q55 11 113 28 L106 62 Q59 53 15 63 Z" fill="#475766" stroke="#dfeaf1" stroke-width="4"/><rect x="45" y="32" width="28" height="14" rx="3" fill="#5de4ff"/></svg>`;
+  if(id==='steering')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="none" stroke="#dce6ee" stroke-width="8"/><circle cx="50" cy="50" r="12" fill="#455666"/><path d="M50 50L25 27M50 50l25-23M50 50v35" stroke="#65798a" stroke-width="7"/></svg>`;
+  if(id==='driver-seat'||id==='seat')return `<svg ${common}><path d="M39 8 Q68 7 75 27 L72 50 L91 67 L30 67 L35 48 L31 25 Q32 12 39 8Z" fill="#596a79" stroke="#e5edf3" stroke-width="4"/><path d="M38 36h33" stroke="#9fb2c1" stroke-width="3"/></svg>`;
+  return '';
+}
 function visualHTML(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;switch(p.className){case'park-bench':return '<span class="creator-object-icon creator-visual creator-bench-visual"><i></i><i></i><i></i><i></i></span>';case'shelf':return '<span class="creator-object-icon creator-visual creator-shelf-visual"></span>';case'sofa':return '<span class="creator-object-icon creator-visual creator-sofa-visual"></span>';case'fluorescent':return '<span class="creator-object-icon creator-visual creator-fluorescent-visual"></span>';case'tvstand':return '<span class="creator-object-icon creator-visual creator-tvstand-visual"></span>';case'settop':return '<span class="creator-object-icon creator-visual creator-settop-visual"></span>';case'chassis':return '<span class="creator-object-icon creator-visual creator-chassis-visual"></span>';case'amphibious':return '<span class="creator-object-icon creator-visual creator-amphibious-visual"></span>';case'wing':return '<span class="creator-object-icon creator-visual creator-wing-visual"></span>';case'toilet':return '<span class="creator-object-icon creator-toilet-visual"></span>';default:return `<span class="creator-object-icon">${p.icon||'◆'}</span>`;}}
 function robotBlueprintSvg(id){const accent=id==='robot-c'?'#ffd45b':id==='robot-d'?'#ff647c':id==='robot-e'?'#5ee3a4':id==='robot-f'?'#9cefff':'#5de4ff';const wheeled=id==='robot-b';const flying=id==='robot-d'||id==='robot-f';return `<svg class="creator-object-icon" viewBox="0 0 120 150" aria-hidden="true"><g fill="none" stroke="${accent}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="35" y="12" width="50" height="34" rx="15"/><path d="M44 29h10m12 0h10"/><path d="M48 39q12 8 24 0"/><path d="M42 48l-10 38h56L78 48z"/><path d="M32 56L12 86m76-30 20 30"/><circle cx="12" cy="88" r="8"/><circle cx="108" cy="88" r="8"/>${wheeled?'<circle cx="38" cy="120" r="16"/><circle cx="82" cy="120" r="16"/><path d="M34 86l4 18m48-18-4 18"/>':'<path d="M47 86l-8 48h18l3-33 3 33h18l-8-48"/>'}${flying?'<path d="M35 55L5 35l20 35m60-15 30-20-20 35"/>':''}</g></svg>`;}
 
@@ -284,17 +481,112 @@ function objectTags(el){try{return JSON.parse(el.dataset.tags||'[]')}catch(_){re
 function makeObjectInteractive(el){el.addEventListener('pointerdown',e=>{if(testRunning)return;e.preventDefault();e.stopPropagation();if(tool==='eraser'){selectObject(el);deleteSelected();return}selectObject(el);const r=stage.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,startX=+el.dataset.x,startY=+el.dataset.y;el.setPointerCapture?.(e.pointerId);el.classList.add('dragging');const move=ev=>{el.dataset.installed='0';el.classList.remove('installed-part');el.dataset.x=clamp(startX+(ev.clientX-sx)/r.width,.02,.98);el.dataset.y=clamp(startY+(ev.clientY-sy)/r.height,.02,.98);applyObjectStyle(el)};const up=()=>{el.classList.remove('dragging');el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);softSnap(el);commitHistory()};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});}
 function selectObject(el){if(selectedObject)selectedObject.classList.remove('selected');selectedObject=el||null;if(selectedObject){selectedObject.classList.add('selected');$('selectedObjectLabel').textContent=selectedObject.dataset.label||t('Selected object','Objet sélectionné');$('objectSize').disabled=false;$('objectRotate').disabled=false;['shrinkObject','growObject','duplicateObject','sendBackObject','bringFrontObject','deleteObject'].forEach(id=>$(id).disabled=false);$('objectSize').value=clamp(+selectedObject.dataset.size||68,24,420);$('objectRotate').value=+(selectedObject.dataset.rotation||0);if(selectedObject.dataset.kind==='blueprint'){currentLibraryId=selectedObject.dataset.blueprintId;renderModes(missions[active],null)}}else{$('selectedObjectLabel').textContent=t('Select an object or drawn shape to edit it','Sélectionne un objet ou une forme à modifier');$('objectSize').disabled=true;$('objectRotate').disabled=true;['shrinkObject','growObject','duplicateObject','sendBackObject','bringFrontObject','deleteObject'].forEach(id=>$(id).disabled=true)}refreshLibraryCards();}
 
-function vehicleBuildTargets(raw=false){const sport={
- wheel:[{x:.657,y:.706,size:.132,aspect:1},{x:.948,y:.622,size:.105,aspect:1}],windscreen:[{x:.555,y:.255,size:.285,aspect:1.9}],roof:[{x:.582,y:.154,size:.360,aspect:2.6}],mirror:[{x:.760,y:.325,size:.073,aspect:1.55}],window:[{x:.704,y:.270,size:.195,aspect:1.75}],door:[{x:.795,y:.500,size:.215,aspect:1.45}],headlight:[{x:.446,y:.545,size:.145,aspect:2.2}],bumper:[{x:.205,y:.735,size:.300,aspect:3}]
-};const executive={wheel:[{x:.643,y:.728,size:.105,aspect:1},{x:.905,y:.694,size:.088,aspect:1}],windscreen:[{x:.470,y:.290,size:.245,aspect:1.9}],roof:[{x:.555,y:.205,size:.350,aspect:2.6}],mirror:[{x:.665,y:.400,size:.065,aspect:1.55}],window:[{x:.665,y:.320,size:.190,aspect:1.75}],door:[{x:.690,y:.545,size:.190,aspect:1.45}],headlight:[{x:.410,y:.525,size:.125,aspect:2.2}],bumper:[{x:.260,y:.705,size:.275,aspect:3}]};const src=currentLibraryId==='vehicle-executive'?executive:sport;if(raw)return Object.fromEntries(Object.entries(src).map(([k,v])=>[k,v.map(mapVehicleTarget)]));return Object.fromEntries(Object.entries(src).map(([k,v])=>[k,v.map(mapVehicleTarget)]));}
-function vehicleTargetFor(el){if(active!=='vehicle'||el?.dataset.kind!=='part'||vehicleViewMode==='interior')return null;const id=el.dataset.partId,targets=vehicleBuildTargets()[id];if(!targets)return null;let best=null,bestD=Infinity;for(const target of targets){const occupied=[...objectLayer.children].some(o=>o!==el&&o.dataset.kind==='part'&&o.dataset.installed==='1'&&o.dataset.targetKey===`${id}:${target.x}:${target.y}`);if(occupied)continue;const d=Math.hypot((+el.dataset.x)-target.x,(+el.dataset.y)-target.y);if(d<bestD){best={...target,key:`${id}:${target.x}:${target.y}`};bestD=d}}return best?{...best,distance:bestD}:null;}
-function tryVehicleSnap(el,announce=true){const target=vehicleTargetFor(el);if(!target)return false;const r=stage.getBoundingClientRect(),targetPx=target.size*r.width,current=+el.dataset.size||68,sizeError=Math.abs(current-targetPx)/Math.max(1,targetPx),near=target.distance<=.105,closeSize=sizeError<=.16;if(near&&closeSize){el.dataset.x=target.x;el.dataset.y=target.y;el.dataset.size=targetPx;el.dataset.aspect=target.aspect||el.dataset.aspect||1;el.dataset.rotation=0;el.dataset.installed='1';el.dataset.targetKey=target.key;el.classList.add('installed-part');applyObjectStyle(el);if(announce)$('creatorCoach').textContent=t('CLICK — exact puzzle fit. This part is now locked into the blueprint.','CLIC — ajustement puzzle exact. Cette pièce est maintenant fixée au plan.');return true}el.dataset.installed='0';el.classList.remove('installed-part');if(announce&&near&&!closeSize)$('creatorCoach').textContent=t('Right place. Resize slowly until the piece covers its blueprint slot and clicks in.','Bonne position. Redimensionne doucement jusqu’à ce que la pièce couvre son emplacement et se fixe.');else if(announce&&closeSize&&!near)$('creatorCoach').textContent=t('Size is close. Move the piece nearer to its matching outline.','La taille est proche. Rapproche la pièce de son contour correspondant.');return false;}
-function softSnap(el){if(active==='vehicle'){tryVehicleSnap(el,true);return}if(active!=='park')return;const tags=objectTags(el),targets=[...objectLayer.children].filter(o=>o!==el&&o.dataset.kind==='part');let desired=null;if(tags.includes('seated-person'))desired=['seat-target'];else if(tags.includes('duck'))desired=['water'];else if(tags.includes('pusher'))desired=['buggy'];else if(tags.includes('swing-rider'))desired=['match-swing'];if(!desired)return;let best=null,bestD=.15;targets.forEach(o=>{const ot=objectTags(o);if(!desired.some(x=>ot.includes(x)))return;const dx=(+o.dataset.x)-(+el.dataset.x),dy=(+o.dataset.y)-(+el.dataset.y),d=Math.hypot(dx,dy);if(d<bestD){best=o;bestD=d}});if(best){el.dataset.x=+best.dataset.x+(tags.includes('pusher')?-.065:0);el.dataset.y=+best.dataset.y+(tags.includes('seated-person')?-.025:tags.includes('duck')?0:-.015);applyObjectStyle(el);$('creatorCoach').textContent=t('Nice match — those pieces work naturally together.','Bonne association — ces éléments fonctionnent naturellement ensemble.')}}
+
+function vehicleTargetFor(el){
+  if(active!=='vehicle'||el?.dataset.kind!=='part')return null;
+  const id=el.dataset.partId;
+  if(vehicleViewMode==='interior'){
+    const slots=vehicleInteriorSlots().filter(x=>x.partId===id);
+    if(!slots.length)return null;
+    const used=installedVehicleKeys();
+    let best=null,bestD=Infinity;
+    for(const sl of slots){
+      if(used.has(sl.key)&&el.dataset.targetKey!==sl.key)continue;
+      const d=Math.hypot((+el.dataset.x)-sl.x,(+el.dataset.y)-sl.y);
+      if(d<bestD){best={...sl,distance:d,sizePx:sl.size*stage.clientWidth,screenAspect:sl.aspect,visible:true,rotation:0};bestD=d}
+    }
+    return best;
+  }
+  const used=installedVehicleKeys(),slots=vehicleSlotDefinitions().filter(x=>x.partId===id);
+  let best=null,bestD=Infinity;
+  for(const sl of slots){
+    if(used.has(sl.key)&&el.dataset.targetKey!==sl.key)continue;
+    const pr=vehicleSlotProjection(sl);
+    if(!pr||!pr.visible)continue;
+    const tx=pr.cx/templateCanvas.width,ty=pr.cy/templateCanvas.height;
+    const d=Math.hypot((+el.dataset.x)-tx,(+el.dataset.y)-ty);
+    if(d<bestD){
+      const cssPx=pr.sizePx/templateCanvas.width*stage.clientWidth;
+      best={...pr,x:tx,y:ty,distance:d,sizePx:cssPx,screenAspect:pr.screenAspect,rotation:0};
+      bestD=d;
+    }
+  }
+  return best;
+}
+function syncInstalledVehiclePart(el){
+  if(active!=='vehicle'||el.dataset.installed!=='1'||!el.dataset.targetKey)return;
+  const key=el.dataset.targetKey;
+  if(vehicleViewMode==='interior'){
+    const sl=vehicleInteriorSlots().find(x=>x.key===key);
+    if(!sl){el.style.opacity='0';return}
+    el.dataset.x=sl.x;el.dataset.y=sl.y;el.dataset.size=sl.size*stage.clientWidth;el.dataset.aspect=sl.aspect;el.dataset.rotation=0;
+    el.style.opacity='1';el.style.pointerEvents='none';el.style.setProperty('--object-squash','1');applyObjectStyle(el);return;
+  }
+  const sl=vehicleSlotDefinitions().find(x=>x.key===key);
+  if(!sl){el.style.opacity='0';return}
+  const pr=vehicleSlotProjection(sl);
+  if(!pr){el.style.opacity='0';return}
+  el.dataset.x=pr.cx/templateCanvas.width;el.dataset.y=pr.cy/templateCanvas.height;
+  el.dataset.size=pr.sizePx/templateCanvas.width*stage.clientWidth;
+  el.dataset.aspect=sl.aspect||pr.screenAspect||1;el.dataset.rotation=0;
+  const squash=clamp(Math.abs(pr.facing),.18,1);
+  el.style.setProperty('--object-squash',String(squash));
+  el.style.opacity=pr.visible?'1':'0.10';el.style.pointerEvents='none';applyObjectStyle(el);
+}
+function syncInstalledVehicleParts(){
+  if(active!=='vehicle')return;
+  [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.installed==='1').forEach(syncInstalledVehiclePart);
+}
+function tryVehicleSnap(el,announce=true){
+  if(!el||el.dataset.kind!=='part')return false;
+  const target=vehicleTargetFor(el);
+  if(!target){
+    if(announce)$('creatorCoach').textContent=t('Rotate the car until the correct puzzle slot for this part is facing you.','Tourne la voiture jusqu’à ce que le bon emplacement du puzzle soit face à toi.');
+    return false;
+  }
+  const current=+el.dataset.size||68,targetPx=Math.max(24,target.sizePx||68);
+  const sizeError=Math.abs(current-targetPx)/targetPx;
+  const proximityLimit=Math.max(.045,Math.min(.075,targetPx/stage.clientWidth*.34));
+  const near=target.distance<=proximityLimit,closeSize=sizeError<=.10;
+  if(near&&closeSize){
+    el.dataset.installed='1';el.dataset.targetKey=target.key;el.classList.add('installed-part');
+    el.dataset.aspect=target.aspect||target.screenAspect||el.dataset.aspect||1;
+    el.style.setProperty('--object-squash','1');
+    syncInstalledVehiclePart(el);
+    renderTemplate('vehicle');
+    selectObject(null);
+    if(announce){
+      const fitted=installedVehicleKeys().size,total=vehicleSlotDefinitions().filter(x=>x.required).length+vehicleInteriorSlots().filter(x=>x.required).length;
+      $('creatorCoach').textContent=t(`CLICK — puzzle piece fitted exactly. ${fitted} pieces are installed. Rotate the car and add the next one.`,`CLIC — pièce du puzzle parfaitement fixée. ${fitted} pièces sont installées. Tourne la voiture et ajoute la suivante.`);
+      window.playTone?.(true);
+    }
+    return true;
+  }
+  el.dataset.installed='0';el.dataset.targetKey='';el.classList.remove('installed-part');el.style.opacity='1';el.style.pointerEvents='auto';el.style.setProperty('--object-squash','1');
+  if(announce&&near&&!closeSize)$('creatorCoach').textContent=t('Correct area. Now resize the piece slowly until it covers the slot and clicks in.','Bonne zone. Redimensionne maintenant la pièce lentement jusqu’à ce qu’elle couvre l’emplacement et se fixe.');
+  else if(announce&&closeSize&&!near)$('creatorCoach').textContent=t('The size is close. Move the piece nearer to its matching outline.','La taille est proche. Rapproche la pièce de son contour correspondant.');
+  else if(announce)$('creatorCoach').textContent=t('Keep matching the outline: correct place + correct size = CLICK.','Continue à faire correspondre le contour : bonne place + bonne taille = CLIC.');
+  return false;
+}
+function vehiclePuzzleProgress(){
+  const used=installedVehicleKeys(),req=[...vehicleSlotDefinitions(),...vehicleInteriorSlots()].filter(x=>x.required);
+  return{done:req.filter(x=>used.has(x.key)).length,total:req.length,missing:req.filter(x=>!used.has(x.key))};
+}
+function softSnap(el){
+  if(active==='vehicle'){tryVehicleSnap(el,true);return}
+  if(active!=='park')return;
+  const tags=objectTags(el),targets=[...objectLayer.children].filter(o=>o!==el&&o.dataset.kind==='part');let desired=null;
+  if(tags.includes('seated-person'))desired=['seat-target'];else if(tags.includes('duck'))desired=['water'];else if(tags.includes('pusher'))desired=['buggy'];else if(tags.includes('swing-rider'))desired=['match-swing'];
+  if(!desired)return;
+  let best=null,bestD=.15;
+  targets.forEach(o=>{const ot=objectTags(o);if(!desired.some(x=>ot.includes(x)))return;const dx=(+o.dataset.x)-(+el.dataset.x),dy=(+o.dataset.y)-(+el.dataset.y),d=Math.hypot(dx,dy);if(d<bestD){best=o;bestD=d}});
+  if(best){el.dataset.x=+best.dataset.x+(tags.includes('pusher')?-.065:0);el.dataset.y=+best.dataset.y+(tags.includes('seated-person')?-.025:tags.includes('duck')?0:-.015);applyObjectStyle(el);$('creatorCoach').textContent=t('Nice match — those pieces work naturally together.','Bonne association — ces éléments fonctionnent naturellement ensemble.')}
+}
 
 function pointerPos(e){const r=canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};}
 function stagePos(e){const r=stage.getBoundingClientRect();return{x:clamp((e.clientX-r.left)/r.width,0,1),y:clamp((e.clientY-r.top)/r.height,0,1),px:e.clientX-r.left,py:e.clientY-r.top,w:r.width,h:r.height};}
 canvas.addEventListener('pointerdown',e=>{if(testRunning)return;if(tool==='select'){selectObject(null);if(active==='vehicle'&&templateOn){vehicleOrbiting=true;vehicleViewMode='orbit';canvas.setPointerCapture?.(e.pointerId);canvas.dataset.orbitX=e.clientX;canvas.dataset.orbitY=e.clientY;canvas.dataset.orbitYaw=vehicleYaw;canvas.dataset.orbitPitch=vehiclePitch;stage.classList.add('vehicle-orbiting');updateVehicleViewUI()}return}drawing=true;startPoint=(tool==='eraser')?pointerPos(e):stagePos(e);lastPoint=startPoint;freePoints=[];canvas.setPointerCapture?.(e.pointerId);if(tool==='pen'){freePoints=[startPoint];previewFreehand()}else if(tool==='eraser'){const p=pointerPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)}});
-canvas.addEventListener('pointermove',e=>{if(vehicleOrbiting&&active==='vehicle'){const dx=e.clientX-(+canvas.dataset.orbitX||e.clientX),dy=e.clientY-(+canvas.dataset.orbitY||e.clientY);vehicleYaw=clamp((+canvas.dataset.orbitYaw||0)+dx*.006,-.72,.72);vehiclePitch=clamp((+canvas.dataset.orbitPitch||0)+dy*.005,-.62,.62);updateVehicleViewUI();return}if(!drawing)return;if(tool==='pen'){const p=stagePos(e);freePoints.push(p);if(freePoints.length%2===0)previewFreehand();lastPoint=p;return}if(tool==='eraser'){const p=pointerPos(e);ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=+$('brushSize').value;ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='rgba(0,0,0,1)';ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();lastPoint=p;return}const p=stagePos(e);previewVector(startPoint,p);});
+canvas.addEventListener('pointermove',e=>{if(vehicleOrbiting&&active==='vehicle'){const dx=e.clientX-(+canvas.dataset.orbitX||e.clientX),dy=e.clientY-(+canvas.dataset.orbitY||e.clientY);vehicleYaw=(+canvas.dataset.orbitYaw||0)+dx*.008;while(vehicleYaw>Math.PI)vehicleYaw-=Math.PI*2;while(vehicleYaw<-Math.PI)vehicleYaw+=Math.PI*2;vehiclePitch=clamp((+canvas.dataset.orbitPitch||0)+dy*.006,-1.03,.88);vehicleViewMode='orbit';renderTemplate('vehicle');updateVehicleViewUI();return}if(!drawing)return;if(tool==='pen'){const p=stagePos(e);freePoints.push(p);if(freePoints.length%2===0)previewFreehand();lastPoint=p;return}if(tool==='eraser'){const p=pointerPos(e);ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=+$('brushSize').value;ctx.globalCompositeOperation='destination-out';ctx.strokeStyle='rgba(0,0,0,1)';ctx.lineTo(p.x,p.y);ctx.stroke();ctx.restore();lastPoint=p;return}const p=stagePos(e);previewVector(startPoint,p);});
 canvas.addEventListener('pointerup',e=>{if(vehicleOrbiting){vehicleOrbiting=false;stage.classList.remove('vehicle-orbiting');commitHistory();return}if(!drawing)return;drawing=false;if(tool==='pen'){const p=stagePos(e);freePoints.push(p);if(tempVector)tempVector.remove();const g=freehandGeometry(freePoints);if(g)addVector(g,{select:true,commit:false});tempVector=null;freePoints=[];drawStrokes++;commitHistory();return}if(tool==='eraser'){ctx.closePath();drawStrokes++;commitHistory();return}const p=stagePos(e);finalizeVector(startPoint,p);tempVector=null;drawStrokes++;commitHistory();});
 canvas.addEventListener('pointercancel',()=>{if(vehicleOrbiting){vehicleOrbiting=false;stage.classList.remove('vehicle-orbiting')}});
 canvas.addEventListener('pointercancel',()=>{drawing=false;freePoints=[];if(tempVector){tempVector.remove();tempVector=null}});
@@ -304,8 +596,32 @@ function vectorGeometry(a,b,type){const dx=(b.x-a.x)*stage.clientWidth,dy=(b.y-a
 function previewVector(a,b){if(tempVector)tempVector.remove();tempVector=addVector(vectorGeometry(a,b,tool),{select:false,commit:false});tempVector.style.pointerEvents='none';tempVector.style.opacity='.7';}
 function finalizeVector(a,b){if(tempVector)tempVector.remove();addVector(vectorGeometry(a,b,tool),{select:true,commit:false});}
 
-function objectData(){return[...objectLayer.children].filter(o=>o!==tempVector).map(o=>({kind:o.dataset.kind,partId:o.dataset.partId,label:o.dataset.label,icon:o.dataset.icon,className:o.dataset.className,tags:o.dataset.tags,x:+o.dataset.x,y:+o.dataset.y,size:+o.dataset.size,rotation:+o.dataset.rotation,aspect:+o.dataset.aspect,blueprintId:o.dataset.blueprintId,image:o.dataset.image,vectorType:o.dataset.vectorType,vectorColor:o.dataset.vectorColor,vectorStroke:+o.dataset.vectorStroke,vectorPath:o.dataset.vectorPath||''}));}
-function restoreObjects(items=[]){objectLayer.innerHTML='';selectedObject=null;items.forEach(d=>{if(d.kind==='blueprint'){const item=[...(missions[active].library||[])].find(x=>x.id===d.blueprintId)||{id:d.blueprintId,name:d.label,img:d.image,blueprintType:active==='robot'?'robot':'scene'};addBlueprint(item,d.x,d.y,d.size,d.rotation,{commit:false,select:false})}else if(d.kind==='vector'){addVector({type:d.vectorType,color:d.vectorColor,stroke:d.vectorStroke,path:d.vectorPath,x:d.x,y:d.y,size:d.size,aspect:d.aspect,rotation:d.rotation,label:d.label},{commit:false,select:false})}else{const p=findPart(d.partId)||part(d.partId,d.icon,d.label,d.label,JSON.parse(d.tags||'[]'),d.className);addObject(p,d.x,d.y,d.size,d.rotation,{commit:false,select:false})}});refreshLibraryCards();}
+function objectData(){
+  return[...objectLayer.children].filter(o=>o!==tempVector).map(o=>({
+    kind:o.dataset.kind,partId:o.dataset.partId,label:o.dataset.label,icon:o.dataset.icon,className:o.dataset.className,tags:o.dataset.tags,
+    x:+o.dataset.x,y:+o.dataset.y,size:+o.dataset.size,rotation:+o.dataset.rotation,aspect:+o.dataset.aspect,
+    installed:o.dataset.installed==='1',targetKey:o.dataset.targetKey||'',
+    blueprintId:o.dataset.blueprintId,image:o.dataset.image,vectorType:o.dataset.vectorType,vectorColor:o.dataset.vectorColor,
+    vectorStroke:+o.dataset.vectorStroke,vectorPath:o.dataset.vectorPath||''
+  }));
+}
+function restoreObjects(items=[]){
+  objectLayer.innerHTML='';selectedObject=null;
+  items.forEach(d=>{
+    if(d.kind==='blueprint'){
+      const item=[...(missions[active].library||[])].find(x=>x.id===d.blueprintId)||{id:d.blueprintId,name:d.label,img:d.image,blueprintType:active==='robot'?'robot':'scene'};
+      addBlueprint(item,d.x,d.y,d.size,d.rotation,{commit:false,select:false});
+    }else if(d.kind==='vector'){
+      addVector({type:d.vectorType,color:d.vectorColor,stroke:d.vectorStroke,path:d.vectorPath,x:d.x,y:d.y,size:d.size,aspect:d.aspect,rotation:d.rotation,label:d.label},{commit:false,select:false});
+    }else{
+      const p=findPart(d.partId)||part(d.partId,d.icon,d.label,d.label,JSON.parse(d.tags||'[]'),d.className);
+      const el=addObject(p,d.x,d.y,d.size,d.rotation,{commit:false,select:false});
+      if(d.installed&&d.targetKey){el.dataset.installed='1';el.dataset.targetKey=d.targetKey;el.classList.add('installed-part');}
+    }
+  });
+  if(active==='vehicle'){renderTemplate('vehicle');syncInstalledVehicleParts();}
+  refreshLibraryCards();
+}
 function snapshot(){return{drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode};}
 function resetHistory(){history=[snapshot()];historyIndex=0;updateHistoryButtons();}
 function commitHistory(){if(restoring||!active)return;history=history.slice(0,historyIndex+1);history.push(snapshot());if(history.length>50)history.shift();historyIndex=history.length-1;updateHistoryButtons();}
@@ -313,9 +629,9 @@ function updateHistoryButtons(){$('undoDraw').disabled=historyIndex<=0;$('redoDr
 function restoreDrawing(data,cb){ctx.clearRect(0,0,canvas.width,canvas.height);if(!data){cb?.();return}const img=new Image();img.onload=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);cb?.()};img.onerror=()=>cb?.();img.src=data;}
 function restoreSnapshot(s){restoring=true;templateOn=s.templateOn!==false;gridOn=!!s.gridOn;activeMode=s.activeMode;currentLibraryId=s.currentLibraryId;vehicleYaw=Number.isFinite(s.vehicleYaw)?s.vehicleYaw:vehicleYaw;vehiclePitch=Number.isFinite(s.vehiclePitch)?s.vehiclePitch:vehiclePitch;vehicleViewMode=s.vehicleViewMode||vehicleViewMode;stage.classList.toggle('show-grid',gridOn);updateBlueprintVisibility();renderTemplate(active);updateVehicleViewUI();renderModes(missions[active],activeMode);restoreDrawing(s.drawing,()=>{restoreObjects(s.objects);restoring=false;updateHistoryButtons()});}
 
-function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');const saved=loadStore()[id]||{};templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;vehicleYaw=Number.isFinite(saved.vehicleYaw)?saved.vehicleYaw:0;vehiclePitch=Number.isFinite(saved.vehiclePitch)?saved.vehiclePitch:.10;vehicleViewMode=saved.vehicleViewMode||'left';stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(saved.objects||[]);drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
+function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;vehicleYaw=Number.isFinite(saved.vehicleYaw)?saved.vehicleYaw:0;vehiclePitch=Number.isFinite(saved.vehiclePitch)?saved.vehiclePitch:.10;vehicleViewMode=saved.vehicleViewMode||'left';stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(saved.objects||[]);drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
 
-function save(){if(!active)return;const all=loadStore();const plan=[...document.querySelectorAll('#creatorPlanFields [data-plan]')].map(i=>i.value.trim());all[active]={plan,notes:$('creatorNotes').value.trim(),drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,updatedAt:Date.now()};try{saveStore(all);$('creatorSaved').textContent=t('✅ Project saved. You can return and continue later.','✅ Projet enregistré. Tu peux revenir plus tard.')}catch(_){$('creatorSaved').textContent=t('This design is too large to save on this device.','Ce design est trop volumineux pour cet appareil.')}window.CWState?.setProgress?.('creator',Math.min(95,Object.keys(all).length*16),{lastMission:active});window.CWState?.logActivity?.({id:'creator-'+active,title:`Creator Studio: ${missions[active].title[0]}`,icon:'🎨',detail:'Saved interactive design',href:'creator.html'});}
+function save(){if(!active)return;const all=loadStore();const plan=[...document.querySelectorAll('#creatorPlanFields [data-plan]')].map(i=>i.value.trim());all[active]={plan,notes:$('creatorNotes').value.trim(),drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePuzzleVersion:active==='vehicle'?VEHICLE_PUZZLE_VERSION:undefined,updatedAt:Date.now()};try{saveStore(all);$('creatorSaved').textContent=t('✅ Project saved. You can return and continue later.','✅ Projet enregistré. Tu peux revenir plus tard.')}catch(_){$('creatorSaved').textContent=t('This design is too large to save on this device.','Ce design est trop volumineux pour cet appareil.')}window.CWState?.setProgress?.('creator',Math.min(95,Object.keys(all).length*16),{lastMission:active});window.CWState?.logActivity?.({id:'creator-'+active,title:`Creator Studio: ${missions[active].title[0]}`,icon:'🎨',detail:'Saved interactive design',href:'creator.html'});}
 function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);resetHistory();closeClearDialog();}
 function openClearDialog(){$('creatorClearDialog').hidden=false;document.body.classList.add('creator-dialog-open');setTimeout(()=>$('keepProject').focus(),0)}
 function closeClearDialog(){$('creatorClearDialog').hidden=true;document.body.classList.remove('creator-dialog-open')}
@@ -323,8 +639,18 @@ function closeClearDialog(){$('creatorClearDialog').hidden=true;document.body.cl
 function testTags(){const set=new Set();[...objectLayer.children].forEach(o=>{if(o.dataset.kind==='part')objectTags(o).forEach(tag=>set.add(tag))});return set;}
 function addTestClasses(){[...objectLayer.children].forEach(o=>{const tags=objectTags(o);if(tags.includes('wheel'))o.classList.add('test-wheel');if(active==='vehicle'&&tags.includes('flight')&&o.dataset.partId.includes('wing'))o.classList.add('test-wing');if(active==='room'&&tags.includes('light'))o.classList.add('test-light')});}
 function clearTestClasses(){[...objectLayer.children].forEach(o=>o.classList.remove('test-wheel','test-wing','test-water-wheel','test-light'));buildLayer.classList.remove('test-road','test-water','test-fly','test-robot');}
-function startTest(){if(!active)return;const m=missions[active],objectCount=objectLayer.children.length,enough=drawStrokes>=1||objectCount>=2;if(!enough){$('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Needs more design work','Il faut encore travailler le design')}</b><p>${t('Add some drawing or at least two movable pieces before testing.','Ajoute un dessin ou au moins deux pièces avant de tester.')}</p></div>`;return}stopTest(false);testRunning=true;stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);simulation.className='creator-simulation active';simulation.innerHTML='';addTestClasses();const tags=testTags();let special='';if(active==='vehicle'){const travel=Math.max(65,stage.clientWidth*.20);buildLayer.style.setProperty('--test-travel',travel+'px');if(tags.has('flight')){buildLayer.classList.add('test-fly');simulation.innerHTML='<span class="flight-cloud" style="top:18%">☁️</span><span class="flight-cloud">☁️</span>';special=t('Flying test: the completed vehicle lifts and flies because flight technology is installed.','Test de vol : le véhicule s’élève grâce aux technologies de vol.')}else if(tags.has('amphibious')){buildLayer.classList.add('test-water');simulation.innerHTML='<div class="water-test"></div>';[...objectLayer.children].filter(o=>objectTags(o).includes('wheel')).forEach(o=>{o.classList.remove('test-wheel');o.classList.add('test-water-wheel')});special=t('Water test: the environment changes to water and the wheels retract while the complete vehicle travels as one build.','Test aquatique : l’environnement devient aquatique et les roues se rétractent pendant que le véhicule complet avance.')}else{buildLayer.classList.add('test-road');special=t('Road test: the whole completed vehicle drives smoothly, pauses at each side, then reverses. The tyres rotate with the direction of travel.','Test routier : le véhicule complet roule en douceur, marque une pause à chaque côté puis repart. Les pneus tournent selon le sens.')}}else if(active==='room'){simulation.innerHTML='<div class="room-scan"></div>';special=roomCollisionReport();}else if(active==='park'){simulation.innerHTML='<span class="park-visitor" style="top:34%">🚶</span><span class="park-visitor">🧑‍🦽</span><span class="park-visitor">🧒</span>';special=t('Visitor simulation is running. Watch how people move through the park, then stop and improve the layout.','La simulation des visiteurs est en cours. Observe leurs déplacements puis arrête et améliore le parc.')}else if(active==='robot'){buildLayer.classList.add('test-robot');special=t('Robot systems test is running on the assembled design. This is the foundation for robot-specific movement tests in later upgrades.','Le test des systèmes fonctionne sur le robot assemblé.')}else if(active==='story'){simulation.innerHTML='<div class="story-frame"></div>';special=t('Story preview is running. Check whether the characters, setting and props communicate the scene clearly.','L’aperçu de l’histoire est en cours. Vérifie que personnages, décor et accessoires racontent clairement la scène.')}else if(active==='mars'){simulation.innerHTML='<div class="room-scan"></div>';special=t('Base systems scan is running. Check habitats, support systems, transport and connections.','Le contrôle de la base est en cours. Vérifie habitats, survie, transport et connexions.')}const checks=(m.checks||[]).map(([tag,label])=>({label,ok:tags.has(tag)||objectCount>=4}));let score=Math.min(100,40+objectCount*4+drawStrokes*5);$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>${score}</b><small>/100</small></div><div><b>${t('Live test running','Test en direct')}</b><p>${special}</p>${checks.length?`<ul>${checks.map(c=>`<li class="${c.ok?'pass':'miss'}">${c.ok?'✓':'○'} ${c.label}</li>`).join('')}</ul>`:''}</div></div>`;$('creatorCoach').textContent=special;window.playTone?.(true);}
-function stopTest(showMessage=true){if(!testRunning&&showMessage)return;testRunning=false;stage.classList.remove('testing','test-active');$('stopCreationTest').hidden=true;simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();if(showMessage){$('creatorCoach').textContent=t('Test stopped. Adjust any part, resize it or add something new, then test again.','Test arrêté. Modifie une pièce, redimensionne-la ou ajoute un élément puis reteste.');$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Test stopped — back to edit mode','Test arrêté — retour au mode édition')}</b><p>${t('Build → Test → Stop → Improve → Test again.','Construis → Teste → Arrête → Améliore → Reteste.')}</p></div></div>`;}}
+function startTest(){if(!active)return;
+  if(active==='vehicle'){
+    const progress=vehiclePuzzleProgress();
+    if(progress.done<progress.total){
+      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the car puzzle first','Termine d’abord le puzzle de la voiture')}</b><p>${t(`${progress.done} of ${progress.total} required pieces are fitted. Rotate the blueprint and complete the missing slots before testing.`,`${progress.done} pièces sur ${progress.total} sont fixées. Tourne le plan et complète les emplacements manquants avant le test.`)}</p></div>`;
+      $('creatorCoach').textContent=t('Build it like a peg puzzle: each required outline must be covered by its matching piece before the car can drive.','Construis-la comme un puzzle : chaque contour requis doit être couvert par sa pièce avant que la voiture puisse rouler.');
+      return;
+    }
+    vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';renderTemplate('vehicle');updateVehicleViewUI();
+  }
+  const m=missions[active],objectCount=objectLayer.children.length,enough=drawStrokes>=1||objectCount>=2;if(!enough){$('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Needs more design work','Il faut encore travailler le design')}</b><p>${t('Add some drawing or at least two movable pieces before testing.','Ajoute un dessin ou au moins deux pièces avant de tester.')}</p></div>`;return}stopTest(false);testRunning=true;if(active==='vehicle')renderTemplate('vehicle');stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);simulation.className='creator-simulation active';simulation.innerHTML='';addTestClasses();const tags=testTags();let special='';if(active==='vehicle'){const travel=Math.max(65,stage.clientWidth*.20);buildLayer.style.setProperty('--test-travel',travel+'px');if(tags.has('flight')){buildLayer.classList.add('test-fly');simulation.innerHTML='<span class="flight-cloud" style="top:18%">☁️</span><span class="flight-cloud">☁️</span>';special=t('Flying test: the completed vehicle lifts and flies because flight technology is installed.','Test de vol : le véhicule s’élève grâce aux technologies de vol.')}else if(tags.has('amphibious')){buildLayer.classList.add('test-water');simulation.innerHTML='<div class="water-test"></div>';[...objectLayer.children].filter(o=>objectTags(o).includes('wheel')).forEach(o=>{o.classList.remove('test-wheel');o.classList.add('test-water-wheel')});special=t('Water test: the environment changes to water and the wheels retract while the complete vehicle travels as one build.','Test aquatique : l’environnement devient aquatique et les roues se rétractent pendant que le véhicule complet avance.')}else{buildLayer.classList.add('test-road');special=t('Road test: the whole completed vehicle drives smoothly, pauses at each side, then reverses. The tyres rotate with the direction of travel.','Test routier : le véhicule complet roule en douceur, marque une pause à chaque côté puis repart. Les pneus tournent selon le sens.')}}else if(active==='room'){simulation.innerHTML='<div class="room-scan"></div>';special=roomCollisionReport();}else if(active==='park'){simulation.innerHTML='<span class="park-visitor" style="top:34%">🚶</span><span class="park-visitor">🧑‍🦽</span><span class="park-visitor">🧒</span>';special=t('Visitor simulation is running. Watch how people move through the park, then stop and improve the layout.','La simulation des visiteurs est en cours. Observe leurs déplacements puis arrête et améliore le parc.')}else if(active==='robot'){buildLayer.classList.add('test-robot');special=t('Robot systems test is running on the assembled design. This is the foundation for robot-specific movement tests in later upgrades.','Le test des systèmes fonctionne sur le robot assemblé.')}else if(active==='story'){simulation.innerHTML='<div class="story-frame"></div>';special=t('Story preview is running. Check whether the characters, setting and props communicate the scene clearly.','L’aperçu de l’histoire est en cours. Vérifie que personnages, décor et accessoires racontent clairement la scène.')}else if(active==='mars'){simulation.innerHTML='<div class="room-scan"></div>';special=t('Base systems scan is running. Check habitats, support systems, transport and connections.','Le contrôle de la base est en cours. Vérifie habitats, survie, transport et connexions.')}const checks=(m.checks||[]).map(([tag,label])=>({label,ok:tags.has(tag)||objectCount>=4}));let score=Math.min(100,40+objectCount*4+drawStrokes*5);$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>${score}</b><small>/100</small></div><div><b>${t('Live test running','Test en direct')}</b><p>${special}</p>${checks.length?`<ul>${checks.map(c=>`<li class="${c.ok?'pass':'miss'}">${c.ok?'✓':'○'} ${c.label}</li>`).join('')}</ul>`:''}</div></div>`;$('creatorCoach').textContent=special;window.playTone?.(true);}
+function stopTest(showMessage=true){if(!testRunning&&showMessage)return;testRunning=false;stage.classList.remove('testing','test-active');$('stopCreationTest').hidden=true;simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();if(active==='vehicle')renderTemplate('vehicle');if(showMessage){$('creatorCoach').textContent=t('Test stopped. Adjust any part, resize it or add something new, then test again.','Test arrêté. Modifie une pièce, redimensionne-la ou ajoute un élément puis reteste.');$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Test stopped — back to edit mode','Test arrêté — retour au mode édition')}</b><p>${t('Build → Test → Stop → Improve → Test again.','Construis → Teste → Arrête → Améliore → Reteste.')}</p></div></div>`;}}
 function roomCollisionReport(){const objects=[...objectLayer.children].filter(o=>o.dataset.kind==='part'),large=objects.filter(o=>objectTags(o).includes('collision-large')),issues=[];for(let i=0;i<large.length;i++){for(let j=i+1;j<large.length;j++){const a=large[i].getBoundingClientRect(),b=large[j].getBoundingClientRect();const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left)),h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));const overlap=w*h,small=Math.min(a.width*a.height,b.width*b.height);if(small&&overlap/small>.28)issues.push(`${large[i].dataset.label} / ${large[j].dataset.label}`)}}return issues.length?t(`Furniture collision found: ${issues[0]}. Move one object so the room remains usable.`,`Collision de mobilier : ${issues[0]}. Déplace un objet pour garder la pièce utilisable.`):t('Room simulation is running. Lighting is switched on and no major furniture collision was detected.','La simulation de la pièce est en cours. L’éclairage est allumé et aucune collision importante n’a été détectée.');}
 
 function setObjectSize(v,commit=false){if(!selectedObject)return;selectedObject.dataset.size=clamp(v,24,420);selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
