@@ -61,8 +61,18 @@ const vehicleModes=[
   part('seat','💺','Passenger seat','Siège passager',['passenger'],'',{aspect:.72,defaultSize:68}),
   part('dashboard','▤','Dashboard','Tableau de bord',['passenger'],'',{aspect:2.4,defaultSize:110})
  ]),
- mode('power','⚡','Power system','Système d’énergie','Choose what powers and drives the vehicle.','Choisis ce qui alimente et propulse le véhicule.',[
-  part('petrol-engine','⚙️','Petrol engine','Moteur essence',['power']),part('diesel-engine','⚙️','Diesel engine','Moteur diesel',['power']),part('electric-motor','⚡','Electric motor','Moteur électrique',['power']),part('battery','🔋','Battery','Batterie',['power']),part('charge-port','🔌','Charging port','Prise de recharge',['power']),part('hybrid','♻️','Hybrid system','Système hybride',['power']),part('fuel-tank','⛽','Fuel tank','Réservoir',['power']),part('exhaust','〽','Exhaust','Échappement',['power']),part('solar','☀️','Solar assist','Assistance solaire',['power'])
+ mode('power','⚡','Power system','Système d’énergie','Choose one powertrain, then install only the components that make that system work.','Choisis une motorisation, puis installe uniquement les composants nécessaires à ce système.',[
+  part('petrol-engine','⚙️','Petrol engine','Moteur essence',['power'], '', {aspect:1.45,defaultSize:82}),
+  part('diesel-engine','⚙️','Diesel engine','Moteur diesel',['power'], '', {aspect:1.45,defaultSize:82}),
+  part('electric-motor','⚡','Electric motor','Moteur électrique',['power'], '', {aspect:1,defaultSize:68}),
+  part('battery','🔋','Traction battery','Batterie de traction',['power'], '', {aspect:2.2,defaultSize:104}),
+  part('inverter','▣','Power controller / inverter','Contrôleur de puissance / onduleur',['power'], '', {aspect:1.55,defaultSize:72}),
+  part('charge-port','🔌','Charge port','Prise de recharge',['power'], '', {aspect:1,defaultSize:54}),
+  part('fuel-tank','⛽','Fuel tank','Réservoir de carburant',['power'], '', {aspect:1.75,defaultSize:88}),
+  part('exhaust','〽','Exhaust system','Système d’échappement',['power'], '', {aspect:3.8,defaultSize:110}),
+  part('radiator','▥','Radiator / cooling','Radiateur / refroidissement',['power'], '', {aspect:1.8,defaultSize:80}),
+  part('dpf','▰','Diesel particulate filter','Filtre à particules diesel',['power'], '', {aspect:2.2,defaultSize:70}),
+  part('solar','☀️','Solar assist','Assistance solaire',['power'], '', {aspect:2.4,defaultSize:96})
  ]),
  mode('safety','🛡️','Safety','Sécurité','Add protection and safe-driving equipment.','Ajoute des équipements de protection et de conduite sûre.',[
   part('belt','🔒','Seat belt','Ceinture',['safety']),part('airbag','◯','Airbag','Airbag',['safety']),part('sensor','📡','Collision sensor','Capteur anticollision',['safety']),part('camera','📷','Safety camera','Caméra de sécurité',['safety']),part('indicator','🟠','Indicator','Clignotant',['safety']),part('safety-light','🚨','Warning light','Feu d’alerte',['safety']),part('emergency-stop','🛑','Emergency stop','Arrêt d’urgence',['safety'])
@@ -225,9 +235,17 @@ const missions={
 const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('creatorTemplate'),tctx=templateCanvas.getContext('2d');
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
-let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false;
+let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self';
 const STORAGE='cw_creator_projects_v18';
+/* Keep version 9 so saved Body & Movement prototype cars restore after this Power System update. */
 const VEHICLE_PUZZLE_VERSION=9;
+const VEHICLE_POWERTRAINS=[
+  {id:'petrol',icon:'⛽',label:['Petrol','Essence']},
+  {id:'diesel',icon:'🛢️',label:['Diesel','Diesel']},
+  {id:'electric',icon:'⚡',label:['Electric','Électrique']},
+  {id:'hybrid',icon:'♻️',label:['Hybrid','Hybride']}
+];
+const VEHICLE_POWER_PART_IDS=new Set(['petrol-engine','diesel-engine','electric-motor','battery','inverter','charge-port','fuel-tank','exhaust','radiator','dpf','solar']);
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
 function allParts(){if(!active)return[];return modesForMission(missions[active]).flatMap(m=>m.parts||[]);}
@@ -243,6 +261,37 @@ function vehicleProfile(){
   return currentLibraryId==='vehicle-executive'
     ?{id:'executive',length:5.02,width:1.88,height:1.45,wheelbase:2.93,wheelRadius:.38,cabinFront:-.92,cabinRear:1.18,bodyZ:.30,roofZ:1.42}
     :{id:'sport',length:4.58,width:1.96,height:1.20,wheelbase:2.72,wheelRadius:.39,cabinFront:-.70,cabinRear:.92,bodyZ:.27,roofZ:1.17};
+}
+
+function vehiclePowertrainChoice(id=vehiclePowertrain){return VEHICLE_POWERTRAINS.find(x=>x.id===id)||null;}
+function vehiclePowertrainLabel(id=vehiclePowertrain){const x=vehiclePowertrainChoice(id);return x?L(x.label):t('Not chosen yet','Pas encore choisi');}
+function vehiclePowerConfig(){
+  if(vehiclePowertrain==='petrol')return{required:['petrol-engine','fuel-tank','exhaust','radiator'],optional:[]};
+  if(vehiclePowertrain==='diesel')return{required:['diesel-engine','fuel-tank','exhaust','radiator','dpf'],optional:[]};
+  if(vehiclePowertrain==='electric')return{required:['electric-motor','battery','inverter','charge-port'],optional:['solar']};
+  if(vehiclePowertrain==='hybrid')return{required:['petrol-engine','electric-motor','battery','fuel-tank','exhaust','radiator','inverter',...(vehicleHybridType==='plugin'?['charge-port']:[])],optional:['solar']};
+  return{required:[],optional:[]};
+}
+function vehiclePowerPartIdsForSelection(){const c=vehiclePowerConfig();return[...c.required,...c.optional];}
+function vehiclePowertrainLocked(){return[...objectLayer.children].some(o=>o.dataset.kind==='part'&&o.dataset.installed==='1'&&(o.dataset.targetKey||'').startsWith('power-'));}
+function removeLooseVehiclePowerPieces(){[...objectLayer.children].filter(o=>o.dataset.kind==='part'&&VEHICLE_POWER_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1').forEach(o=>o.remove());if(selectedObject&&VEHICLE_POWER_PART_IDS.has(selectedObject.dataset.partId))selectObject(null);}
+function selectVehiclePowertrain(id){
+  if(!VEHICLE_POWERTRAINS.some(x=>x.id===id))return;
+  if(vehiclePowertrainLocked()&&vehiclePowertrain&&vehiclePowertrain!==id){$('creatorCoach').textContent=t('This power system is already being built. Use Change power system if you want to remove only the fitted power components and choose another one.','Ce système d’énergie est déjà en construction. Utilise Changer le système d’énergie pour retirer uniquement les composants de puissance fixés et en choisir un autre.');return;}
+  if(vehiclePowertrain!==id){removeLooseVehiclePowerPieces();vehiclePowertrain=id;if(id!=='hybrid')vehicleHybridType='self';}
+  renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));commitHistory();
+}
+function selectVehicleHybridType(type){
+  if(!['self','plugin'].includes(type)||vehiclePowertrain!=='hybrid')return;
+  if(vehiclePowertrainLocked()&&vehicleHybridType!==type){$('creatorCoach').textContent=t('The hybrid system is already being built. Change the power system first if you want a different hybrid type.','Le système hybride est déjà en construction. Change d’abord le système d’énergie si tu veux un autre type d’hybride.');return;}
+  if(vehicleHybridType!==type){removeLooseVehiclePowerPieces();vehicleHybridType=type;renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));commitHistory();}
+}
+function resetVehiclePowerSystem(){
+  if(!vehiclePowertrain&&!vehiclePowertrainLocked())return;
+  if(!window.confirm(t('Change power system? Only the Power System parts will be removed. Your completed Body & Movement car will stay exactly as it is.','Changer le système d’énergie ? Seules les pièces du système d’énergie seront retirées. La carrosserie et le mouvement déjà terminés resteront exactement comme ils sont.')))return;
+  [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&((o.dataset.targetKey||'').startsWith('power-')||VEHICLE_POWER_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1')).forEach(o=>o.remove());
+  selectObject(null);vehiclePowertrain='';vehicleHybridType='self';renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));commitHistory();
+  $('creatorCoach').textContent=t('Power System cleared only. Choose Petrol, Diesel, Electric or Hybrid. Your Body & Movement build is untouched.','Seul le système d’énergie a été effacé. Choisis Essence, Diesel, Électrique ou Hybride. Ta carrosserie et ton mouvement sont intacts.');
 }
 function rotateVehiclePoint(p,yaw,pitch){
   const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
@@ -287,9 +336,17 @@ function vehiclePartShape(partId){
     seat:[[-.80,-.92],[.80,-.92],[.96,-.50],[.78,.92],[-.78,.92],[-.96,-.50]],
     belt:[[-.88,-1],[-.62,-1],[.90,.78],[.68,1]],
     battery:[[-1,-.72],[.82,-.72],[1,-.45],[.92,.72],[-.92,.72],[-1,.46]],
-    camera:[[-1,-.72],[.72,-.72],[1,-.12],[.72,.72],[-.72,.72],[-1,.12]]
+    camera:[[-1,-.72],[.72,-.72],[1,-.12],[.72,.72],[-.72,.72],[-1,.12]],
+    'petrol-engine':[[-1,-.72],[-.78,-1],[.62,-1],[1,-.58],[.92,.64],[.58,.94],[-.74,.94],[-1,.54]],
+    'diesel-engine':[[-1,-.76],[-.72,-1],[.68,-.96],[1,-.50],[.88,.68],[.50,.96],[-.72,.92],[-1,.48]],
+    inverter:[[-1,-.82],[.78,-.82],[1,-.48],[.92,.80],[-.92,.80],[-1,.48]],
+    'fuel-tank':[[-1,-.52],[-.76,-.88],[.68,-.88],[1,-.48],[.90,.56],[.62,.88],[-.72,.88],[-1,.50]],
+    exhaust:[[-1,-.30],[-.82,-.58],[.30,-.48],[.46,-.18],[1,-.12],[1,.20],[.40,.28],[.20,.52],[-.84,.46]],
+    radiator:[[-1,-.90],[1,-.90],[1,.90],[-1,.90]],
+    dpf:[[-1,-.60],[.76,-.60],[1,-.28],[.86,.60],[-.86,.60],[-1,.28]],
+    solar:[[-1,-.82],[1,-.82],[1,.82],[-1,.82]]
   };
-  if(['steering','airbag','emergency-stop'].includes(partId))return circle();
+  if(['steering','airbag','emergency-stop','electric-motor','charge-port'].includes(partId))return circle();
   return shapes[partId]||[[-1,-1],[1,-1],[1,1],[-1,1]];
 }
 function vehicleSlotDefinitions(){
@@ -333,6 +390,10 @@ function vehiclePartFill(partId){
   if(partId==='taillight')return{fill:'rgba(255,84,111,.78)',stroke:'rgba(255,196,207,.95)'};
   if(['window','windscreen','rear-window'].includes(partId))return{fill:'rgba(95,202,235,.34)',stroke:'rgba(218,248,255,.82)'};
   if(partId==='mirror')return{fill:'rgba(132,170,195,.70)',stroke:'rgba(229,244,252,.88)'};
+  if(['battery','electric-motor','inverter','charge-port'].includes(partId))return{fill:'rgba(88,225,159,.68)',stroke:'rgba(221,255,239,.94)'};
+  if(['petrol-engine','diesel-engine','radiator','dpf'].includes(partId))return{fill:'rgba(187,196,205,.72)',stroke:'rgba(248,252,255,.94)'};
+  if(['fuel-tank','exhaust'].includes(partId))return{fill:'rgba(178,151,108,.68)',stroke:'rgba(250,229,194,.92)'};
+  if(partId==='solar')return{fill:'rgba(66,139,213,.64)',stroke:'rgba(209,238,255,.94)'};
   return{fill:'rgba(128,159,185,.63)',stroke:'rgba(229,243,251,.90)'};
 }
 function drawInstalledVehiclePanel(proj){
@@ -368,8 +429,27 @@ function vehicleInteriorSlots(){
   slots.push(vehicleSlot('cabin-camera','camera',[-.33,0,sport?.91:1.04],[.075,0,0],[0,.050,0],down,{aspect:1.5,minFacing:.34,view:'interior',shape:vehiclePartShape('camera'),required:false}));
   slots.push(vehicleSlot('emergency-stop','emergency-stop',[-.48,W*.12,sport?.70:.81],[.050,0,0],[0,.050,0],down,{aspect:1,minFacing:.34,view:'interior',shape:vehiclePartShape('emergency-stop'),required:false}));
 
-  /* One unmistakably internal power item: the under-floor battery pack. */
-  slots.push(vehicleSlot('battery-underfloor','battery',[.58,0,sport?.35:.40],[.34,0,0],[0,W*.30,0],down,{aspect:1.15,minFacing:.34,view:'interior',shape:vehiclePartShape('battery'),required:false}));
+  return slots;
+}
+function vehiclePowerSlots(){
+  if(!vehiclePowertrain)return[];
+  const p=vehicleProfile(),L=p.length,W=p.width,sport=p.id==='sport',down=[0,0,-1],top=[0,0,1],side=[0,1,0],slots=[];
+  const add=(key,partId,center,u,v,normal=down,opts={})=>slots.push(vehicleSlot(`power-${key}`,partId,center,u,v,normal,{view:opts.view||'interior',required:opts.required!==false,minFacing:opts.minFacing??.28,aspect:opts.aspect||1,shape:vehiclePartShape(partId),label:opts.label||partId}));
+  const ids=new Set(vehiclePowerPartIdsForSelection());
+  if(ids.has('petrol-engine'))add('petrol-engine','petrol-engine',[-L*.30,0,sport?.43:.48],[.40,0,0],[0,W*.27,0],down,{aspect:1.5});
+  if(ids.has('diesel-engine'))add('diesel-engine','diesel-engine',[-L*.30,0,sport?.43:.48],[.41,0,0],[0,W*.27,0],down,{aspect:1.5});
+  if(ids.has('electric-motor'))add('electric-motor','electric-motor',[-L*.26,0,sport?.34:.39],[.25,0,0],[0,.25,0],down,{aspect:1});
+  if(ids.has('battery')){
+    const hybrid=vehiclePowertrain==='hybrid';
+    add('battery','battery',[hybrid?L*.12:L*.16,0,sport?.27:.31],[hybrid?.42:.72,0,0],[0,W*(hybrid?.25:.34),0],down,{aspect:hybrid?1.65:2.2});
+  }
+  if(ids.has('inverter'))add('inverter','inverter',[-L*.06,0,sport?.34:.39],[.27,0,0],[0,W*.20,0],down,{aspect:1.55});
+  if(ids.has('fuel-tank'))add('fuel-tank','fuel-tank',[L*.31,0,sport?.27:.31],[.34,0,0],[0,W*.27,0],down,{aspect:1.75});
+  if(ids.has('exhaust'))add('exhaust','exhaust',[L*.18,-W*.31,sport?.17:.20],[.66,0,0],[0,.10,0],down,{aspect:3.8});
+  if(ids.has('radiator'))add('radiator','radiator',[-L*.44,0,sport?.42:.47],[.15,0,0],[0,W*.30,0],down,{aspect:1.8});
+  if(ids.has('dpf'))add('dpf','dpf',[L*.02,-W*.26,sport?.20:.23],[.24,0,0],[0,.12,0],down,{aspect:2.2});
+  if(ids.has('charge-port'))add('charge-port','charge-port',[L*.23,W*.515,sport?.70:.78],[.085,0,0],[0,0,.085],side,{view:'exterior',minFacing:.22,aspect:1});
+  if(ids.has('solar'))add('solar','solar',[.10,0,p.roofZ+.025],[.54,0,0],[0,W*.28,0],top,{view:'exterior',required:false,minFacing:.08,aspect:2.4});
   return slots;
 }
 function vehicleUnderAccess(){return vehicleViewMode==='interior'||vehiclePitch>.38;}
@@ -467,27 +547,38 @@ function drawVehicleInteriorAccessLabel(){
   if(!vehicleUnderAccess())return;
   tctx.save();
   tctx.fillStyle='rgba(159,236,255,.88)';tctx.font='800 13px system-ui';tctx.textAlign='center';
-  tctx.fillText(t('UNDERBODY / INTERIOR ACCESS — fit the cabin pieces from below','ACCÈS SOUS-CAISSE / INTÉRIEUR — fixe les pièces de l’habitacle par dessous'),400,402);
+  const label=activeMode==='power'
+    ?t('UNDERBODY / POWER ACCESS — install the hidden power components','ACCÈS SOUS-CAISSE / ÉNERGIE — installe les composants d’énergie cachés')
+    :t('UNDERBODY / INTERIOR ACCESS — fit the cabin pieces from below','ACCÈS SOUS-CAISSE / INTÉRIEUR — fixe les pièces de l’habitacle par dessous');
+  tctx.fillText(label,400,402);
   tctx.restore();
 }
 function drawVehicleBlueprint(){
   if(!templateOn)return;
   if(vehicleViewMode!=='interior')drawVehicleGround();
-  const installed=installedVehicleKeys();
-  const projections=[...vehicleSlotDefinitions(),...vehicleInteriorSlots()].map(vehicleSlotProjection).filter(Boolean).sort((a,b)=>a.depth-b.depth);
+  const installed=installedVehicleKeys(),modeIds=vehicleModePartIds();
+  const allSlots=vehicleAllPuzzleSlots();
+  const projections=allSlots.map(vehicleSlotProjection).filter(Boolean).sort((a,b)=>a.depth-b.depth);
   projections.forEach(proj=>{if(proj.visible&&installed.has(proj.key))drawInstalledVehiclePanel(proj)});
   drawVehicleWireframe();
   projections.forEach(proj=>{
-    if(!proj.visible||installed.has(proj.key))return;
-    /* Interior view is deliberately uncluttered: only the internal puzzle holes are shown. */
+    if(!proj.visible||installed.has(proj.key)||!modeIds.has(proj.partId))return;
+    /* Interior/underbody view stays uncluttered: only slots belonging to the active stage are shown. */
     if(vehicleViewMode==='interior'&&proj.view!=='interior')return;
     drawVehicleSlotGuide(proj,proj,false);
   });
   drawVehicleInteriorAccessLabel();
   tctx.save();tctx.fillStyle='rgba(145,236,255,.66)';tctx.font='700 13px system-ui';tctx.textAlign='center';
-  const msg=vehicleUnderAccess()
-    ?t('Fit the interior pieces from underneath. Fitted pieces lock permanently into the car.','Fixe les pièces intérieures par dessous. Les pièces fixées se verrouillent définitivement dans la voiture.')
-    :t('Drag the car to rotate it freely. Fitted pieces stay attached while you turn it.','Fais glisser la voiture pour la tourner librement. Les pièces fixées restent attachées pendant la rotation.');
+  let msg;
+  if(activeMode==='power'&&vehiclePowertrain){
+    msg=vehicleUnderAccess()
+      ?t('Power access: fit the internal and underbody components here. Exterior power parts use their matching outside view.','Accès énergie : place ici les composants internes et sous la caisse. Les pièces d’énergie extérieures utilisent leur vue extérieure correspondante.')
+      :t('Power System selected. Use Interior/underbody for hidden components, then side or top views for external ones.','Système d’énergie sélectionné. Utilise Intérieur/sous la caisse pour les composants cachés, puis les vues latérale ou dessus pour les pièces extérieures.');
+  }else{
+    msg=vehicleUnderAccess()
+      ?t('Fit the interior pieces from underneath. Fitted pieces lock permanently into the car.','Fixe les pièces intérieures par dessous. Les pièces fixées se verrouillent définitivement dans la voiture.')
+      :t('Drag the car to rotate it freely. Fitted pieces stay attached while you turn it.','Fais glisser la voiture pour la tourner librement. Les pièces fixées restent attachées pendant la rotation.');
+  }
   tctx.fillText(msg,400,425);
   tctx.restore();
   syncInstalledVehicleParts();
@@ -534,12 +625,13 @@ function renderLibrary(m){const panel=$('creatorLibraryPanel'),host=$('creatorLi
 function refreshLibraryCards(){document.querySelectorAll('.creator-library-card').forEach(card=>{const exists=active==='vehicle'?card.dataset.libraryId===currentLibraryId:[...objectLayer.children].some(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===card.dataset.libraryId);card.classList.toggle('active',exists)});}
 function chooseLibrary(item){if(active==='vehicle'){
   const changed=!!currentLibraryId&&currentLibraryId!==item.id;
-  if(changed){[...objectLayer.children].filter(o=>o.dataset.kind==='part').forEach(o=>o.remove());selectObject(null);}
+  if(changed){[...objectLayer.children].filter(o=>o.dataset.kind==='part').forEach(o=>o.remove());selectObject(null);vehiclePowertrain='';vehicleHybridType='self';}
   currentLibraryId=item.id;vehicleYaw=0;vehiclePitch=.10;vehicleViewMode='left';renderTemplate('vehicle');refreshLibraryCards();updateVehicleViewUI();renderModes(missions[active],activeMode);commitHistory();return
 }currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
 
 function renderModes(m,preferred){const modes=modesForMission(m);if(!modes.length)return;activeMode=(preferred&&modes.some(x=>x.id===preferred))?preferred:(activeMode&&modes.some(x=>x.id===activeMode)?activeMode:modes[0].id);const host=$('creatorModes');host.innerHTML='';modes.forEach(md=>{const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'');b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${L(md.help)}</small>`;b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);commitHistory()};host.appendChild(b)});const selected=modes.find(x=>x.id===activeMode);$('creatorModeHelp').textContent=L(selected.help);renderComponents(selected);}
-function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots()];}
+function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots(),...vehiclePowerSlots()];}
+function vehicleModePartIds(){const md=modesForMission(missions.vehicle).find(x=>x.id===activeMode);return new Set((md?.parts||[]).map(x=>x.id));}
 function vehiclePartRequirement(id){return vehicleAllPuzzleSlots().filter(s=>s.partId===id).length;}
 function vehicleInstalledPartCount(id){return [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.partId===id&&o.dataset.installed==='1'&&o.dataset.targetKey).length;}
 function vehiclePartComplete(id){const need=vehiclePartRequirement(id);return need>0&&vehicleInstalledPartCount(id)>=need;}
@@ -566,7 +658,28 @@ function addPalettePart(p){
   }
   commitHistory();return el;
 }
-function renderComponents(md){const host=$('creatorComponents');host.innerHTML=`<div class="creator-palette-title"><b>${t('Parts for','Pièces pour')} ${L(md.label)}</b><small>${t('Choose the matching puzzle piece. When every required copy is fitted, its button locks.','Choisis la pièce de puzzle correspondante. Quand tous les exemplaires requis sont fixés, son bouton se verrouille.')}</small></div>`;(md.parts||[]).forEach(p=>{const b=document.createElement('button');b.type='button';b.className='creator-component';b.dataset.partId=p.id;const need=active==='vehicle'?vehiclePartRequirement(p.id):0,done=active==='vehicle'?vehicleInstalledPartCount(p.id):0;b.innerHTML=`<span>${paletteVisual(p)}</span><small>${L(p.label)}${need?` <em data-part-counter>${done}/${need}</em>`:''}</small>`;b.onclick=()=>addPalettePart(p);host.appendChild(b)});refreshVehicleComponentButtons();}
+function renderComponents(md){
+  const host=$('creatorComponents');
+  if(active==='vehicle'&&md.id==='power'){
+    host.innerHTML=`<div class="creator-palette-title"><b>${t('Choose the vehicle power system','Choisis le système d’énergie du véhicule')}</b><small>${t('Petrol, Diesel, Electric and Hybrid are alternative engineering choices — not four engines to install together.','Essence, Diesel, Électrique et Hybride sont des choix techniques différents — pas quatre moteurs à installer ensemble.')}</small></div>`;
+    VEHICLE_POWERTRAINS.forEach(choice=>{const b=document.createElement('button');b.type='button';b.className='creator-component';if(vehiclePowertrain===choice.id){b.style.borderColor='rgba(93,228,255,.85)';b.style.background='rgba(93,228,255,.14)';}b.innerHTML=`<span>${choice.icon}</span><small>${L(choice.label)}</small>`;b.onclick=()=>selectVehiclePowertrain(choice.id);host.appendChild(b)});
+    if(!vehiclePowertrain){const note=document.createElement('div');note.className='creator-palette-title';note.innerHTML=`<small>${t('Choose one system first. The correct components and fitting locations will then appear for this same car.','Choisis d’abord un système. Les bons composants et leurs emplacements apparaîtront ensuite pour cette même voiture.')}</small>`;host.appendChild(note);return;}
+    const summary=document.createElement('div');summary.className='creator-palette-title';summary.innerHTML=`<b>${t('Selected','Sélectionné')}: ${vehiclePowertrainLabel()}</b><small>${t('Internal and underbody parts fit from underneath. Exterior parts such as the charge port use the appropriate outside view.','Les pièces internes et sous la caisse se placent par dessous. Les pièces extérieures comme la prise de recharge utilisent la vue extérieure adaptée.')}</small>`;host.appendChild(summary);
+    if(vehiclePowertrain==='hybrid'){
+      const subTitle=document.createElement('div');subTitle.className='creator-palette-title';subTitle.innerHTML=`<b>${t('Choose hybrid type','Choisis le type d’hybride')}</b><small>${t('Self-charging has no plug; plug-in hybrid adds a charge port.','L’hybride auto-rechargeable n’a pas de prise ; l’hybride rechargeable ajoute une prise de recharge.')}</small>`;host.appendChild(subTitle);
+      [['self','♻️',t('Self-charging hybrid','Hybride auto-rechargeable')],['plugin','🔌',t('Plug-in hybrid','Hybride rechargeable')]].forEach(([id,icon,label])=>{const b=document.createElement('button');b.type='button';b.className='creator-component';if(vehicleHybridType===id){b.style.borderColor='rgba(93,228,255,.85)';b.style.background='rgba(93,228,255,.14)';}b.innerHTML=`<span>${icon}</span><small>${label}</small>`;b.onclick=()=>selectVehicleHybridType(id);host.appendChild(b)});
+    }
+    const ids=new Set(vehiclePowerPartIdsForSelection());
+    const config=vehiclePowerConfig();
+    const reqTitle=document.createElement('div');reqTitle.className='creator-palette-title';reqTitle.innerHTML=`<b>${t('Required power components','Composants d’énergie requis')}</b><small>${t('Fit every required piece into its matching blueprint slot.','Place chaque pièce requise dans son emplacement correspondant du plan.')}</small>`;host.appendChild(reqTitle);
+    (md.parts||[]).filter(p=>ids.has(p.id)&&config.required.includes(p.id)).forEach(p=>appendVehiclePartButton(host,p));
+    const optional=(md.parts||[]).filter(p=>ids.has(p.id)&&config.optional.includes(p.id));
+    if(optional.length){const optTitle=document.createElement('div');optTitle.className='creator-palette-title';optTitle.innerHTML=`<b>${t('Optional efficiency upgrade','Amélioration d’efficacité facultative')}</b><small>${t('Optional pieces do not block Power System completion.','Les pièces facultatives ne bloquent pas la fin du système d’énergie.')}</small>`;host.appendChild(optTitle);optional.forEach(p=>appendVehiclePartButton(host,p));}
+    const change=document.createElement('button');change.type='button';change.className='creator-component';change.innerHTML=`<span>↺</span><small>${t('Change power system','Changer le système d’énergie')}</small>`;change.onclick=resetVehiclePowerSystem;host.appendChild(change);refreshVehicleComponentButtons();return;
+  }
+  host.innerHTML=`<div class="creator-palette-title"><b>${t('Parts for','Pièces pour')} ${L(md.label)}</b><small>${t('Choose the matching puzzle piece. When every required copy is fitted, its button locks.','Choisis la pièce de puzzle correspondante. Quand tous les exemplaires requis sont fixés, son bouton se verrouille.')}</small></div>`;(md.parts||[]).forEach(p=>appendVehiclePartButton(host,p));refreshVehicleComponentButtons();
+}
+function appendVehiclePartButton(host,p){const b=document.createElement('button');b.type='button';b.className='creator-component';b.dataset.partId=p.id;const need=active==='vehicle'?vehiclePartRequirement(p.id):0,done=active==='vehicle'?vehicleInstalledPartCount(p.id):0;b.innerHTML=`<span>${paletteVisual(p)}</span><small>${L(p.label)}${need?` <em data-part-counter>${done}/${need}</em>`:''}</small>`;b.onclick=()=>addPalettePart(p);host.appendChild(b);}
 function paletteVisual(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;if(p.className==='park-bench')return '<span class="creator-mini-bench"><i></i><i></i><i></i></span>';if(p.className==='shelf')return '▤';if(p.className==='sofa')return '🛋️';if(p.className==='fluorescent')return '▬';if(p.className==='chassis')return '▰';if(p.className==='amphibious')return '⛴️';if(p.className==='wing')return '🪽';return p.icon||'◆';}
 
 function renderPlan(m,saved={}){const host=$('creatorPlanFields');host.innerHTML='';m.prompts.forEach((q,i)=>{const l=document.createElement('label');l.textContent=L(q);const inp=document.createElement('input');inp.dataset.plan=i;inp.value=saved.plan?.[i]||'';l.appendChild(inp);host.appendChild(l)});$('creatorNotes').value=saved.notes||'';}
@@ -580,11 +693,13 @@ function vehiclePartSvg(id){
     const handle=id==='door'?'<path d="M82 37h13" stroke="#33495b" stroke-width="4" stroke-linecap="round"/>':'';
     return `<svg ${common}><polygon points="${pts}" fill="${style.fill}" stroke="#eef8ff" stroke-width="4" stroke-linejoin="round"/>${handle}</svg>`;
   }
-  if(['dashboard','driver-seat','seat','belt','battery','camera'].includes(id)){
+  if(['dashboard','driver-seat','seat','belt','battery','camera','petrol-engine','diesel-engine','inverter','fuel-tank','exhaust','radiator','dpf','solar'].includes(id)){
     const pts=vehiclePartShape(id).map(([a,b])=>`${(60+a*52).toFixed(1)},${(40+b*31).toFixed(1)}`).join(' ');
-    const fills={dashboard:'#475766','driver-seat':'#596a79',seat:'#596a79',belt:'#d9e4ed',battery:'#77e06f',camera:'#5f7484'};
+    const fills={dashboard:'#475766','driver-seat':'#596a79',seat:'#596a79',belt:'#d9e4ed',battery:'#55d99a',camera:'#5f7484','petrol-engine':'#aeb8c2','diesel-engine':'#929eaa',inverter:'#55d99a','fuel-tank':'#b89b70',exhaust:'#9b8261',radiator:'#b7c2cb',dpf:'#a8b2bc',solar:'#418bd5'};
     return `<svg ${common}><polygon points="${pts}" fill="${fills[id]||'#596a79'}" stroke="#e5edf3" stroke-width="4" stroke-linejoin="round"/></svg>`;
   }
+  if(id==='electric-motor')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#55d99a" stroke="#e5fff2" stroke-width="5"/><circle cx="50" cy="50" r="14" fill="#294b42"/><path d="M50 13v17M50 70v17M13 50h17M70 50h17" stroke="#e5fff2" stroke-width="5" stroke-linecap="round"/></svg>`;
+  if(id==='charge-port')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#55d99a" stroke="#e5fff2" stroke-width="5"/><circle cx="40" cy="43" r="5" fill="#27483f"/><circle cx="60" cy="43" r="5" fill="#27483f"/><rect x="43" y="57" width="14" height="18" rx="5" fill="#27483f"/></svg>`;
   if(id==='steering')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="none" stroke="#dce6ee" stroke-width="8"/><circle cx="50" cy="50" r="12" fill="#455666"/><path d="M50 50L25 27M50 50l25-23M50 50v35" stroke="#65798a" stroke-width="7"/></svg>`;
   if(id==='airbag')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#eef5fa" stroke="#ffffff" stroke-width="5"/><path d="M30 57q20 17 40 0" fill="none" stroke="#9aabba" stroke-width="5" stroke-linecap="round"/></svg>`;
   if(id==='emergency-stop')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#ed5968" stroke="#fff1f3" stroke-width="5"/><rect x="29" y="43" width="42" height="14" rx="7" fill="#fff"/></svg>`;
@@ -678,7 +793,7 @@ function tryVehicleSnap(el,announce=true){
   const target=vehicleTargetFor(el);
   if(!target){
     if(announce){
-      const hasInterior=vehicleInteriorSlots().some(s=>s.partId===el.dataset.partId);
+      const hasInterior=[...vehicleInteriorSlots(),...vehiclePowerSlots()].some(s=>s.partId===el.dataset.partId&&s.view==='interior');
       $('creatorCoach').textContent=hasInterior
         ?t('This part fits inside the car. Rotate underneath the blueprint or tap Interior, then match it to its exact slot.','Cette pièce se fixe à l’intérieur. Tourne le plan par dessous ou touche Intérieur, puis fais-la correspondre exactement à son emplacement.')
         :t('Rotate the car until the correct puzzle slot for this part is facing you.','Tourne la voiture jusqu’à ce que le bon emplacement du puzzle soit face à toi.');
@@ -699,7 +814,7 @@ function tryVehicleSnap(el,announce=true){
     selectObject(null);
     refreshVehicleComponentButtons();
     if(announce){
-      const fitted=installedVehicleKeys().size,total=vehicleSlotDefinitions().filter(x=>x.required).length+vehicleInteriorSlots().filter(x=>x.required).length;
+      const fitted=installedVehicleKeys().size,total=vehicleAllPuzzleSlots().filter(x=>x.required).length;
       $('creatorCoach').textContent=t(`CLICK — piece fitted to the vehicle. ${fitted} pieces are installed and will stay attached while you rotate the car.`,`CLIC — pièce fixée au véhicule. ${fitted} pièces sont installées et resteront attachées pendant la rotation.`);
       window.playTone?.(true);
     }
@@ -711,9 +826,17 @@ function tryVehicleSnap(el,announce=true){
   else if(announce)$('creatorCoach').textContent=t('Keep matching the outline: correct place + correct size = CLICK.','Continue à faire correspondre le contour : bonne place + bonne taille = CLIC.');
   return false;
 }
-function vehiclePuzzleProgress(){
+function vehicleBodyProgress(){
   const used=installedVehicleKeys(),req=[...vehicleSlotDefinitions(),...vehicleInteriorSlots()].filter(x=>x.required);
   return{done:req.filter(x=>used.has(x.key)).length,total:req.length,missing:req.filter(x=>!used.has(x.key))};
+}
+function vehiclePowerProgress(){
+  const used=installedVehicleKeys(),req=vehiclePowerSlots().filter(x=>x.required);
+  return{chosen:!!vehiclePowertrain,done:req.filter(x=>used.has(x.key)).length,total:req.length,missing:req.filter(x=>!used.has(x.key))};
+}
+function vehiclePuzzleProgress(){
+  const body=vehicleBodyProgress(),power=vehiclePowerProgress();
+  return{done:body.done+power.done,total:body.total+power.total,body,power};
 }
 function softSnap(el){
   if(active==='vehicle'){tryVehicleSnap(el,true);return}
@@ -765,17 +888,17 @@ function restoreObjects(items=[]){
   if(active==='vehicle'){renderTemplate('vehicle');syncInstalledVehicleParts();refreshVehicleComponentButtons();}
   refreshLibraryCards();
 }
-function snapshot(){return{drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode};}
+function snapshot(){return{drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain,vehicleHybridType};}
 function resetHistory(){history=[snapshot()];historyIndex=0;updateHistoryButtons();}
 function commitHistory(){if(restoring||!active)return;history=history.slice(0,historyIndex+1);history.push(snapshot());if(history.length>50)history.shift();historyIndex=history.length-1;updateHistoryButtons();}
 function updateHistoryButtons(){$('undoDraw').disabled=historyIndex<=0;$('redoDraw').disabled=historyIndex<0||historyIndex>=history.length-1;}
 function restoreDrawing(data,cb){ctx.clearRect(0,0,canvas.width,canvas.height);if(!data){cb?.();return}const img=new Image();img.onload=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);cb?.()};img.onerror=()=>cb?.();img.src=data;}
-function restoreSnapshot(s){restoring=true;templateOn=s.templateOn!==false;gridOn=!!s.gridOn;activeMode=s.activeMode;currentLibraryId=s.currentLibraryId;vehicleYaw=Number.isFinite(s.vehicleYaw)?s.vehicleYaw:vehicleYaw;vehiclePitch=Number.isFinite(s.vehiclePitch)?s.vehiclePitch:vehiclePitch;vehicleViewMode=s.vehicleViewMode||vehicleViewMode;stage.classList.toggle('show-grid',gridOn);updateBlueprintVisibility();renderTemplate(active);updateVehicleViewUI();renderModes(missions[active],activeMode);restoreDrawing(s.drawing,()=>{restoreObjects(s.objects);restoring=false;updateHistoryButtons()});}
+function restoreSnapshot(s){restoring=true;templateOn=s.templateOn!==false;gridOn=!!s.gridOn;activeMode=s.activeMode;currentLibraryId=s.currentLibraryId;vehicleYaw=Number.isFinite(s.vehicleYaw)?s.vehicleYaw:vehicleYaw;vehiclePitch=Number.isFinite(s.vehiclePitch)?s.vehiclePitch:vehiclePitch;vehicleViewMode=s.vehicleViewMode||vehicleViewMode;vehiclePowertrain=s.vehiclePowertrain||'';vehicleHybridType=s.vehicleHybridType||'self';stage.classList.toggle('show-grid',gridOn);updateBlueprintVisibility();renderTemplate(active);updateVehicleViewUI();renderModes(missions[active],activeMode);restoreDrawing(s.drawing,()=>{restoreObjects(s.objects);restoring=false;updateHistoryButtons()});}
 
-function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;vehicleYaw=Number.isFinite(saved.vehicleYaw)?saved.vehicleYaw:0;vehiclePitch=Number.isFinite(saved.vehiclePitch)?saved.vehiclePitch:.10;vehicleViewMode=saved.vehicleViewMode||'left';stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(saved.objects||[]);drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
+function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;vehicleYaw=Number.isFinite(saved.vehicleYaw)?saved.vehicleYaw:0;vehiclePitch=Number.isFinite(saved.vehiclePitch)?saved.vehiclePitch:.10;vehicleViewMode=saved.vehicleViewMode||'left';vehiclePowertrain=id==='vehicle'?(saved.vehiclePowertrain||''):'';vehicleHybridType=id==='vehicle'?(saved.vehicleHybridType||'self'):'self';stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(saved.objects||[]);drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
 
-function save(){if(!active)return;const all=loadStore();const plan=[...document.querySelectorAll('#creatorPlanFields [data-plan]')].map(i=>i.value.trim());all[active]={plan,notes:$('creatorNotes').value.trim(),drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePuzzleVersion:active==='vehicle'?VEHICLE_PUZZLE_VERSION:undefined,updatedAt:Date.now()};try{saveStore(all);$('creatorSaved').textContent=t('✅ Project saved. You can return and continue later.','✅ Projet enregistré. Tu peux revenir plus tard.')}catch(_){$('creatorSaved').textContent=t('This design is too large to save on this device.','Ce design est trop volumineux pour cet appareil.')}window.CWState?.setProgress?.('creator',Math.min(95,Object.keys(all).length*16),{lastMission:active});window.CWState?.logActivity?.({id:'creator-'+active,title:`Creator Studio: ${missions[active].title[0]}`,icon:'🎨',detail:'Saved interactive design',href:'creator.html'});}
-function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);resetHistory();closeClearDialog();}
+function save(){if(!active)return;const all=loadStore();const plan=[...document.querySelectorAll('#creatorPlanFields [data-plan]')].map(i=>i.value.trim());all[active]={plan,notes:$('creatorNotes').value.trim(),drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain:active==='vehicle'?vehiclePowertrain:undefined,vehicleHybridType:active==='vehicle'?vehicleHybridType:undefined,vehiclePuzzleVersion:active==='vehicle'?VEHICLE_PUZZLE_VERSION:undefined,updatedAt:Date.now()};try{saveStore(all);$('creatorSaved').textContent=t('✅ Project saved. You can return and continue later.','✅ Projet enregistré. Tu peux revenir plus tard.')}catch(_){$('creatorSaved').textContent=t('This design is too large to save on this device.','Ce design est trop volumineux pour cet appareil.')}window.CWState?.setProgress?.('creator',Math.min(95,Object.keys(all).length*16),{lastMission:active});window.CWState?.logActivity?.({id:'creator-'+active,title:`Creator Studio: ${missions[active].title[0]}`,icon:'🎨',detail:'Saved interactive design',href:'creator.html'});}
+function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);if(active==='vehicle'){vehiclePowertrain='';vehicleHybridType='self';}const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);resetHistory();closeClearDialog();}
 function openClearDialog(){$('creatorClearDialog').hidden=false;document.body.classList.add('creator-dialog-open');setTimeout(()=>$('keepProject').focus(),0)}
 function closeClearDialog(){$('creatorClearDialog').hidden=true;document.body.classList.remove('creator-dialog-open')}
 
@@ -784,11 +907,18 @@ function addTestClasses(){[...objectLayer.children].forEach(o=>{const tags=objec
 function clearTestClasses(){[...objectLayer.children].forEach(o=>o.classList.remove('test-wheel','test-wing','test-water-wheel','test-light'));buildLayer.classList.remove('test-road','test-water','test-fly','test-robot');}
 function startTest(){if(!active)return;
   if(active==='vehicle'){
-    const progress=vehiclePuzzleProgress();
-    if(progress.done<progress.total){
-      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the car puzzle first','Termine d’abord le puzzle de la voiture')}</b><p>${t(`${progress.done} of ${progress.total} required pieces are fitted. Rotate the blueprint and complete the missing slots before testing.`,`${progress.done} pièces sur ${progress.total} sont fixées. Tourne le plan et complète les emplacements manquants avant le test.`)}</p></div>`;
-      $('creatorCoach').textContent=t('Build it like a peg puzzle: each required outline must be covered by its matching piece before the car can drive.','Construis-la comme un puzzle : chaque contour requis doit être couvert par sa pièce avant que la voiture puisse rouler.');
-      return;
+    const body=vehicleBodyProgress(),power=vehiclePowerProgress();
+    if(body.done<body.total){
+      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish Body & Movement first','Termine d’abord Carrosserie et mouvement')}</b><p>${t(`${body.done} of ${body.total} required body pieces are fitted.`,`${body.done} pièces de carrosserie requises sur ${body.total} sont fixées.`)}</p></div>`;
+      $('creatorCoach').textContent=t('Complete the main car puzzle before testing the power system.','Termine le puzzle principal de la voiture avant de tester le système d’énergie.');return;
+    }
+    if(!power.chosen){
+      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Choose a Power System','Choisis un système d’énergie')}</b><p>${t('Body & Movement is complete. Now choose Petrol, Diesel, Electric or Hybrid and install its required components.','Carrosserie et mouvement est terminé. Choisis maintenant Essence, Diesel, Électrique ou Hybride et installe les composants requis.')}</p></div>`;
+      $('creatorCoach').textContent=t('Open Power System and choose how this same car will be powered.','Ouvre Système d’énergie et choisis comment cette même voiture sera propulsée.');return;
+    }
+    if(power.done<power.total){
+      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the Power System','Termine le système d’énergie')}</b><p>${t(`${power.done} of ${power.total} required ${vehiclePowertrainLabel()} components are fitted.`,`${power.done} composants ${vehiclePowertrainLabel()} requis sur ${power.total} sont fixés.`)}</p></div>`;
+      $('creatorCoach').textContent=t('Use the underbody/interior and exterior views to finish every required power component.','Utilise les vues sous la caisse/intérieure et extérieures pour terminer tous les composants d’énergie requis.');return;
     }
     vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';renderTemplate('vehicle');updateVehicleViewUI();
   }
