@@ -334,21 +334,41 @@ function vehicleFutureConfig(){
 function vehicleFuturePartIdsForSelection(){const c=vehicleFutureConfig();return[...c.required,...c.optional];}
 function vehicleFutureLocked(){return[...objectLayer.children].some(o=>o.dataset.kind==='part'&&o.dataset.installed==='1'&&(o.dataset.targetKey||'').startsWith('future-'));}
 function removeLooseVehicleFuturePieces(){[...objectLayer.children].filter(o=>o.dataset.kind==='part'&&VEHICLE_FUTURE_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1').forEach(o=>o.remove());if(selectedObject&&VEHICLE_FUTURE_PART_IDS.has(selectedObject.dataset.partId))selectObject(null);}
+/* Prototype test helper: remove ONLY Future Tech pieces so another future system can
+   be fitted and checked on the same completed Body + Power + Safety vehicle. */
+function clearVehicleFuturePiecesForSwitch(){
+  [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&((o.dataset.targetKey||'').startsWith('future-')||(VEHICLE_FUTURE_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1'))).forEach(o=>o.remove());
+  if(selectedObject&&VEHICLE_FUTURE_PART_IDS.has(selectedObject.dataset.partId))selectObject(null);
+}
 function selectVehicleFutureAbility(id){
   if(!VEHICLE_FUTURE_ABILITIES.some(x=>x.id===id))return;
-  if(vehicleFutureLocked()&&vehicleFutureAbility&&vehicleFutureAbility!==id){$('creatorCoach').textContent=t('This Future Tech system is already being built. Use Change Future Tech if you want to remove only the future components and choose another ability.','Ce système de technologie future est déjà en construction. Utilise Changer la technologie future pour retirer uniquement les composants futurs et choisir une autre capacité.');return;}
-  if(vehicleFutureAbility!==id){removeLooseVehicleFuturePieces();vehicleFutureAbility=id;vehicleFlightSystem='';}
-  renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
+  if(vehicleFutureAbility!==id){
+    if(testRunning)stopTest(false);
+    clearVehicleFuturePiecesForSwitch();
+    vehicleFutureAbility=id;vehicleFlightSystem='';
+    renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
+    $('creatorCoach').textContent=id==='flight'
+      ?t('Flying Car selected. Choose Propeller, Jet or Drone Lift, then fit that complete system. Your Body, Power and Safety work is unchanged.','Voiture volante sélectionnée. Choisis Hélices, Réacteurs ou Rotors drone, puis installe ce système complet. Carrosserie, Énergie et Sécurité restent inchangées.')
+      :t('Water / Amphibious selected. Fit the water system on this same completed car. Your Body, Power and Safety work is unchanged.','Aquatique / amphibie sélectionné. Installe le système aquatique sur cette même voiture terminée. Carrosserie, Énergie et Sécurité restent inchangées.');
+    return;
+  }
+  renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));
 }
 function selectVehicleFlightSystem(id){
   if(!VEHICLE_FLIGHT_SYSTEMS.some(x=>x.id===id)||vehicleFutureAbility!=='flight')return;
-  if(vehicleFutureLocked()&&vehicleFlightSystem&&vehicleFlightSystem!==id){$('creatorCoach').textContent=t('The flying system is already being installed. Change Future Tech first if you want a different flight system.','Le système de vol est déjà en cours d’installation. Change d’abord la technologie future si tu veux un autre système de vol.');return;}
-  if(vehicleFlightSystem!==id){removeLooseVehicleFuturePieces();vehicleFlightSystem=id;renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();}
+  if(vehicleFlightSystem!==id){
+    if(testRunning)stopTest(false);
+    clearVehicleFuturePiecesForSwitch();
+    vehicleFlightSystem=id;
+    renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
+    $('creatorCoach').textContent=t(`${vehicleFlightSystemLabel()} selected for testing. Fit its required Future Tech pieces. The rest of your car is untouched.`,`${vehicleFlightSystemLabel()} sélectionné pour le test. Installe ses pièces de technologie future requises. Le reste de la voiture reste intact.`);
+  }
 }
 function resetVehicleFutureSystem(){
   if(!vehicleFutureAbility&&!vehicleFutureLocked())return;
   if(!window.confirm(t('Change Future Tech? Only the Future Tech parts will be removed. Body & Movement, Power System and Safety will stay exactly as they are.','Changer la technologie future ? Seules les pièces de technologie future seront retirées. Carrosserie et mouvement, Système d’énergie et Sécurité resteront exactement comme ils sont.')))return;
-  [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&((o.dataset.targetKey||'').startsWith('future-')||VEHICLE_FUTURE_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1')).forEach(o=>o.remove());
+  if(testRunning)stopTest(false);
+  clearVehicleFuturePiecesForSwitch();
   selectObject(null);vehicleFutureAbility='';vehicleFlightSystem='';renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
   $('creatorCoach').textContent=t('Future Tech cleared only. Choose Flying Car or Water / Amphibious Car. The rest of your completed vehicle is untouched.','Seule la technologie future a été effacée. Choisis Voiture volante ou Voiture aquatique / amphibie. Le reste de ton véhicule terminé est intact.');
 }
