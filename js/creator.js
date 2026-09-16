@@ -42,7 +42,7 @@ const marsLibrary=[
 ];
 
 const vehicleModes=[
- mode('body','🚘','Body & movement','Carrosserie et mouvement','Build the car like a peg puzzle: choose a real vehicle part, move it near its matching slot, resize it carefully and let it click into place.','Construis la voiture comme un puzzle : choisis une vraie pièce, rapproche-la de son emplacement, redimensionne-la avec précision puis laisse-la se fixer.',[
+ mode('body','🚘','Body & movement','Carrosserie et mouvement','Build the car like a peg puzzle. Exterior pieces fit around the shell; steering, seats and dashboard are fitted by rotating underneath the car.','Construis la voiture comme un puzzle. Les pièces extérieures se fixent sur la carrosserie ; le volant, les sièges et le tableau de bord se placent en tournant sous la voiture.',[
   part('wheel','', 'Wheel / tyre','Roue / pneu',['movement','wheel'],'',{aspect:1,defaultSize:74}),
   part('door','', 'Car door','Porte de voiture',['passenger'],'',{aspect:1.55,defaultSize:96}),
   part('window','', 'Side window','Vitre latérale',['passenger'],'',{aspect:1.9,defaultSize:90}),
@@ -227,7 +227,7 @@ const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLaye
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
 let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false;
 const STORAGE='cw_creator_projects_v18';
-const VEHICLE_PUZZLE_VERSION=8;
+const VEHICLE_PUZZLE_VERSION=9;
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
 function allParts(){if(!active)return[];return modesForMission(missions[active]).flatMap(m=>m.parts||[]);}
@@ -268,6 +268,7 @@ function vehicleSlot(key,partId,center,u,v,normal,opts={}){
   This keeps the activity behaving like a wooden peg puzzle rather than stickers.
 */
 function vehiclePartShape(partId){
+  const circle=()=>Array.from({length:24},(_,i)=>{const a=(i/24)*Math.PI*2;return[Math.cos(a),Math.sin(a)]});
   const shapes={
     door:[[-1,-.94],[-.98,.44],[-.66,.96],[.68,.94],[.98,.54],[1,-.90]],
     window:[[-1,-.78],[-.72,.90],[.18,1],[.92,.58],[1,-.70],[.62,-.96],[-.62,-.94]],
@@ -282,9 +283,13 @@ function vehiclePartShape(partId){
     bumper:[[-1,-.42],[-.72,-.82],[.60,-.80],[1,-.36],[.90,.42],[.48,.72],[-.66,.70]],
     'rear-bumper':[[-1,-.38],[-.62,-.76],[.66,-.72],[1,-.30],[.86,.44],[.40,.72],[-.70,.68]],
     dashboard:[[-1,-.46],[-.78,-.82],[.74,-.78],[1,-.40],[.88,.56],[.52,.82],[-.60,.84],[-.92,.52]],
-    'driver-seat':[[-.56,-1],[.34,-1],[.54,-.58],[.46,-.06],[.86,.56],[.66,1],[-.66,1],[-.86,.58],[-.46,-.06]],
-    seat:[[-.56,-1],[.34,-1],[.54,-.58],[.46,-.06],[.86,.56],[.66,1],[-.66,1],[-.86,.58],[-.46,-.06]]
+    'driver-seat':[[-.80,-.92],[.80,-.92],[.96,-.50],[.78,.92],[-.78,.92],[-.96,-.50]],
+    seat:[[-.80,-.92],[.80,-.92],[.96,-.50],[.78,.92],[-.78,.92],[-.96,-.50]],
+    belt:[[-.88,-1],[-.62,-1],[.90,.78],[.68,1]],
+    battery:[[-1,-.72],[.82,-.72],[1,-.45],[.92,.72],[-.92,.72],[-1,.46]],
+    camera:[[-1,-.72],[.72,-.72],[1,-.12],[.72,.72],[-.72,.72],[-1,.12]]
   };
+  if(['steering','airbag','emergency-stop'].includes(partId))return circle();
   return shapes[partId]||[[-1,-1],[1,-1],[1,1],[-1,1]];
 }
 function vehicleSlotDefinitions(){
@@ -344,18 +349,34 @@ function drawInstalledVehiclePanel(proj){
 }
 
 function vehicleInteriorSlots(){
-  return[
-    {key:'dashboard',partId:'dashboard',x:.39,y:.39,size:.19,aspect:2.4,shape:vehiclePartShape('dashboard'),required:true},
-    {key:'steering',partId:'steering',x:.29,y:.50,size:.075,aspect:1,required:true},
-    {key:'driver-seat',partId:'driver-seat',x:.40,y:.65,size:.095,aspect:.72,shape:vehiclePartShape('driver-seat'),required:true},
-    {key:'passenger-seat',partId:'seat',x:.59,y:.65,size:.095,aspect:.72,shape:vehiclePartShape('seat'),required:true}
-  ];
+  const p=vehicleProfile(),W=p.width,sport=p.id==='sport',down=[0,0,-1],slots=[];
+  /*
+    Interior / underbody puzzle pieces live in real 3D positions inside the same car.
+    They are intentionally exposed only when the child rotates underneath the car
+    (or taps Interior).  The palette piece and slot still share the exact contour.
+  */
+  slots.push(vehicleSlot('dashboard','dashboard',[-.62,0,sport?.73:.84],[0,W*.34,0],[.16,0,0],down,{aspect:2.4,minFacing:.34,view:'interior',shape:vehiclePartShape('dashboard'),required:true}));
+  slots.push(vehicleSlot('steering','steering',[-.45,-W*.29,sport?.70:.81],[.105,0,0],[0,.105,0],down,{aspect:1,minFacing:.34,view:'interior',shape:vehiclePartShape('steering'),required:true}));
+  slots.push(vehicleSlot('driver-seat','driver-seat',[.03,-W*.28,sport?.53:.60],[.19,0,0],[0,.135,0],down,{aspect:1.42,minFacing:.34,view:'interior',shape:vehiclePartShape('driver-seat'),required:true}));
+  slots.push(vehicleSlot('passenger-seat','seat',[.03,W*.28,sport?.53:.60],[.19,0,0],[0,.135,0],down,{aspect:1.42,minFacing:.34,view:'interior',shape:vehiclePartShape('seat'),required:true}));
+
+  /* Cabin safety equipment: optional to the basic body puzzle, but it now has a true fitting place. */
+  slots.push(vehicleSlot('belt-driver','belt',[.08,-W*.40,sport?.58:.65],[.12,0,0],[0,.045,0],down,{aspect:2.7,minFacing:.34,view:'interior',shape:vehiclePartShape('belt'),required:false}));
+  slots.push(vehicleSlot('belt-passenger','belt',[.08,W*.40,sport?.58:.65],[.12,0,0],[0,.045,0],down,{aspect:2.7,minFacing:.34,view:'interior',shape:vehiclePartShape('belt'),required:false}));
+  slots.push(vehicleSlot('airbag-driver','airbag',[-.50,-W*.25,sport?.69:.80],[.075,0,0],[0,.075,0],down,{aspect:1,minFacing:.34,view:'interior',shape:vehiclePartShape('airbag'),required:false}));
+  slots.push(vehicleSlot('airbag-passenger','airbag',[-.56,W*.25,sport?.69:.80],[.085,0,0],[0,.085,0],down,{aspect:1,minFacing:.34,view:'interior',shape:vehiclePartShape('airbag'),required:false}));
+  slots.push(vehicleSlot('cabin-camera','camera',[-.33,0,sport?.91:1.04],[.075,0,0],[0,.050,0],down,{aspect:1.5,minFacing:.34,view:'interior',shape:vehiclePartShape('camera'),required:false}));
+  slots.push(vehicleSlot('emergency-stop','emergency-stop',[-.48,W*.12,sport?.70:.81],[.050,0,0],[0,.050,0],down,{aspect:1,minFacing:.34,view:'interior',shape:vehiclePartShape('emergency-stop'),required:false}));
+
+  /* One unmistakably internal power item: the under-floor battery pack. */
+  slots.push(vehicleSlot('battery-underfloor','battery',[.58,0,sport?.35:.40],[.34,0,0],[0,W*.30,0],down,{aspect:1.15,minFacing:.34,view:'interior',shape:vehiclePartShape('battery'),required:false}));
+  return slots;
 }
+function vehicleUnderAccess(){return vehicleViewMode==='interior'||vehiclePitch>.38;}
 function installedVehicleKeys(){
   return new Set([...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.installed==='1'&&o.dataset.targetKey).map(o=>o.dataset.targetKey));
 }
 function vehicleSlotProjection(slot){
-  if(slot.view==='interior')return null;
   const c=vehicleProjectPoint(slot.center);
   const corners=[
     [slot.center[0]-slot.u[0]-slot.v[0],slot.center[1]-slot.u[1]-slot.v[1],slot.center[2]-slot.u[2]-slot.v[2]],
@@ -371,10 +392,11 @@ function vehicleSlotProjection(slot){
   const w=Math.max(10,Math.hypot(ux,uy)*2);
   const h=Math.max(10,Math.hypot(vx,vy)*2);
   const screenAngle=Math.atan2(uy,ux)*180/Math.PI;
-  const n=vehicleProjectVector(slot.normal),facing=n.depth;
+  const n=vehicleProjectVector(slot.normal),facing=n.depth,isInterior=slot.view==='interior';
   const shapeCorners=vehicleSlotShapePoints(slot).map(vehicleProjectPoint);
+  const visible=isInterior?(vehicleUnderAccess()&&facing>=slot.minFacing):(facing>=slot.minFacing);
   return{...slot,cx:c.x,cy:c.y,w,h,sizePx:w,screenAspect:clamp(w/h,.28,4.2),screenAngle,
-    screenU:{x:ux,y:uy},screenV:{x:vx,y:vy},facing,visible:facing>=slot.minFacing,corners,shapeCorners};
+    screenU:{x:ux,y:uy},screenV:{x:vx,y:vy},facing,visible,corners,shapeCorners};
 }
 function vehicleMainEdges(){
   const p=vehicleProfile(),L=p.length,W=p.width,H=p.height,y=W*.49;
@@ -441,37 +463,32 @@ function drawVehicleGround(){
   tctx.save();tctx.strokeStyle='rgba(93,228,255,.12)';tctx.lineWidth=1.2;tctx.setLineDash([8,8]);
   tctx.beginPath();tctx.ellipse(400,305,205,25,0,0,Math.PI*2);tctx.stroke();tctx.restore();
 }
-function drawVehicleInterior(){
-  const installed=installedVehicleKeys(),W=800,H=450;
-  tctx.save();tctx.strokeStyle='rgba(132,222,255,.74)';tctx.lineWidth=2.4;tctx.translate(W/2,H/2);
-  tctx.beginPath();tctx.roundRect(-205,-112,410,224,72);tctx.stroke();
-  tctx.beginPath();tctx.moveTo(-130,-95);tctx.lineTo(-130,95);tctx.moveTo(30,-95);tctx.lineTo(30,95);tctx.stroke();
+function drawVehicleInteriorAccessLabel(){
+  if(!vehicleUnderAccess())return;
+  tctx.save();
+  tctx.fillStyle='rgba(159,236,255,.88)';tctx.font='800 13px system-ui';tctx.textAlign='center';
+  tctx.fillText(t('UNDERBODY / INTERIOR ACCESS — fit the cabin pieces from below','ACCÈS SOUS-CAISSE / INTÉRIEUR — fixe les pièces de l’habitacle par dessous'),400,402);
   tctx.restore();
-  const slots=vehicleInteriorSlots();
-  slots.forEach(sl=>{
-    const x=sl.x*W,y=sl.y*H,w=sl.size*W,h=w/sl.aspect,done=installed.has(sl.key);
-    tctx.save();tctx.strokeStyle=done?'rgba(68,229,173,.18)':'rgba(164,239,255,.58)';tctx.fillStyle=done?'rgba(68,229,173,.04)':'rgba(93,228,255,.025)';
-    tctx.lineWidth=2;tctx.setLineDash(done?[]:[7,6]);tctx.beginPath();
-    if(sl.partId==='steering')tctx.arc(x,y,w/2,0,Math.PI*2);
-    else if(sl.shape){sl.shape.forEach(([a,b],i)=>{const px=x+a*w/2,py=y+b*h/2;i?tctx.lineTo(px,py):tctx.moveTo(px,py)});tctx.closePath();}
-    else tctx.roundRect(x-w/2,y-h/2,w,h,12);
-    tctx.fill();tctx.stroke();tctx.restore();
-  });
 }
 function drawVehicleBlueprint(){
   if(!templateOn)return;
-  if(vehicleViewMode==='interior'){drawVehicleInterior();syncInstalledVehicleParts();return}
-  drawVehicleGround();
+  if(vehicleViewMode!=='interior')drawVehicleGround();
   const installed=installedVehicleKeys();
-  const projections=vehicleSlotDefinitions().map(vehicleSlotProjection).filter(Boolean).sort((a,b)=>a.depth-b.depth);
+  const projections=[...vehicleSlotDefinitions(),...vehicleInteriorSlots()].map(vehicleSlotProjection).filter(Boolean).sort((a,b)=>a.depth-b.depth);
   projections.forEach(proj=>{if(proj.visible&&installed.has(proj.key))drawInstalledVehiclePanel(proj)});
   drawVehicleWireframe();
   projections.forEach(proj=>{
     if(!proj.visible||installed.has(proj.key))return;
+    /* Interior view is deliberately uncluttered: only the internal puzzle holes are shown. */
+    if(vehicleViewMode==='interior'&&proj.view!=='interior')return;
     drawVehicleSlotGuide(proj,proj,false);
   });
+  drawVehicleInteriorAccessLabel();
   tctx.save();tctx.fillStyle='rgba(145,236,255,.66)';tctx.font='700 13px system-ui';tctx.textAlign='center';
-  tctx.fillText(t('Drag the car to rotate it freely. Fitted pieces stay attached while you turn it.','Fais glisser la voiture pour la tourner librement. Les pièces fixées restent attachées pendant la rotation.'),400,425);
+  const msg=vehicleUnderAccess()
+    ?t('Fit the interior pieces from underneath. Fitted pieces lock permanently into the car.','Fixe les pièces intérieures par dessous. Les pièces fixées se verrouillent définitivement dans la voiture.')
+    :t('Drag the car to rotate it freely. Fitted pieces stay attached while you turn it.','Fais glisser la voiture pour la tourner librement. Les pièces fixées restent attachées pendant la rotation.');
+  tctx.fillText(msg,400,425);
   tctx.restore();
   syncInstalledVehicleParts();
 }
@@ -509,6 +526,7 @@ function setVehicleView(view){
   else if(view==='front'){vehicleYaw=-Math.PI/2;vehiclePitch=.03}
   else if(view==='rear'){vehicleYaw=Math.PI/2;vehiclePitch=.03}
   else if(view==='top'){vehicleYaw=0;vehiclePitch=-.95}
+  else if(view==='interior'){vehicleYaw=0;vehiclePitch=.82}
   else if(view==='orbit'&&Math.abs(vehiclePitch)>.98){vehiclePitch=.12}
   renderTemplate('vehicle');updateVehicleViewUI();commitHistory();
 }
@@ -562,12 +580,14 @@ function vehiclePartSvg(id){
     const handle=id==='door'?'<path d="M82 37h13" stroke="#33495b" stroke-width="4" stroke-linecap="round"/>':'';
     return `<svg ${common}><polygon points="${pts}" fill="${style.fill}" stroke="#eef8ff" stroke-width="4" stroke-linejoin="round"/>${handle}</svg>`;
   }
-  if(['dashboard','driver-seat','seat'].includes(id)){
+  if(['dashboard','driver-seat','seat','belt','battery','camera'].includes(id)){
     const pts=vehiclePartShape(id).map(([a,b])=>`${(60+a*52).toFixed(1)},${(40+b*31).toFixed(1)}`).join(' ');
-    const fill=id==='dashboard'?'#475766':'#596a79';
-    return `<svg ${common}><polygon points="${pts}" fill="${fill}" stroke="#e5edf3" stroke-width="4" stroke-linejoin="round"/></svg>`;
+    const fills={dashboard:'#475766','driver-seat':'#596a79',seat:'#596a79',belt:'#d9e4ed',battery:'#77e06f',camera:'#5f7484'};
+    return `<svg ${common}><polygon points="${pts}" fill="${fills[id]||'#596a79'}" stroke="#e5edf3" stroke-width="4" stroke-linejoin="round"/></svg>`;
   }
   if(id==='steering')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="none" stroke="#dce6ee" stroke-width="8"/><circle cx="50" cy="50" r="12" fill="#455666"/><path d="M50 50L25 27M50 50l25-23M50 50v35" stroke="#65798a" stroke-width="7"/></svg>`;
+  if(id==='airbag')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#eef5fa" stroke="#ffffff" stroke-width="5"/><path d="M30 57q20 17 40 0" fill="none" stroke="#9aabba" stroke-width="5" stroke-linecap="round"/></svg>`;
+  if(id==='emergency-stop')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#ed5968" stroke="#fff1f3" stroke-width="5"/><rect x="29" y="43" width="42" height="14" rx="7" fill="#fff"/></svg>`;
   return '';
 }
 function visualHTML(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;switch(p.className){case'park-bench':return '<span class="creator-object-icon creator-visual creator-bench-visual"><i></i><i></i><i></i><i></i></span>';case'shelf':return '<span class="creator-object-icon creator-visual creator-shelf-visual"></span>';case'sofa':return '<span class="creator-object-icon creator-visual creator-sofa-visual"></span>';case'fluorescent':return '<span class="creator-object-icon creator-visual creator-fluorescent-visual"></span>';case'tvstand':return '<span class="creator-object-icon creator-visual creator-tvstand-visual"></span>';case'settop':return '<span class="creator-object-icon creator-visual creator-settop-visual"></span>';case'chassis':return '<span class="creator-object-icon creator-visual creator-chassis-visual"></span>';case'amphibious':return '<span class="creator-object-icon creator-visual creator-amphibious-visual"></span>';case'wing':return '<span class="creator-object-icon creator-visual creator-wing-visual"></span>';case'toilet':return '<span class="creator-object-icon creator-toilet-visual"></span>';default:return `<span class="creator-object-icon">${p.icon||'◆'}</span>`;}}
@@ -613,20 +633,7 @@ function selectObject(el){if(selectedObject)selectedObject.classList.remove('sel
 
 function vehicleTargetFor(el){
   if(active!=='vehicle'||el?.dataset.kind!=='part')return null;
-  const id=el.dataset.partId;
-  if(vehicleViewMode==='interior'){
-    const slots=vehicleInteriorSlots().filter(x=>x.partId===id);
-    if(!slots.length)return null;
-    const used=installedVehicleKeys();
-    let best=null,bestD=Infinity;
-    for(const sl of slots){
-      if(used.has(sl.key)&&el.dataset.targetKey!==sl.key)continue;
-      const d=Math.hypot((+el.dataset.x)-sl.x,(+el.dataset.y)-sl.y);
-      if(d<bestD){best={...sl,distance:d,sizePx:sl.size*stage.clientWidth,screenAspect:sl.aspect,visible:true,rotation:0};bestD=d}
-    }
-    return best;
-  }
-  const used=installedVehicleKeys(),slots=vehicleSlotDefinitions().filter(x=>x.partId===id);
+  const id=el.dataset.partId,used=installedVehicleKeys(),slots=vehicleAllPuzzleSlots().filter(x=>x.partId===id);
   let best=null,bestD=Infinity;
   for(const sl of slots){
     if(used.has(sl.key)&&el.dataset.targetKey!==sl.key)continue;
@@ -644,19 +651,13 @@ function vehicleTargetFor(el){
 }
 function syncInstalledVehiclePart(el){
   if(active!=='vehicle'||el.dataset.installed!=='1'||!el.dataset.targetKey)return;
-  const key=el.dataset.targetKey;
-  if(vehicleViewMode==='interior'){
-    const sl=vehicleInteriorSlots().find(x=>x.key===key);
-    if(!sl){el.style.opacity='0';return}
-    el.dataset.x=sl.x;el.dataset.y=sl.y;el.dataset.size=sl.size*stage.clientWidth;el.dataset.aspect=sl.aspect;el.dataset.rotation=0;
-    el.style.opacity='1';el.style.pointerEvents='none';el.style.setProperty('--object-squash','1');applyObjectStyle(el);return;
-  }
-  const sl=vehicleSlotDefinitions().find(x=>x.key===key);
+  const key=el.dataset.targetKey,sl=vehicleAllPuzzleSlots().find(x=>x.key===key);
   if(!sl){el.style.opacity='0';return}
   const pr=vehicleSlotProjection(sl);
   if(!pr){el.style.opacity='0';return}
-  el.style.opacity=pr.visible?'1':'0.08';el.style.pointerEvents='none';
+  el.style.pointerEvents='none';
   if(sl.partId==='wheel'){
+    el.style.opacity=pr.visible?'1':'0.08';
     clearVehicleProjectedStyle(el);
     el.dataset.x=pr.cx/templateCanvas.width;el.dataset.y=pr.cy/templateCanvas.height;
     el.dataset.size=pr.sizePx/templateCanvas.width*stage.clientWidth;
@@ -664,9 +665,8 @@ function syncInstalledVehiclePart(el){
     el.dataset.rotation=Number.isFinite(pr.screenAngle)?pr.screenAngle:0;
     el.style.setProperty('--object-squash','1');applyObjectStyle(el);
   }else{
-    clearVehicleProjectedStyle(el);
-    el.style.opacity='0';
-    el.style.pointerEvents='none';
+    /* Non-wheel fitted pieces are painted directly into their exact projected puzzle contour. */
+    clearVehicleProjectedStyle(el);el.style.opacity='0';
   }
 }
 function syncInstalledVehicleParts(){
@@ -677,7 +677,12 @@ function tryVehicleSnap(el,announce=true){
   if(!el||el.dataset.kind!=='part')return false;
   const target=vehicleTargetFor(el);
   if(!target){
-    if(announce)$('creatorCoach').textContent=t('Rotate the car until the correct puzzle slot for this part is facing you.','Tourne la voiture jusqu’à ce que le bon emplacement du puzzle soit face à toi.');
+    if(announce){
+      const hasInterior=vehicleInteriorSlots().some(s=>s.partId===el.dataset.partId);
+      $('creatorCoach').textContent=hasInterior
+        ?t('This part fits inside the car. Rotate underneath the blueprint or tap Interior, then match it to its exact slot.','Cette pièce se fixe à l’intérieur. Tourne le plan par dessous ou touche Intérieur, puis fais-la correspondre exactement à son emplacement.')
+        :t('Rotate the car until the correct puzzle slot for this part is facing you.','Tourne la voiture jusqu’à ce que le bon emplacement du puzzle soit face à toi.');
+    }
     return false;
   }
   const current=+el.dataset.size||68,targetPx=Math.max(24,target.sizePx||68);
