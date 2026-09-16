@@ -83,8 +83,16 @@ const vehicleModes=[
   part('safety-light','🚨','Warning light','Feu d’alerte',['safety'],'',{aspect:1.15,defaultSize:50}),
   part('emergency-stop','🛑','Emergency stop','Arrêt d’urgence',['safety'],'',{aspect:1,defaultSize:50})
  ]),
- mode('future','✨','Future tech','Technologies futures','Add technology for flying, hovering, water travel or other future ideas.','Ajoute des technologies de vol, de sustentation, de navigation sur l’eau ou d’autres idées futures.',[
-  part('wing','', 'Flight wing','Aile de vol',['future','flight'],'wing'),part('propeller','🌀','Propeller','Hélice',['future','flight']),part('jet','🔥','Jet unit','Réacteur',['future','flight']),part('hover','💠','Hover unit','Module de sustentation',['future','flight']),part('amphibious','', 'Amphibious hull','Coque amphibie',['future','amphibious'],'amphibious'),part('water-jet','🌊','Water jet','Propulseur aquatique',['future','amphibious']),part('retract-wheel','🛞','Retractable wheel','Roue rétractable',['future','amphibious','wheel']),part('drone-lift','🛸','Drone lift','Portance drone',['future','flight']),part('stabiliser','◢','Stabiliser','Stabilisateur',['future']),part('future-sensor','🔵','Future sensor','Capteur futuriste',['future','safety'])
+ mode('future','✨','Future tech','Technologies futures','Choose one future ability for this same car, then fit the matching technology.','Choisis une capacité future pour cette même voiture, puis installe la technologie correspondante.',[
+  part('wing','', 'Flight wing','Aile de vol',['future','flight'],'wing',{aspect:2.8,defaultSize:104}),
+  part('propeller','🌀','Flight propeller','Hélice de vol',['future','flight'],'',{aspect:1,defaultSize:64}),
+  part('jet','🔥','Jet unit','Réacteur',['future','flight'],'',{aspect:1.45,defaultSize:64}),
+  part('amphibious','', 'Amphibious hull','Coque amphibie',['future','amphibious'],'amphibious',{aspect:3.1,defaultSize:120}),
+  part('water-jet','🌊','Water jet','Propulseur aquatique',['future','amphibious'],'',{aspect:1,defaultSize:58}),
+  part('retract-wheel','🛞','Retractable wheel mechanism','Mécanisme de roue rétractable',['future','wheel'],'',{aspect:1,defaultSize:56}),
+  part('drone-lift','🛸','Drone lift rotor','Rotor de portance drone',['future','flight'],'',{aspect:1,defaultSize:62}),
+  part('stabiliser','◢','Stabiliser fin','Aileron stabilisateur',['future'],'',{aspect:1.65,defaultSize:64}),
+  part('future-sensor','🔵','Future sensor','Capteur futuriste',['future','safety'],'',{aspect:1,defaultSize:52})
  ])
 ];
 
@@ -241,7 +249,7 @@ const missions={
 const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('creatorTemplate'),tctx=templateCanvas.getContext('2d');
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
-let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self';
+let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='';
 const STORAGE='cw_creator_projects_v18';
 /* Keep version 9 so saved Body & Movement prototype cars restore after this Power System update. */
 const VEHICLE_PUZZLE_VERSION=9;
@@ -252,6 +260,16 @@ const VEHICLE_POWERTRAINS=[
   {id:'hybrid',icon:'♻️',label:['Hybrid','Hybride']}
 ];
 const VEHICLE_POWER_PART_IDS=new Set(['petrol-engine','diesel-engine','electric-motor','battery','inverter','charge-port','fuel-tank','exhaust','radiator','dpf','solar']);
+const VEHICLE_FUTURE_ABILITIES=[
+  {id:'flight',icon:'✈️',label:['Flying car','Voiture volante']},
+  {id:'water',icon:'🌊',label:['Water / amphibious car','Voiture aquatique / amphibie']}
+];
+const VEHICLE_FLIGHT_SYSTEMS=[
+  {id:'propeller',icon:'🌀',label:['Propeller flight','Vol par hélices']},
+  {id:'jet',icon:'🔥',label:['Jet flight','Vol par réacteurs']},
+  {id:'drone',icon:'🛸',label:['Drone lift','Portance par rotors']}
+];
+const VEHICLE_FUTURE_PART_IDS=new Set(['wing','propeller','jet','amphibious','water-jet','retract-wheel','drone-lift','stabiliser','future-sensor']);
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
 function allParts(){if(!active)return[];return modesForMission(missions[active]).flatMap(m=>m.parts||[]);}
@@ -298,6 +316,41 @@ function resetVehiclePowerSystem(){
   [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&((o.dataset.targetKey||'').startsWith('power-')||VEHICLE_POWER_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1')).forEach(o=>o.remove());
   selectObject(null);vehiclePowertrain='';vehicleHybridType='self';renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));commitHistory();
   $('creatorCoach').textContent=t('Power System cleared only. Choose Petrol, Diesel, Electric or Hybrid. Your Body & Movement build is untouched.','Seul le système d’énergie a été effacé. Choisis Essence, Diesel, Électrique ou Hybride. Ta carrosserie et ton mouvement sont intacts.');
+}
+
+function vehicleFutureAbilityChoice(id=vehicleFutureAbility){return VEHICLE_FUTURE_ABILITIES.find(x=>x.id===id)||null;}
+function vehicleFutureAbilityLabel(id=vehicleFutureAbility){const x=vehicleFutureAbilityChoice(id);return x?L(x.label):t('Not chosen yet','Pas encore choisi');}
+function vehicleFlightSystemChoice(id=vehicleFlightSystem){return VEHICLE_FLIGHT_SYSTEMS.find(x=>x.id===id)||null;}
+function vehicleFlightSystemLabel(id=vehicleFlightSystem){const x=vehicleFlightSystemChoice(id);return x?L(x.label):t('Not chosen yet','Pas encore choisi');}
+function vehicleFutureConfig(){
+  if(vehicleFutureAbility==='flight'){
+    if(!vehicleFlightSystem)return{required:[],optional:[]};
+    const propulsion=vehicleFlightSystem==='propeller'?'propeller':vehicleFlightSystem==='jet'?'jet':'drone-lift';
+    return{required:['wing',propulsion,'retract-wheel','stabiliser','future-sensor'],optional:[]};
+  }
+  if(vehicleFutureAbility==='water')return{required:['amphibious','water-jet','retract-wheel','stabiliser','future-sensor'],optional:[]};
+  return{required:[],optional:[]};
+}
+function vehicleFuturePartIdsForSelection(){const c=vehicleFutureConfig();return[...c.required,...c.optional];}
+function vehicleFutureLocked(){return[...objectLayer.children].some(o=>o.dataset.kind==='part'&&o.dataset.installed==='1'&&(o.dataset.targetKey||'').startsWith('future-'));}
+function removeLooseVehicleFuturePieces(){[...objectLayer.children].filter(o=>o.dataset.kind==='part'&&VEHICLE_FUTURE_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1').forEach(o=>o.remove());if(selectedObject&&VEHICLE_FUTURE_PART_IDS.has(selectedObject.dataset.partId))selectObject(null);}
+function selectVehicleFutureAbility(id){
+  if(!VEHICLE_FUTURE_ABILITIES.some(x=>x.id===id))return;
+  if(vehicleFutureLocked()&&vehicleFutureAbility&&vehicleFutureAbility!==id){$('creatorCoach').textContent=t('This Future Tech system is already being built. Use Change Future Tech if you want to remove only the future components and choose another ability.','Ce système de technologie future est déjà en construction. Utilise Changer la technologie future pour retirer uniquement les composants futurs et choisir une autre capacité.');return;}
+  if(vehicleFutureAbility!==id){removeLooseVehicleFuturePieces();vehicleFutureAbility=id;vehicleFlightSystem='';}
+  renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
+}
+function selectVehicleFlightSystem(id){
+  if(!VEHICLE_FLIGHT_SYSTEMS.some(x=>x.id===id)||vehicleFutureAbility!=='flight')return;
+  if(vehicleFutureLocked()&&vehicleFlightSystem&&vehicleFlightSystem!==id){$('creatorCoach').textContent=t('The flying system is already being installed. Change Future Tech first if you want a different flight system.','Le système de vol est déjà en cours d’installation. Change d’abord la technologie future si tu veux un autre système de vol.');return;}
+  if(vehicleFlightSystem!==id){removeLooseVehicleFuturePieces();vehicleFlightSystem=id;renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();}
+}
+function resetVehicleFutureSystem(){
+  if(!vehicleFutureAbility&&!vehicleFutureLocked())return;
+  if(!window.confirm(t('Change Future Tech? Only the Future Tech parts will be removed. Body & Movement, Power System and Safety will stay exactly as they are.','Changer la technologie future ? Seules les pièces de technologie future seront retirées. Carrosserie et mouvement, Système d’énergie et Sécurité resteront exactement comme ils sont.')))return;
+  [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&((o.dataset.targetKey||'').startsWith('future-')||VEHICLE_FUTURE_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1')).forEach(o=>o.remove());
+  selectObject(null);vehicleFutureAbility='';vehicleFlightSystem='';renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
+  $('creatorCoach').textContent=t('Future Tech cleared only. Choose Flying Car or Water / Amphibious Car. The rest of your completed vehicle is untouched.','Seule la technologie future a été effacée. Choisis Voiture volante ou Voiture aquatique / amphibie. Le reste de ton véhicule terminé est intact.');
 }
 function rotateVehiclePoint(p,yaw,pitch){
   const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
@@ -353,9 +406,14 @@ function vehiclePartShape(partId){
     exhaust:[[-1,-.30],[-.82,-.58],[.30,-.48],[.46,-.18],[1,-.12],[1,.20],[.40,.28],[.20,.52],[-.84,.46]],
     radiator:[[-1,-.90],[1,-.90],[1,.90],[-1,.90]],
     dpf:[[-1,-.60],[.76,-.60],[1,-.28],[.86,.60],[-.86,.60],[-1,.28]],
-    solar:[[-1,-.82],[1,-.82],[1,.82],[-1,.82]]
+    solar:[[-1,-.82],[1,-.82],[1,.82],[-1,.82]],
+    wing:[[-1,-.20],[-.44,-.68],[.86,-.92],[1,-.48],[.30,.18],[.92,.64],[.72,.94],[-.42,.54]],
+    jet:[[-1,-.58],[-.62,-.92],[.48,-.92],[1,-.46],[.92,.54],[.48,.92],[-.62,.92],[-1,.58]],
+    amphibious:[[-1,-.44],[-.78,-.82],[.66,-.92],[1,-.46],[.92,.48],[.58,.90],[-.68,.82],[-1,.42]],
+    stabiliser:[[-1,.78],[-.54,-.90],[.18,-.36],[1,.84]],
+    'future-sensor':[[-.72,-1],[.72,-1],[1,-.72],[1,.72],[.72,1],[-.72,1],[-1,.72],[-1,-.72]]
   };
-  if(['steering','airbag','emergency-stop','electric-motor','charge-port','sensor'].includes(partId))return circle();
+  if(['steering','airbag','emergency-stop','electric-motor','charge-port','sensor','propeller','water-jet','retract-wheel','drone-lift'].includes(partId))return circle();
   return shapes[partId]||[[-1,-1],[1,-1],[1,1],[-1,1]];
 }
 function vehicleSlotDefinitions(){
@@ -408,6 +466,11 @@ function vehiclePartFill(partId){
   if(partId==='indicator')return{fill:'rgba(255,174,54,.82)',stroke:'rgba(255,235,196,.98)'};
   if(['safety-light','emergency-stop'].includes(partId))return{fill:'rgba(237,89,104,.78)',stroke:'rgba(255,230,235,.98)'};
   if(partId==='solar')return{fill:'rgba(66,139,213,.64)',stroke:'rgba(209,238,255,.94)'};
+  if(['wing','stabiliser'].includes(partId))return{fill:'rgba(124,126,255,.68)',stroke:'rgba(229,232,255,.96)'};
+  if(['propeller','jet','drone-lift'].includes(partId))return{fill:'rgba(167,112,255,.70)',stroke:'rgba(242,230,255,.96)'};
+  if(['amphibious','water-jet'].includes(partId))return{fill:'rgba(64,177,232,.68)',stroke:'rgba(220,248,255,.96)'};
+  if(partId==='retract-wheel')return{fill:'rgba(112,128,145,.76)',stroke:'rgba(238,246,252,.96)'};
+  if(partId==='future-sensor')return{fill:'rgba(71,229,222,.74)',stroke:'rgba(220,255,252,.96)'};
   return{fill:'rgba(128,159,185,.63)',stroke:'rgba(229,243,251,.90)'};
 }
 function drawInstalledVehiclePanel(proj){
@@ -482,6 +545,49 @@ function vehiclePowerSlots(){
   if(ids.has('dpf'))add('dpf','dpf',[L*.02,-W*.26,sport?.20:.23],[.24,0,0],[0,.12,0],down,{aspect:2.2});
   if(ids.has('charge-port'))add('charge-port','charge-port',[L*.23,W*.515,sport?.70:.78],[.085,0,0],[0,0,.085],side,{view:'exterior',minFacing:.22,aspect:1});
   if(ids.has('solar'))add('solar','solar',[.10,0,p.roofZ+.025],[.54,0,0],[0,W*.28,0],top,{view:'exterior',required:false,minFacing:.08,aspect:2.4});
+  return slots;
+}
+function vehicleFutureSlots(){
+  if(!vehicleFutureAbility)return[];
+  if(vehicleFutureAbility==='flight'&&!vehicleFlightSystem)return[];
+  const p=vehicleProfile(),L=p.length,W=p.width,sport=p.id==='sport',down=[0,0,-1],top=[0,0,1],rear=[1,0,0],front=[-1,0,0],slots=[];
+  const ids=new Set(vehicleFuturePartIdsForSelection());
+  const add=(key,partId,center,u,v,normal=top,opts={})=>slots.push(vehicleSlot(`future-${key}`,partId,center,u,v,normal,{view:opts.view||'exterior',required:opts.required!==false,minFacing:opts.minFacing??.22,aspect:opts.aspect||1,shape:vehiclePartShape(partId),label:opts.label||partId}));
+
+  if(vehicleFutureAbility==='flight'){
+    /* Two wings — easiest from Top view. */
+    for(const sgn of [-1,1])add(`wing-${sgn>0?'r':'l'}`,'wing',[.20,sgn*W*.73,sport?.62:.68],[.48,0,0],[0,sgn*W*.34,0],top,{aspect:2.8,minFacing:.08});
+    /* Four retractable-wheel mechanisms — fitted from underneath. */
+    for(const [axle,x] of [['front',-p.wheelbase/2],['rear',p.wheelbase/2]])for(const sgn of [-1,1])add(`retract-${axle}-${sgn>0?'r':'l'}`,'retract-wheel',[x,sgn*W*.44,.19],[.085,0,0],[0,.085,0],down,{view:'interior',aspect:1,minFacing:.30});
+    /* Rear stabiliser fins. */
+    for(const sgn of [-1,1])add(`stabiliser-${sgn>0?'r':'l'}`,'stabiliser',[L*.34,sgn*W*.37,sport?.74:.82],[.16,0,0],[0,sgn*.10,.12],top,{aspect:1.65,minFacing:.08});
+    /* Advanced front/rear environment sensors. */
+    add('sensor-front','future-sensor',[-L*.485,0,sport?.67:.73],[0,W*.075,0],[0,0,.075],front,{aspect:1,minFacing:.20});
+    add('sensor-rear','future-sensor',[L*.485,0,sport?.65:.71],[0,W*.075,0],[0,0,.075],rear,{aspect:1,minFacing:.20});
+    if(ids.has('propeller')){
+      for(const sgn of [-1,1])add(`propeller-${sgn>0?'r':'l'}`,'propeller',[L*.49,sgn*W*.28,sport?.59:.65],[0,.10,0],[0,0,.10],rear,{aspect:1,minFacing:.22});
+    }
+    if(ids.has('jet')){
+      for(const sgn of [-1,1])add(`jet-${sgn>0?'r':'l'}`,'jet',[L*.49,sgn*W*.27,sport?.52:.58],[0,.12,0],[0,0,.082],rear,{aspect:1.45,minFacing:.22});
+    }
+    if(ids.has('drone-lift')){
+      const xs=[-L*.22,L*.22],ys=[-W*.48,W*.48];
+      xs.forEach((x,xi)=>ys.forEach((y,yi)=>add(`drone-${xi}-${yi}`,'drone-lift',[x,y,sport?.78:.86],[.095,0,0],[0,.095,0],top,{aspect:1,minFacing:.08})));
+    }
+  }
+
+  if(vehicleFutureAbility==='water'){
+    /* Sealed amphibious underbody hull. */
+    add('amphibious-hull','amphibious',[.08,0,sport?.14:.17],[L*.36,0,0],[0,W*.36,0],down,{view:'interior',aspect:3.1,minFacing:.28});
+    /* Four wheel-retraction mechanisms for water travel. */
+    for(const [axle,x] of [['front',-p.wheelbase/2],['rear',p.wheelbase/2]])for(const sgn of [-1,1])add(`retract-${axle}-${sgn>0?'r':'l'}`,'retract-wheel',[x,sgn*W*.44,.19],[.085,0,0],[0,.085,0],down,{view:'interior',aspect:1,minFacing:.30});
+    /* Twin rear water jets. */
+    for(const sgn of [-1,1])add(`water-jet-${sgn>0?'r':'l'}`,'water-jet',[L*.49,sgn*W*.25,sport?.30:.34],[0,.095,0],[0,0,.095],rear,{aspect:1,minFacing:.22});
+    /* Two small stabilising fins for directional control in water. */
+    for(const sgn of [-1,1])add(`stabiliser-${sgn>0?'r':'l'}`,'stabiliser',[L*.34,sgn*W*.39,sport?.35:.39],[0,sgn*.14,0],[0,0,.10],rear,{aspect:1.65,minFacing:.18});
+    add('sensor-front','future-sensor',[-L*.485,0,sport?.58:.64],[0,W*.075,0],[0,0,.075],front,{aspect:1,minFacing:.20});
+    add('sensor-rear','future-sensor',[L*.485,0,sport?.58:.64],[0,W*.075,0],[0,0,.075],rear,{aspect:1,minFacing:.20});
+  }
   return slots;
 }
 function vehicleUnderAccess(){return vehicleViewMode==='interior'||vehiclePitch>.38;}
@@ -583,7 +689,9 @@ function drawVehicleInteriorAccessLabel(){
     ?t('UNDERBODY / POWER ACCESS — install the hidden power components','ACCÈS SOUS-CAISSE / ÉNERGIE — installe les composants d’énergie cachés')
     :activeMode==='safety'
       ?t('UNDERBODY / SAFETY ACCESS — install belts, airbags and cabin safety controls','ACCÈS SOUS-CAISSE / SÉCURITÉ — installe ceintures, airbags et commandes de sécurité')
-      :t('UNDERBODY / INTERIOR ACCESS — fit the cabin pieces from below','ACCÈS SOUS-CAISSE / INTÉRIEUR — fixe les pièces de l’habitacle par dessous');
+      :activeMode==='future'
+        ?t('UNDERBODY / FUTURE TECH ACCESS — fit hidden future mechanisms here','ACCÈS SOUS-CAISSE / TECHNOLOGIE FUTURE — fixe ici les mécanismes futurs cachés')
+        :t('UNDERBODY / INTERIOR ACCESS — fit the cabin pieces from below','ACCÈS SOUS-CAISSE / INTÉRIEUR — fixe les pièces de l’habitacle par dessous');
   tctx.fillText(label,400,402);
   tctx.restore();
 }
@@ -612,6 +720,12 @@ function drawVehicleBlueprint(){
     msg=vehicleUnderAccess()
       ?t('Safety access: fit the seat belts, airbags, safety camera, warning control and emergency stop inside the cabin.','Accès sécurité : place les ceintures, airbags, caméra de sécurité, commande d’alerte et arrêt d’urgence dans l’habitacle.')
       :t('Safety stage: use Front, Rear and Side views for collision sensors and indicators; use Interior for cabin protection.','Étape sécurité : utilise les vues Avant, Arrière et Latérales pour les capteurs et clignotants ; utilise Intérieur pour la protection de l’habitacle.');
+  }else if(activeMode==='future'&&vehicleFutureAbility){
+    msg=vehicleUnderAccess()
+      ?t('Future Tech access: fit the hidden wheel-retraction or amphibious components underneath the same car.','Accès technologie future : place sous la même voiture les mécanismes cachés de roues rétractables ou de coque amphibie.')
+      :vehicleFutureAbility==='flight'
+        ?t('Flying Car selected. Use Top for wings or drone lift, Rear for propellers/jets, and Interior for retractable-wheel mechanisms.','Voiture volante sélectionnée. Utilise Dessus pour les ailes ou rotors, Arrière pour les hélices/réacteurs et Intérieur pour les mécanismes de roues rétractables.')
+        :t('Water / Amphibious selected. Use Interior for the hull and retractable wheels, then Rear for water jets and stabilisers.','Aquatique / amphibie sélectionné. Utilise Intérieur pour la coque et les roues rétractables, puis Arrière pour les propulseurs aquatiques et stabilisateurs.');
   }else{
     msg=vehicleUnderAccess()
       ?t('Fit the interior pieces from underneath. Fitted pieces lock permanently into the car.','Fixe les pièces intérieures par dessous. Les pièces fixées se verrouillent définitivement dans la voiture.')
@@ -663,12 +777,12 @@ function renderLibrary(m){const panel=$('creatorLibraryPanel'),host=$('creatorLi
 function refreshLibraryCards(){document.querySelectorAll('.creator-library-card').forEach(card=>{const exists=active==='vehicle'?card.dataset.libraryId===currentLibraryId:[...objectLayer.children].some(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===card.dataset.libraryId);card.classList.toggle('active',exists)});}
 function chooseLibrary(item){if(active==='vehicle'){
   const changed=!!currentLibraryId&&currentLibraryId!==item.id;
-  if(changed){[...objectLayer.children].filter(o=>o.dataset.kind==='part').forEach(o=>o.remove());selectObject(null);vehiclePowertrain='';vehicleHybridType='self';}
+  if(changed){[...objectLayer.children].filter(o=>o.dataset.kind==='part').forEach(o=>o.remove());selectObject(null);vehiclePowertrain='';vehicleHybridType='self';vehicleFutureAbility='';vehicleFlightSystem='';}
   currentLibraryId=item.id;vehicleYaw=0;vehiclePitch=.10;vehicleViewMode='left';renderTemplate('vehicle');refreshLibraryCards();updateVehicleViewUI();renderModes(missions[active],activeMode);commitHistory();return
 }currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
 
 function renderModes(m,preferred){const modes=modesForMission(m);if(!modes.length)return;activeMode=(preferred&&modes.some(x=>x.id===preferred))?preferred:(activeMode&&modes.some(x=>x.id===activeMode)?activeMode:modes[0].id);const host=$('creatorModes');host.innerHTML='';modes.forEach(md=>{const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'');b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${L(md.help)}</small>`;b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);commitHistory()};host.appendChild(b)});const selected=modes.find(x=>x.id===activeMode);$('creatorModeHelp').textContent=L(selected.help);renderComponents(selected);}
-function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots()];}
+function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots(),...vehicleFutureSlots()];}
 function vehicleModePartIds(){const md=modesForMission(missions.vehicle).find(x=>x.id===activeMode);return new Set((md?.parts||[]).map(x=>x.id));}
 function vehiclePartRequirement(id){return vehicleAllPuzzleSlots().filter(s=>s.partId===id).length;}
 function vehicleInstalledPartCount(id){return [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.partId===id&&o.dataset.installed==='1'&&o.dataset.targetKey).length;}
@@ -715,6 +829,23 @@ function renderComponents(md){
     if(optional.length){const optTitle=document.createElement('div');optTitle.className='creator-palette-title';optTitle.innerHTML=`<b>${t('Optional efficiency upgrade','Amélioration d’efficacité facultative')}</b><small>${t('Optional pieces do not block Power System completion.','Les pièces facultatives ne bloquent pas la fin du système d’énergie.')}</small>`;host.appendChild(optTitle);optional.forEach(p=>appendVehiclePartButton(host,p));}
     const change=document.createElement('button');change.type='button';change.className='creator-component';change.innerHTML=`<span>↺</span><small>${t('Change power system','Changer le système d’énergie')}</small>`;change.onclick=resetVehiclePowerSystem;host.appendChild(change);refreshVehicleComponentButtons();return;
   }
+  if(active==='vehicle'&&md.id==='future'){
+    host.innerHTML=`<div class="creator-palette-title"><b>${t('Choose the final Future Tech ability','Choisis la capacité finale de technologie future')}</b><small>${t('Choose one path for this same completed car: make it fly or make it travel on water.','Choisis une seule voie pour cette même voiture terminée : fais-la voler ou naviguer sur l’eau.')}</small></div>`;
+    VEHICLE_FUTURE_ABILITIES.forEach(choice=>{const b=document.createElement('button');b.type='button';b.className='creator-component';if(vehicleFutureAbility===choice.id){b.style.borderColor='rgba(93,228,255,.85)';b.style.background='rgba(93,228,255,.14)';}b.innerHTML=`<span>${choice.icon}</span><small>${L(choice.label)}</small>`;b.onclick=()=>selectVehicleFutureAbility(choice.id);host.appendChild(b)});
+    if(!vehicleFutureAbility){const note=document.createElement('div');note.className='creator-palette-title';note.innerHTML=`<small>${t('Choose Flying Car or Water / Amphibious Car. Only the technology required for that ability will appear.','Choisis Voiture volante ou Voiture aquatique / amphibie. Seule la technologie nécessaire à cette capacité apparaîtra.')}</small>`;host.appendChild(note);return;}
+    const summary=document.createElement('div');summary.className='creator-palette-title';summary.innerHTML=`<b>${t('Selected','Sélectionné')}: ${vehicleFutureAbilityLabel()}</b><small>${vehicleFutureAbility==='flight'?t('The same road car will gain flight hardware.','La même voiture routière recevra des équipements de vol.'):t('The same road car will gain a sealed hull and water propulsion.','La même voiture routière recevra une coque étanche et une propulsion aquatique.')}</small>`;host.appendChild(summary);
+    if(vehicleFutureAbility==='flight'){
+      const subTitle=document.createElement('div');subTitle.className='creator-palette-title';subTitle.innerHTML=`<b>${t('How should it fly?','Comment doit-elle voler ?')}</b><small>${t('Choose one propulsion method. Do not install propellers, jets and drone rotors together.','Choisis une seule méthode de propulsion. N’installe pas ensemble hélices, réacteurs et rotors de drone.')}</small>`;host.appendChild(subTitle);
+      VEHICLE_FLIGHT_SYSTEMS.forEach(choice=>{const b=document.createElement('button');b.type='button';b.className='creator-component';if(vehicleFlightSystem===choice.id){b.style.borderColor='rgba(93,228,255,.85)';b.style.background='rgba(93,228,255,.14)';}b.innerHTML=`<span>${choice.icon}</span><small>${L(choice.label)}</small>`;b.onclick=()=>selectVehicleFlightSystem(choice.id);host.appendChild(b)});
+      if(!vehicleFlightSystem){const note=document.createElement('div');note.className='creator-palette-title';note.innerHTML=`<small>${t('Choose the flight system first. Then the exact puzzle pieces and slots will appear.','Choisis d’abord le système de vol. Ensuite les pièces exactes du puzzle et leurs emplacements apparaîtront.')}</small>`;host.appendChild(note);return;}
+      const flight=document.createElement('div');flight.className='creator-palette-title';flight.innerHTML=`<b>${t('Flight system','Système de vol')}: ${vehicleFlightSystemLabel()}</b><small>${t('Use Top, Rear and Interior/underbody views to install the complete flight system.','Utilise les vues Dessus, Arrière et Intérieur/sous la caisse pour installer le système de vol complet.')}</small>`;host.appendChild(flight);
+    }
+    const ids=new Set(vehicleFuturePartIdsForSelection());
+    const config=vehicleFutureConfig();
+    const reqTitle=document.createElement('div');reqTitle.className='creator-palette-title';reqTitle.innerHTML=`<b>${t('Required Future Tech components','Composants de technologie future requis')}</b><small>${t('Fit every required copy into its matching blueprint slot. A button locks only when all copies are installed.','Place chaque exemplaire requis dans son emplacement correspondant. Un bouton se verrouille seulement quand tous les exemplaires sont installés.')}</small>`;host.appendChild(reqTitle);
+    (md.parts||[]).filter(p=>ids.has(p.id)&&config.required.includes(p.id)).forEach(p=>appendVehiclePartButton(host,p));
+    const change=document.createElement('button');change.type='button';change.className='creator-component';change.innerHTML=`<span>↺</span><small>${t('Change Future Tech','Changer la technologie future')}</small>`;change.onclick=resetVehicleFutureSystem;host.appendChild(change);refreshVehicleComponentButtons();return;
+  }
   host.innerHTML=`<div class="creator-palette-title"><b>${t('Parts for','Pièces pour')} ${L(md.label)}</b><small>${t('Choose the matching puzzle piece. When every required copy is fitted, its button locks.','Choisis la pièce de puzzle correspondante. Quand tous les exemplaires requis sont fixés, son bouton se verrouille.')}</small></div>`;(md.parts||[]).forEach(p=>appendVehiclePartButton(host,p));refreshVehicleComponentButtons();
 }
 function appendVehiclePartButton(host,p){const b=document.createElement('button');b.type='button';b.className='creator-component';b.dataset.partId=p.id;const need=active==='vehicle'?vehiclePartRequirement(p.id):0,done=active==='vehicle'?vehicleInstalledPartCount(p.id):0;b.innerHTML=`<span>${paletteVisual(p)}</span><small>${L(p.label)}${need?` <em data-part-counter>${done}/${need}</em>`:''}</small>`;b.onclick=()=>addPalettePart(p);host.appendChild(b);}
@@ -731,13 +862,17 @@ function vehiclePartSvg(id){
     const handle=id==='door'?'<path d="M82 37h13" stroke="#33495b" stroke-width="4" stroke-linecap="round"/>':'';
     return `<svg ${common}><polygon points="${pts}" fill="${style.fill}" stroke="#eef8ff" stroke-width="4" stroke-linejoin="round"/>${handle}</svg>`;
   }
-  if(['dashboard','driver-seat','seat','belt','battery','camera','indicator','safety-light','petrol-engine','diesel-engine','inverter','fuel-tank','exhaust','radiator','dpf','solar'].includes(id)){
+  if(['dashboard','driver-seat','seat','belt','battery','camera','indicator','safety-light','petrol-engine','diesel-engine','inverter','fuel-tank','exhaust','radiator','dpf','solar','wing','jet','amphibious','stabiliser','future-sensor'].includes(id)){
     const pts=vehiclePartShape(id).map(([a,b])=>`${(60+a*52).toFixed(1)},${(40+b*31).toFixed(1)}`).join(' ');
-    const fills={dashboard:'#475766','driver-seat':'#596a79',seat:'#596a79',belt:'#d9e4ed',battery:'#55d99a',camera:'#4abeE0',indicator:'#ffae36','safety-light':'#ed5968','petrol-engine':'#aeb8c2','diesel-engine':'#929eaa',inverter:'#55d99a','fuel-tank':'#b89b70',exhaust:'#9b8261',radiator:'#b7c2cb',dpf:'#a8b2bc',solar:'#418bd5'};
+    const fills={dashboard:'#475766','driver-seat':'#596a79',seat:'#596a79',belt:'#d9e4ed',battery:'#55d99a',camera:'#4abeE0',indicator:'#ffae36','safety-light':'#ed5968','petrol-engine':'#aeb8c2','diesel-engine':'#929eaa',inverter:'#55d99a','fuel-tank':'#b89b70',exhaust:'#9b8261',radiator:'#b7c2cb',dpf:'#a8b2bc',solar:'#418bd5',wing:'#7c7eff',jet:'#a770ff',amphibious:'#40b1e8',stabiliser:'#7c7eff','future-sensor':'#47e5de'};
     return `<svg ${common}><polygon points="${pts}" fill="${fills[id]||'#596a79'}" stroke="#e5edf3" stroke-width="4" stroke-linejoin="round"/></svg>`;
   }
   if(id==='electric-motor')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#55d99a" stroke="#e5fff2" stroke-width="5"/><circle cx="50" cy="50" r="14" fill="#294b42"/><path d="M50 13v17M50 70v17M13 50h17M70 50h17" stroke="#e5fff2" stroke-width="5" stroke-linecap="round"/></svg>`;
   if(id==='charge-port')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#55d99a" stroke="#e5fff2" stroke-width="5"/><circle cx="40" cy="43" r="5" fill="#27483f"/><circle cx="60" cy="43" r="5" fill="#27483f"/><rect x="43" y="57" width="14" height="18" rx="5" fill="#27483f"/></svg>`;
+  if(id==='propeller')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#a770ff" stroke="#f2e6ff" stroke-width="5"/><circle cx="50" cy="50" r="8" fill="#3f2f56"/><path d="M50 50C33 41 27 25 35 18c10 2 17 16 15 32M50 50c9-17 25-23 32-15-2 10-16 17-32 15M50 50c17 9 23 25 15 32-10-2-17-16-15-32M50 50c-9 17-25 23-32 15 2-10 16-17 32-15" fill="#eadcff"/></svg>`;
+  if(id==='water-jet')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#40b1e8" stroke="#dcf8ff" stroke-width="5"/><path d="M25 50h50M58 34l18 16-18 16" fill="none" stroke="#e8fbff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  if(id==='retract-wheel')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#708091" stroke="#eef6fc" stroke-width="5"/><circle cx="50" cy="50" r="19" fill="none" stroke="#273440" stroke-width="8"/><path d="M50 16v17M39 27l11-11 11 11" fill="none" stroke="#eef6fc" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  if(id==='drone-lift')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#a770ff" stroke="#f2e6ff" stroke-width="5"/><circle cx="50" cy="50" r="9" fill="#3f2f56"/><path d="M50 21v58M21 50h58M30 30l40 40M70 30L30 70" stroke="#eadcff" stroke-width="6" stroke-linecap="round"/></svg>`;
   if(id==='steering')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="none" stroke="#dce6ee" stroke-width="8"/><circle cx="50" cy="50" r="12" fill="#455666"/><path d="M50 50L25 27M50 50l25-23M50 50v35" stroke="#65798a" stroke-width="7"/></svg>`;
   if(id==='sensor')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="#4abee0" stroke="#dcfaff" stroke-width="5"/><circle cx="50" cy="50" r="10" fill="#173e4c"/><path d="M50 18a32 32 0 0 1 0 64M50 29a21 21 0 0 1 0 42" fill="none" stroke="#dcfaff" stroke-width="5" stroke-linecap="round"/></svg>`;
   if(id==='airbag')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#eef5fa" stroke="#ffffff" stroke-width="5"/><path d="M30 57q20 17 40 0" fill="none" stroke="#9aabba" stroke-width="5" stroke-linecap="round"/></svg>`;
@@ -832,7 +967,7 @@ function tryVehicleSnap(el,announce=true){
   const target=vehicleTargetFor(el);
   if(!target){
     if(announce){
-      const hasInterior=[...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots()].some(s=>s.partId===el.dataset.partId&&s.view==='interior');
+      const hasInterior=[...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots(),...vehicleFutureSlots()].some(s=>s.partId===el.dataset.partId&&s.view==='interior');
       $('creatorCoach').textContent=hasInterior
         ?t('This part fits inside the car. Rotate underneath the blueprint or tap Interior, then match it to its exact slot.','Cette pièce se fixe à l’intérieur. Tourne le plan par dessous ou touche Intérieur, puis fais-la correspondre exactement à son emplacement.')
         :t('Rotate the car until the correct puzzle slot for this part is facing you.','Tourne la voiture jusqu’à ce que le bon emplacement du puzzle soit face à toi.');
@@ -877,9 +1012,14 @@ function vehicleSafetyProgress(){
   const used=installedVehicleKeys(),req=vehicleSafetySlots().filter(x=>x.required);
   return{done:req.filter(x=>used.has(x.key)).length,total:req.length,missing:req.filter(x=>!used.has(x.key))};
 }
+function vehicleFutureProgress(){
+  const used=installedVehicleKeys(),req=vehicleFutureSlots().filter(x=>x.required);
+  const ready=vehicleFutureAbility!=='flight'||!!vehicleFlightSystem;
+  return{chosen:!!vehicleFutureAbility,ready,done:req.filter(x=>used.has(x.key)).length,total:req.length,missing:req.filter(x=>!used.has(x.key))};
+}
 function vehiclePuzzleProgress(){
-  const body=vehicleBodyProgress(),power=vehiclePowerProgress(),safety=vehicleSafetyProgress();
-  return{done:body.done+power.done+safety.done,total:body.total+power.total+safety.total,body,power,safety};
+  const body=vehicleBodyProgress(),power=vehiclePowerProgress(),safety=vehicleSafetyProgress(),future=vehicleFutureProgress();
+  return{done:body.done+power.done+safety.done+future.done,total:body.total+power.total+safety.total+future.total,body,power,safety,future};
 }
 function softSnap(el){
   if(active==='vehicle'){tryVehicleSnap(el,true);return}
@@ -931,17 +1071,17 @@ function restoreObjects(items=[]){
   if(active==='vehicle'){renderTemplate('vehicle');syncInstalledVehicleParts();refreshVehicleComponentButtons();}
   refreshLibraryCards();
 }
-function snapshot(){return{drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain,vehicleHybridType};}
+function snapshot(){return{drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain,vehicleHybridType,vehicleFutureAbility,vehicleFlightSystem};}
 function resetHistory(){history=[snapshot()];historyIndex=0;updateHistoryButtons();}
 function commitHistory(){if(restoring||!active)return;history=history.slice(0,historyIndex+1);history.push(snapshot());if(history.length>50)history.shift();historyIndex=history.length-1;updateHistoryButtons();}
 function updateHistoryButtons(){$('undoDraw').disabled=historyIndex<=0;$('redoDraw').disabled=historyIndex<0||historyIndex>=history.length-1;}
 function restoreDrawing(data,cb){ctx.clearRect(0,0,canvas.width,canvas.height);if(!data){cb?.();return}const img=new Image();img.onload=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);cb?.()};img.onerror=()=>cb?.();img.src=data;}
-function restoreSnapshot(s){restoring=true;templateOn=s.templateOn!==false;gridOn=!!s.gridOn;activeMode=s.activeMode;currentLibraryId=s.currentLibraryId;vehicleYaw=Number.isFinite(s.vehicleYaw)?s.vehicleYaw:vehicleYaw;vehiclePitch=Number.isFinite(s.vehiclePitch)?s.vehiclePitch:vehiclePitch;vehicleViewMode=s.vehicleViewMode||vehicleViewMode;vehiclePowertrain=s.vehiclePowertrain||'';vehicleHybridType=s.vehicleHybridType||'self';stage.classList.toggle('show-grid',gridOn);updateBlueprintVisibility();renderTemplate(active);updateVehicleViewUI();renderModes(missions[active],activeMode);restoreDrawing(s.drawing,()=>{restoreObjects(s.objects);restoring=false;updateHistoryButtons()});}
+function restoreSnapshot(s){restoring=true;templateOn=s.templateOn!==false;gridOn=!!s.gridOn;activeMode=s.activeMode;currentLibraryId=s.currentLibraryId;vehicleYaw=Number.isFinite(s.vehicleYaw)?s.vehicleYaw:vehicleYaw;vehiclePitch=Number.isFinite(s.vehiclePitch)?s.vehiclePitch:vehiclePitch;vehicleViewMode=s.vehicleViewMode||vehicleViewMode;vehiclePowertrain=s.vehiclePowertrain||'';vehicleHybridType=s.vehicleHybridType||'self';vehicleFutureAbility=s.vehicleFutureAbility||'';vehicleFlightSystem=s.vehicleFlightSystem||'';stage.classList.toggle('show-grid',gridOn);updateBlueprintVisibility();renderTemplate(active);updateVehicleViewUI();renderModes(missions[active],activeMode);restoreDrawing(s.drawing,()=>{restoreObjects(s.objects);restoring=false;updateHistoryButtons()});}
 
-function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;vehicleYaw=Number.isFinite(saved.vehicleYaw)?saved.vehicleYaw:0;vehiclePitch=Number.isFinite(saved.vehiclePitch)?saved.vehiclePitch:.10;vehicleViewMode=saved.vehicleViewMode||'left';vehiclePowertrain=id==='vehicle'?(saved.vehiclePowertrain||''):'';vehicleHybridType=id==='vehicle'?(saved.vehicleHybridType||'self'):'self';stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(saved.objects||[]);drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
+function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;vehicleYaw=Number.isFinite(saved.vehicleYaw)?saved.vehicleYaw:0;vehiclePitch=Number.isFinite(saved.vehiclePitch)?saved.vehiclePitch:.10;vehicleViewMode=saved.vehicleViewMode||'left';vehiclePowertrain=id==='vehicle'?(saved.vehiclePowertrain||''):'';vehicleHybridType=id==='vehicle'?(saved.vehicleHybridType||'self'):'self';vehicleFutureAbility=id==='vehicle'?(saved.vehicleFutureAbility||''):'';vehicleFlightSystem=id==='vehicle'?(saved.vehicleFlightSystem||''):'';stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(saved.objects||[]);drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
 
-function save(){if(!active)return;const all=loadStore();const plan=[...document.querySelectorAll('#creatorPlanFields [data-plan]')].map(i=>i.value.trim());all[active]={plan,notes:$('creatorNotes').value.trim(),drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain:active==='vehicle'?vehiclePowertrain:undefined,vehicleHybridType:active==='vehicle'?vehicleHybridType:undefined,vehiclePuzzleVersion:active==='vehicle'?VEHICLE_PUZZLE_VERSION:undefined,updatedAt:Date.now()};try{saveStore(all);$('creatorSaved').textContent=t('✅ Project saved. You can return and continue later.','✅ Projet enregistré. Tu peux revenir plus tard.')}catch(_){$('creatorSaved').textContent=t('This design is too large to save on this device.','Ce design est trop volumineux pour cet appareil.')}window.CWState?.setProgress?.('creator',Math.min(95,Object.keys(all).length*16),{lastMission:active});window.CWState?.logActivity?.({id:'creator-'+active,title:`Creator Studio: ${missions[active].title[0]}`,icon:'🎨',detail:'Saved interactive design',href:'creator.html'});}
-function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);if(active==='vehicle'){vehiclePowertrain='';vehicleHybridType='self';}const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);resetHistory();closeClearDialog();}
+function save(){if(!active)return;const all=loadStore();const plan=[...document.querySelectorAll('#creatorPlanFields [data-plan]')].map(i=>i.value.trim());all[active]={plan,notes:$('creatorNotes').value.trim(),drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain:active==='vehicle'?vehiclePowertrain:undefined,vehicleHybridType:active==='vehicle'?vehicleHybridType:undefined,vehicleFutureAbility:active==='vehicle'?vehicleFutureAbility:undefined,vehicleFlightSystem:active==='vehicle'?vehicleFlightSystem:undefined,vehiclePuzzleVersion:active==='vehicle'?VEHICLE_PUZZLE_VERSION:undefined,updatedAt:Date.now()};try{saveStore(all);$('creatorSaved').textContent=t('✅ Project saved. You can return and continue later.','✅ Projet enregistré. Tu peux revenir plus tard.')}catch(_){$('creatorSaved').textContent=t('This design is too large to save on this device.','Ce design est trop volumineux pour cet appareil.')}window.CWState?.setProgress?.('creator',Math.min(95,Object.keys(all).length*16),{lastMission:active});window.CWState?.logActivity?.({id:'creator-'+active,title:`Creator Studio: ${missions[active].title[0]}`,icon:'🎨',detail:'Saved interactive design',href:'creator.html'});}
+function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);if(active==='vehicle'){vehiclePowertrain='';vehicleHybridType='self';vehicleFutureAbility='';vehicleFlightSystem='';}const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);resetHistory();closeClearDialog();}
 function openClearDialog(){$('creatorClearDialog').hidden=false;document.body.classList.add('creator-dialog-open');setTimeout(()=>$('keepProject').focus(),0)}
 function closeClearDialog(){$('creatorClearDialog').hidden=true;document.body.classList.remove('creator-dialog-open')}
 
@@ -950,7 +1090,7 @@ function addTestClasses(){[...objectLayer.children].forEach(o=>{const tags=objec
 function clearTestClasses(){[...objectLayer.children].forEach(o=>o.classList.remove('test-wheel','test-wing','test-water-wheel','test-light'));buildLayer.classList.remove('test-road','test-water','test-fly','test-robot');}
 function startTest(){if(!active)return;
   if(active==='vehicle'){
-    const body=vehicleBodyProgress(),power=vehiclePowerProgress(),safety=vehicleSafetyProgress();
+    const body=vehicleBodyProgress(),power=vehiclePowerProgress(),safety=vehicleSafetyProgress(),future=vehicleFutureProgress();
     if(body.done<body.total){
       $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish Body & Movement first','Termine d’abord Carrosserie et mouvement')}</b><p>${t(`${body.done} of ${body.total} required body pieces are fitted.`,`${body.done} pièces de carrosserie requises sur ${body.total} sont fixées.`)}</p></div>`;
       $('creatorCoach').textContent=t('Complete the main car puzzle before testing the power system.','Termine le puzzle principal de la voiture avant de tester le système d’énergie.');return;
@@ -966,6 +1106,18 @@ function startTest(){if(!active)return;
     if(safety.done<safety.total){
       $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the Safety stage','Termine l’étape Sécurité')}</b><p>${t(`${safety.done} of ${safety.total} required safety pieces are fitted.`,`${safety.done} pièces de sécurité requises sur ${safety.total} sont fixées.`)}</p></div>`;
       $('creatorCoach').textContent=t('Open Safety. Use Interior for cabin protection and Front, Rear or Side views for sensors and indicators.','Ouvre Sécurité. Utilise Intérieur pour la protection de l’habitacle et les vues Avant, Arrière ou Latérales pour les capteurs et clignotants.');return;
+    }
+    if(!future.chosen){
+      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Choose the final Future Tech ability','Choisis la capacité finale de technologie future')}</b><p>${t('Body, Power and Safety are complete. Now choose Flying Car or Water / Amphibious Car and install its required technology.','Carrosserie, Énergie et Sécurité sont terminés. Choisis maintenant Voiture volante ou Voiture aquatique / amphibie et installe la technologie requise.')}</p></div>`;
+      $('creatorCoach').textContent=t('Open Future Tech and choose the final ability for this same car.','Ouvre Technologie future et choisis la capacité finale de cette même voiture.');return;
+    }
+    if(!future.ready){
+      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Choose how the car will fly','Choisis comment la voiture volera')}</b><p>${t('Select Propeller flight, Jet flight or Drone lift before fitting the flight components.','Choisis Vol par hélices, Vol par réacteurs ou Portance par rotors avant d’installer les composants de vol.')}</p></div>`;
+      $('creatorCoach').textContent=t('Open Future Tech and choose one flight system.','Ouvre Technologie future et choisis un système de vol.');return;
+    }
+    if(future.done<future.total){
+      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the Future Tech stage','Termine l’étape Technologie future')}</b><p>${t(`${future.done} of ${future.total} required Future Tech pieces are fitted.`,`${future.done} pièces de technologie future requises sur ${future.total} sont fixées.`)}</p></div>`;
+      $('creatorCoach').textContent=vehicleFutureAbility==='flight'?t('Use Top, Rear and Interior views to finish the flying-car hardware.','Utilise les vues Dessus, Arrière et Intérieur pour terminer les équipements de la voiture volante.'):t('Use Interior and Rear views to finish the amphibious system.','Utilise les vues Intérieur et Arrière pour terminer le système amphibie.');return;
     }
     vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';renderTemplate('vehicle');updateVehicleViewUI();
   }
