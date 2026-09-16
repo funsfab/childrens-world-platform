@@ -74,8 +74,14 @@ const vehicleModes=[
   part('dpf','▰','Diesel particulate filter','Filtre à particules diesel',['power'], '', {aspect:2.2,defaultSize:70}),
   part('solar','☀️','Solar assist','Assistance solaire',['power'], '', {aspect:2.4,defaultSize:96})
  ]),
- mode('safety','🛡️','Safety','Sécurité','Add protection and safe-driving equipment.','Ajoute des équipements de protection et de conduite sûre.',[
-  part('belt','🔒','Seat belt','Ceinture',['safety']),part('airbag','◯','Airbag','Airbag',['safety']),part('sensor','📡','Collision sensor','Capteur anticollision',['safety']),part('camera','📷','Safety camera','Caméra de sécurité',['safety']),part('indicator','🟠','Indicator','Clignotant',['safety']),part('safety-light','🚨','Warning light','Feu d’alerte',['safety']),part('emergency-stop','🛑','Emergency stop','Arrêt d’urgence',['safety'])
+ mode('safety','🛡️','Safety','Sécurité','Protect the same car: fit cabin safety equipment from underneath, then rotate to the front, rear and sides for the external sensors and indicators.','Protège la même voiture : place les équipements de sécurité de l’habitacle par dessous, puis tourne vers l’avant, l’arrière et les côtés pour les capteurs et clignotants extérieurs.',[
+  part('belt','🔒','Seat belt','Ceinture',['safety'],'',{aspect:2.7,defaultSize:58}),
+  part('airbag','◯','Airbag','Airbag',['safety'],'',{aspect:1,defaultSize:54}),
+  part('sensor','📡','Collision sensor','Capteur anticollision',['safety'],'',{aspect:1,defaultSize:46}),
+  part('camera','📷','Safety camera','Caméra de sécurité',['safety'],'',{aspect:1.5,defaultSize:54}),
+  part('indicator','🟠','Indicator','Clignotant',['safety'],'',{aspect:2.0,defaultSize:48}),
+  part('safety-light','🚨','Warning light','Feu d’alerte',['safety'],'',{aspect:1.15,defaultSize:50}),
+  part('emergency-stop','🛑','Emergency stop','Arrêt d’urgence',['safety'],'',{aspect:1,defaultSize:50})
  ]),
  mode('future','✨','Future tech','Technologies futures','Add technology for flying, hovering, water travel or other future ideas.','Ajoute des technologies de vol, de sustentation, de navigation sur l’eau ou d’autres idées futures.',[
   part('wing','', 'Flight wing','Aile de vol',['future','flight'],'wing'),part('propeller','🌀','Propeller','Hélice',['future','flight']),part('jet','🔥','Jet unit','Réacteur',['future','flight']),part('hover','💠','Hover unit','Module de sustentation',['future','flight']),part('amphibious','', 'Amphibious hull','Coque amphibie',['future','amphibious'],'amphibious'),part('water-jet','🌊','Water jet','Propulseur aquatique',['future','amphibious']),part('retract-wheel','🛞','Retractable wheel','Roue rétractable',['future','amphibious','wheel']),part('drone-lift','🛸','Drone lift','Portance drone',['future','flight']),part('stabiliser','◢','Stabiliser','Stabilisateur',['future']),part('future-sensor','🔵','Future sensor','Capteur futuriste',['future','safety'])
@@ -335,6 +341,9 @@ function vehiclePartShape(partId){
     'driver-seat':[[-.80,-.92],[.80,-.92],[.96,-.50],[.78,.92],[-.78,.92],[-.96,-.50]],
     seat:[[-.80,-.92],[.80,-.92],[.96,-.50],[.78,.92],[-.78,.92],[-.96,-.50]],
     belt:[[-.88,-1],[-.62,-1],[.90,.78],[.68,1]],
+    sensor:[[-.82,-.82],[.82,-.82],[1,-.34],[1,.34],[.82,.82],[-.82,.82],[-1,.34],[-1,-.34]],
+    indicator:[[-1,-.42],[-.68,-.76],[.50,-.70],[1,-.22],[.78,.50],[-.46,.72]],
+    'safety-light':[[0,-1],[.94,.66],[.56,1],[-.56,1],[-.94,.66]],
     battery:[[-1,-.72],[.82,-.72],[1,-.45],[.92,.72],[-.92,.72],[-1,.46]],
     camera:[[-1,-.72],[.72,-.72],[1,-.12],[.72,.72],[-.72,.72],[-1,.12]],
     'petrol-engine':[[-1,-.72],[-.78,-1],[.62,-1],[1,-.58],[.92,.64],[.58,.94],[-.74,.94],[-1,.54]],
@@ -346,7 +355,7 @@ function vehiclePartShape(partId){
     dpf:[[-1,-.60],[.76,-.60],[1,-.28],[.86,.60],[-.86,.60],[-1,.28]],
     solar:[[-1,-.82],[1,-.82],[1,.82],[-1,.82]]
   };
-  if(['steering','airbag','emergency-stop','electric-motor','charge-port'].includes(partId))return circle();
+  if(['steering','airbag','emergency-stop','electric-motor','charge-port','sensor'].includes(partId))return circle();
   return shapes[partId]||[[-1,-1],[1,-1],[1,1],[-1,1]];
 }
 function vehicleSlotDefinitions(){
@@ -393,6 +402,11 @@ function vehiclePartFill(partId){
   if(['battery','electric-motor','inverter','charge-port'].includes(partId))return{fill:'rgba(88,225,159,.68)',stroke:'rgba(221,255,239,.94)'};
   if(['petrol-engine','diesel-engine','radiator','dpf'].includes(partId))return{fill:'rgba(187,196,205,.72)',stroke:'rgba(248,252,255,.94)'};
   if(['fuel-tank','exhaust'].includes(partId))return{fill:'rgba(178,151,108,.68)',stroke:'rgba(250,229,194,.92)'};
+  if(partId==='belt')return{fill:'rgba(218,228,237,.78)',stroke:'rgba(250,253,255,.95)'};
+  if(partId==='airbag')return{fill:'rgba(238,245,250,.82)',stroke:'rgba(255,255,255,.98)'};
+  if(['sensor','camera'].includes(partId))return{fill:'rgba(74,190,224,.74)',stroke:'rgba(220,250,255,.96)'};
+  if(partId==='indicator')return{fill:'rgba(255,174,54,.82)',stroke:'rgba(255,235,196,.98)'};
+  if(['safety-light','emergency-stop'].includes(partId))return{fill:'rgba(237,89,104,.78)',stroke:'rgba(255,230,235,.98)'};
   if(partId==='solar')return{fill:'rgba(66,139,213,.64)',stroke:'rgba(209,238,255,.94)'};
   return{fill:'rgba(128,159,185,.63)',stroke:'rgba(229,243,251,.90)'};
 }
@@ -421,14 +435,32 @@ function vehicleInteriorSlots(){
   slots.push(vehicleSlot('driver-seat','driver-seat',[.03,-W*.28,sport?.53:.60],[.19,0,0],[0,.135,0],down,{aspect:1.42,minFacing:.34,view:'interior',shape:vehiclePartShape('driver-seat'),required:true}));
   slots.push(vehicleSlot('passenger-seat','seat',[.03,W*.28,sport?.53:.60],[.19,0,0],[0,.135,0],down,{aspect:1.42,minFacing:.34,view:'interior',shape:vehiclePartShape('seat'),required:true}));
 
-  /* Cabin safety equipment: optional to the basic body puzzle, but it now has a true fitting place. */
-  slots.push(vehicleSlot('belt-driver','belt',[.08,-W*.40,sport?.58:.65],[.12,0,0],[0,.045,0],down,{aspect:2.7,minFacing:.34,view:'interior',shape:vehiclePartShape('belt'),required:false}));
-  slots.push(vehicleSlot('belt-passenger','belt',[.08,W*.40,sport?.58:.65],[.12,0,0],[0,.045,0],down,{aspect:2.7,minFacing:.34,view:'interior',shape:vehiclePartShape('belt'),required:false}));
-  slots.push(vehicleSlot('airbag-driver','airbag',[-.50,-W*.25,sport?.69:.80],[.075,0,0],[0,.075,0],down,{aspect:1,minFacing:.34,view:'interior',shape:vehiclePartShape('airbag'),required:false}));
-  slots.push(vehicleSlot('airbag-passenger','airbag',[-.56,W*.25,sport?.69:.80],[.085,0,0],[0,.085,0],down,{aspect:1,minFacing:.34,view:'interior',shape:vehiclePartShape('airbag'),required:false}));
-  slots.push(vehicleSlot('cabin-camera','camera',[-.33,0,sport?.91:1.04],[.075,0,0],[0,.050,0],down,{aspect:1.5,minFacing:.34,view:'interior',shape:vehiclePartShape('camera'),required:false}));
-  slots.push(vehicleSlot('emergency-stop','emergency-stop',[-.48,W*.12,sport?.70:.81],[.050,0,0],[0,.050,0],down,{aspect:1,minFacing:.34,view:'interior',shape:vehiclePartShape('emergency-stop'),required:false}));
+  return slots;
+}
+function vehicleSafetySlots(){
+  const p=vehicleProfile(),L=p.length,W=p.width,sport=p.id==='sport',down=[0,0,-1],slots=[];
+  const add=(key,partId,center,u,v,normal,opts={})=>slots.push(vehicleSlot(`safety-${key}`,partId,center,u,v,normal,{view:opts.view||'exterior',required:opts.required!==false,minFacing:opts.minFacing??.28,aspect:opts.aspect||1,shape:vehiclePartShape(partId),label:opts.label||partId}));
 
+  /* Cabin protection — fitted by rotating underneath / using Interior. */
+  add('belt-driver','belt',[.08,-W*.40,sport?.58:.65],[.12,0,0],[0,.045,0],down,{view:'interior',aspect:2.7,minFacing:.34});
+  add('belt-passenger','belt',[.08,W*.40,sport?.58:.65],[.12,0,0],[0,.045,0],down,{view:'interior',aspect:2.7,minFacing:.34});
+  add('airbag-driver','airbag',[-.50,-W*.25,sport?.69:.80],[.075,0,0],[0,.075,0],down,{view:'interior',aspect:1,minFacing:.34});
+  add('airbag-passenger','airbag',[-.56,W*.25,sport?.69:.80],[.085,0,0],[0,.085,0],down,{view:'interior',aspect:1,minFacing:.34});
+  add('camera','camera',[-.33,0,sport?.91:1.04],[.075,0,0],[0,.050,0],down,{view:'interior',aspect:1.5,minFacing:.34});
+  add('warning-light','safety-light',[-.48,-W*.04,sport?.71:.82],[.052,0,0],[0,.045,0],down,{view:'interior',aspect:1.15,minFacing:.34});
+  add('emergency-stop','emergency-stop',[-.48,W*.12,sport?.70:.81],[.050,0,0],[0,.050,0],down,{view:'interior',aspect:1,minFacing:.34});
+
+  /* Collision sensors around the shell: front, rear and both sides. */
+  add('sensor-front','sensor',[-L*.492,0,sport?.44:.50],[0,W*.065,0],[0,0,.065],[-1,0,.05],{aspect:1,minFacing:.24});
+  add('sensor-rear','sensor',[L*.492,0,sport?.43:.49],[0,W*.065,0],[0,0,.065],[1,0,.05],{aspect:1,minFacing:.24});
+  add('sensor-left','sensor',[.10,-W*.505,sport?.46:.52],[.065,0,0],[0,0,.065],[0,-1,.03],{aspect:1,minFacing:.24});
+  add('sensor-right','sensor',[.10,W*.505,sport?.46:.52],[.065,0,0],[0,0,.065],[0,1,.03],{aspect:1,minFacing:.24});
+
+  /* Four turn indicators: one at each front/rear corner. */
+  for(const sgn of [-1,1]){
+    add(`indicator-front-${sgn>0?'r':'l'}`,'indicator',[-L*.468,sgn*W*.405,sport?.58:.64],[0,W*.090,0],[0,0,.045],[-1,0,.10],{aspect:2.0,minFacing:.24});
+    add(`indicator-rear-${sgn>0?'r':'l'}`,'indicator',[L*.468,sgn*W*.405,sport?.56:.62],[0,W*.088,0],[0,0,.044],[1,0,.10],{aspect:2.0,minFacing:.24});
+  }
   return slots;
 }
 function vehiclePowerSlots(){
@@ -549,7 +581,9 @@ function drawVehicleInteriorAccessLabel(){
   tctx.fillStyle='rgba(159,236,255,.88)';tctx.font='800 13px system-ui';tctx.textAlign='center';
   const label=activeMode==='power'
     ?t('UNDERBODY / POWER ACCESS — install the hidden power components','ACCÈS SOUS-CAISSE / ÉNERGIE — installe les composants d’énergie cachés')
-    :t('UNDERBODY / INTERIOR ACCESS — fit the cabin pieces from below','ACCÈS SOUS-CAISSE / INTÉRIEUR — fixe les pièces de l’habitacle par dessous');
+    :activeMode==='safety'
+      ?t('UNDERBODY / SAFETY ACCESS — install belts, airbags and cabin safety controls','ACCÈS SOUS-CAISSE / SÉCURITÉ — installe ceintures, airbags et commandes de sécurité')
+      :t('UNDERBODY / INTERIOR ACCESS — fit the cabin pieces from below','ACCÈS SOUS-CAISSE / INTÉRIEUR — fixe les pièces de l’habitacle par dessous');
   tctx.fillText(label,400,402);
   tctx.restore();
 }
@@ -574,6 +608,10 @@ function drawVehicleBlueprint(){
     msg=vehicleUnderAccess()
       ?t('Power access: fit the internal and underbody components here. Exterior power parts use their matching outside view.','Accès énergie : place ici les composants internes et sous la caisse. Les pièces d’énergie extérieures utilisent leur vue extérieure correspondante.')
       :t('Power System selected. Use Interior/underbody for hidden components, then side or top views for external ones.','Système d’énergie sélectionné. Utilise Intérieur/sous la caisse pour les composants cachés, puis les vues latérale ou dessus pour les pièces extérieures.');
+  }else if(activeMode==='safety'){
+    msg=vehicleUnderAccess()
+      ?t('Safety access: fit the seat belts, airbags, safety camera, warning control and emergency stop inside the cabin.','Accès sécurité : place les ceintures, airbags, caméra de sécurité, commande d’alerte et arrêt d’urgence dans l’habitacle.')
+      :t('Safety stage: use Front, Rear and Side views for collision sensors and indicators; use Interior for cabin protection.','Étape sécurité : utilise les vues Avant, Arrière et Latérales pour les capteurs et clignotants ; utilise Intérieur pour la protection de l’habitacle.');
   }else{
     msg=vehicleUnderAccess()
       ?t('Fit the interior pieces from underneath. Fitted pieces lock permanently into the car.','Fixe les pièces intérieures par dessous. Les pièces fixées se verrouillent définitivement dans la voiture.')
@@ -630,7 +668,7 @@ function chooseLibrary(item){if(active==='vehicle'){
 }currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
 
 function renderModes(m,preferred){const modes=modesForMission(m);if(!modes.length)return;activeMode=(preferred&&modes.some(x=>x.id===preferred))?preferred:(activeMode&&modes.some(x=>x.id===activeMode)?activeMode:modes[0].id);const host=$('creatorModes');host.innerHTML='';modes.forEach(md=>{const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'');b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${L(md.help)}</small>`;b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);commitHistory()};host.appendChild(b)});const selected=modes.find(x=>x.id===activeMode);$('creatorModeHelp').textContent=L(selected.help);renderComponents(selected);}
-function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots(),...vehiclePowerSlots()];}
+function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots()];}
 function vehicleModePartIds(){const md=modesForMission(missions.vehicle).find(x=>x.id===activeMode);return new Set((md?.parts||[]).map(x=>x.id));}
 function vehiclePartRequirement(id){return vehicleAllPuzzleSlots().filter(s=>s.partId===id).length;}
 function vehicleInstalledPartCount(id){return [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.partId===id&&o.dataset.installed==='1'&&o.dataset.targetKey).length;}
@@ -693,14 +731,15 @@ function vehiclePartSvg(id){
     const handle=id==='door'?'<path d="M82 37h13" stroke="#33495b" stroke-width="4" stroke-linecap="round"/>':'';
     return `<svg ${common}><polygon points="${pts}" fill="${style.fill}" stroke="#eef8ff" stroke-width="4" stroke-linejoin="round"/>${handle}</svg>`;
   }
-  if(['dashboard','driver-seat','seat','belt','battery','camera','petrol-engine','diesel-engine','inverter','fuel-tank','exhaust','radiator','dpf','solar'].includes(id)){
+  if(['dashboard','driver-seat','seat','belt','battery','camera','indicator','safety-light','petrol-engine','diesel-engine','inverter','fuel-tank','exhaust','radiator','dpf','solar'].includes(id)){
     const pts=vehiclePartShape(id).map(([a,b])=>`${(60+a*52).toFixed(1)},${(40+b*31).toFixed(1)}`).join(' ');
-    const fills={dashboard:'#475766','driver-seat':'#596a79',seat:'#596a79',belt:'#d9e4ed',battery:'#55d99a',camera:'#5f7484','petrol-engine':'#aeb8c2','diesel-engine':'#929eaa',inverter:'#55d99a','fuel-tank':'#b89b70',exhaust:'#9b8261',radiator:'#b7c2cb',dpf:'#a8b2bc',solar:'#418bd5'};
+    const fills={dashboard:'#475766','driver-seat':'#596a79',seat:'#596a79',belt:'#d9e4ed',battery:'#55d99a',camera:'#4abeE0',indicator:'#ffae36','safety-light':'#ed5968','petrol-engine':'#aeb8c2','diesel-engine':'#929eaa',inverter:'#55d99a','fuel-tank':'#b89b70',exhaust:'#9b8261',radiator:'#b7c2cb',dpf:'#a8b2bc',solar:'#418bd5'};
     return `<svg ${common}><polygon points="${pts}" fill="${fills[id]||'#596a79'}" stroke="#e5edf3" stroke-width="4" stroke-linejoin="round"/></svg>`;
   }
   if(id==='electric-motor')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#55d99a" stroke="#e5fff2" stroke-width="5"/><circle cx="50" cy="50" r="14" fill="#294b42"/><path d="M50 13v17M50 70v17M13 50h17M70 50h17" stroke="#e5fff2" stroke-width="5" stroke-linecap="round"/></svg>`;
   if(id==='charge-port')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="#55d99a" stroke="#e5fff2" stroke-width="5"/><circle cx="40" cy="43" r="5" fill="#27483f"/><circle cx="60" cy="43" r="5" fill="#27483f"/><rect x="43" y="57" width="14" height="18" rx="5" fill="#27483f"/></svg>`;
   if(id==='steering')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="none" stroke="#dce6ee" stroke-width="8"/><circle cx="50" cy="50" r="12" fill="#455666"/><path d="M50 50L25 27M50 50l25-23M50 50v35" stroke="#65798a" stroke-width="7"/></svg>`;
+  if(id==='sensor')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="37" fill="#4abee0" stroke="#dcfaff" stroke-width="5"/><circle cx="50" cy="50" r="10" fill="#173e4c"/><path d="M50 18a32 32 0 0 1 0 64M50 29a21 21 0 0 1 0 42" fill="none" stroke="#dcfaff" stroke-width="5" stroke-linecap="round"/></svg>`;
   if(id==='airbag')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#eef5fa" stroke="#ffffff" stroke-width="5"/><path d="M30 57q20 17 40 0" fill="none" stroke="#9aabba" stroke-width="5" stroke-linecap="round"/></svg>`;
   if(id==='emergency-stop')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#ed5968" stroke="#fff1f3" stroke-width="5"/><rect x="29" y="43" width="42" height="14" rx="7" fill="#fff"/></svg>`;
   return '';
@@ -793,7 +832,7 @@ function tryVehicleSnap(el,announce=true){
   const target=vehicleTargetFor(el);
   if(!target){
     if(announce){
-      const hasInterior=[...vehicleInteriorSlots(),...vehiclePowerSlots()].some(s=>s.partId===el.dataset.partId&&s.view==='interior');
+      const hasInterior=[...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots()].some(s=>s.partId===el.dataset.partId&&s.view==='interior');
       $('creatorCoach').textContent=hasInterior
         ?t('This part fits inside the car. Rotate underneath the blueprint or tap Interior, then match it to its exact slot.','Cette pièce se fixe à l’intérieur. Tourne le plan par dessous ou touche Intérieur, puis fais-la correspondre exactement à son emplacement.')
         :t('Rotate the car until the correct puzzle slot for this part is facing you.','Tourne la voiture jusqu’à ce que le bon emplacement du puzzle soit face à toi.');
@@ -834,9 +873,13 @@ function vehiclePowerProgress(){
   const used=installedVehicleKeys(),req=vehiclePowerSlots().filter(x=>x.required);
   return{chosen:!!vehiclePowertrain,done:req.filter(x=>used.has(x.key)).length,total:req.length,missing:req.filter(x=>!used.has(x.key))};
 }
+function vehicleSafetyProgress(){
+  const used=installedVehicleKeys(),req=vehicleSafetySlots().filter(x=>x.required);
+  return{done:req.filter(x=>used.has(x.key)).length,total:req.length,missing:req.filter(x=>!used.has(x.key))};
+}
 function vehiclePuzzleProgress(){
-  const body=vehicleBodyProgress(),power=vehiclePowerProgress();
-  return{done:body.done+power.done,total:body.total+power.total,body,power};
+  const body=vehicleBodyProgress(),power=vehiclePowerProgress(),safety=vehicleSafetyProgress();
+  return{done:body.done+power.done+safety.done,total:body.total+power.total+safety.total,body,power,safety};
 }
 function softSnap(el){
   if(active==='vehicle'){tryVehicleSnap(el,true);return}
@@ -907,7 +950,7 @@ function addTestClasses(){[...objectLayer.children].forEach(o=>{const tags=objec
 function clearTestClasses(){[...objectLayer.children].forEach(o=>o.classList.remove('test-wheel','test-wing','test-water-wheel','test-light'));buildLayer.classList.remove('test-road','test-water','test-fly','test-robot');}
 function startTest(){if(!active)return;
   if(active==='vehicle'){
-    const body=vehicleBodyProgress(),power=vehiclePowerProgress();
+    const body=vehicleBodyProgress(),power=vehiclePowerProgress(),safety=vehicleSafetyProgress();
     if(body.done<body.total){
       $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish Body & Movement first','Termine d’abord Carrosserie et mouvement')}</b><p>${t(`${body.done} of ${body.total} required body pieces are fitted.`,`${body.done} pièces de carrosserie requises sur ${body.total} sont fixées.`)}</p></div>`;
       $('creatorCoach').textContent=t('Complete the main car puzzle before testing the power system.','Termine le puzzle principal de la voiture avant de tester le système d’énergie.');return;
@@ -919,6 +962,10 @@ function startTest(){if(!active)return;
     if(power.done<power.total){
       $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the Power System','Termine le système d’énergie')}</b><p>${t(`${power.done} of ${power.total} required ${vehiclePowertrainLabel()} components are fitted.`,`${power.done} composants ${vehiclePowertrainLabel()} requis sur ${power.total} sont fixés.`)}</p></div>`;
       $('creatorCoach').textContent=t('Use the underbody/interior and exterior views to finish every required power component.','Utilise les vues sous la caisse/intérieure et extérieures pour terminer tous les composants d’énergie requis.');return;
+    }
+    if(safety.done<safety.total){
+      $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the Safety stage','Termine l’étape Sécurité')}</b><p>${t(`${safety.done} of ${safety.total} required safety pieces are fitted.`,`${safety.done} pièces de sécurité requises sur ${safety.total} sont fixées.`)}</p></div>`;
+      $('creatorCoach').textContent=t('Open Safety. Use Interior for cabin protection and Front, Rear or Side views for sensors and indicators.','Ouvre Sécurité. Utilise Intérieur pour la protection de l’habitacle et les vues Avant, Arrière ou Latérales pour les capteurs et clignotants.');return;
     }
     vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';renderTemplate('vehicle');updateVehicleViewUI();
   }
