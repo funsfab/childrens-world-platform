@@ -249,7 +249,7 @@ const missions={
 const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('creatorTemplate'),tctx=templateCanvas.getContext('2d');
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
-let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0;
+let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0;
 const STORAGE='cw_creator_projects_v18';
 /* Keep version 9 so saved prototype cars restore through the staged final-reveal updates. */
 const VEHICLE_PUZZLE_VERSION=9;
@@ -730,11 +730,11 @@ function drawCanonicalFinishedVehicle(){
   const phase1=vehicleRevealStage==='phase1';
   const phase2=vehicleRevealStage==='phase2'||vehicleRevealStage==='phase2-ready'||vehicleRevealStage==='phase2-confirmed';
   const p=phase1?vehicleRevealProgress:1;
-  const bodyT=phase1?vehicleRevealEase(.18,.66,p):1;
+  const bodyT=phase1?vehicleRevealEase(.08,.58,p):1;
   const lineT=phase1?1-vehicleRevealEase(.38,.88,p):0;
-  const glassT=phase1?vehicleRevealEase(.42,.76,p):1;
-  const wheelT=phase1?vehicleRevealEase(.48,.82,p):1;
-  const lightT=phase1?vehicleRevealEase(.70,.96,p):1;
+  const glassT=phase1?vehicleRevealEase(.28,.70,p):1;
+  const wheelT=phase1?vehicleRevealEase(.34,.76,p):1;
+  const lightT=phase1?vehicleRevealEase(.62,.94,p):1;
   const camPulse=phase2?Math.sin(Math.min(1,vehiclePhase2Progress)*Math.PI):0;
   const camSlide=phase2?(-18+36*Math.min(1,vehiclePhase2Progress)):0;
   const paintBase=phase2?vehicleMixColour(vehiclePreviousPaintColor,vehiclePaintColor,vehiclePaintMix):'#9fb0ba';
@@ -1211,11 +1211,22 @@ function setVehicleRevealWheelOpacity(alpha,glow=0){
     o.style.opacity=String(alpha);o.style.filter=glow?`drop-shadow(0 0 ${Math.round(4+glow*14)}px rgba(92,235,255,.95))`:'';
   });
 }
+function safeVehicleRender(){
+  try{renderTemplate('vehicle')}catch(err){console.error('Vehicle reveal render error',err)}
+}
 function resetVehiclePhaseOneReveal(){
-  if(vehicleRevealRAF)cancelAnimationFrame(vehicleRevealRAF);if(vehiclePhase2RAF)cancelAnimationFrame(vehiclePhase2RAF);if(vehiclePaintRAF)cancelAnimationFrame(vehiclePaintRAF);
-  vehicleRevealRAF=vehiclePhase2RAF=vehiclePaintRAF=0;vehicleRevealActive=false;vehicleRevealProgress=0;vehicleRevealStart=0;vehicleRevealStage='idle';vehiclePhase2Progress=0;vehiclePhase2Start=0;vehiclePaintMix=1;
+  if(vehicleRevealRAF)cancelAnimationFrame(vehicleRevealRAF);
+  if(vehiclePhase2RAF)cancelAnimationFrame(vehiclePhase2RAF);
+  if(vehiclePaintRAF)cancelAnimationFrame(vehiclePaintRAF);
+  if(vehicleRevealTimer)clearInterval(vehicleRevealTimer);
+  if(vehiclePhase2Timer)clearInterval(vehiclePhase2Timer);
+  if(vehiclePaintTimer)clearInterval(vehiclePaintTimer);
+  vehicleRevealRAF=vehiclePhase2RAF=vehiclePaintRAF=0;
+  vehicleRevealTimer=vehiclePhase2Timer=vehiclePaintTimer=0;
+  vehicleRevealActive=false;vehicleRevealProgress=0;vehicleRevealStart=0;vehicleRevealStage='idle';
+  vehiclePhase2Progress=0;vehiclePhase2Start=0;vehiclePaintMix=1;
   [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.installed==='1').forEach(o=>{o.style.filter='';});
-  if(active==='vehicle'){syncInstalledVehicleParts();renderTemplate('vehicle');}
+  if(active==='vehicle'){syncInstalledVehicleParts();safeVehicleRender();}
 }
 const VEHICLE_PHASE2_COLOURS=[
   ['#5de4ff','Aqua'],['#377dff','Blue'],['#8d5cff','Purple'],['#ff4f6d','Red'],['#ff9b42','Orange'],['#ffd84d','Yellow'],['#4ed38a','Green'],['#f5f7fa','Pearl'],['#202a36','Midnight']
@@ -1223,10 +1234,17 @@ const VEHICLE_PHASE2_COLOURS=[
 function animateVehiclePaintChange(next){
   if(!next||next===vehiclePaintColor)return;
   if(vehiclePaintRAF)cancelAnimationFrame(vehiclePaintRAF);
+  if(vehiclePaintTimer)clearInterval(vehiclePaintTimer);
+  vehiclePaintRAF=0;vehiclePaintTimer=0;
   vehiclePreviousPaintColor=vehiclePaintColor;vehiclePaintColor=next;vehiclePaintMix=0;
-  const start=performance.now(),dur=950;
-  const tick=now=>{if(!testRunning||!vehicleRevealActive)return;vehiclePaintMix=clamp((now-start)/dur,0,1);renderTemplate('vehicle');if(vehiclePaintMix<1)vehiclePaintRAF=requestAnimationFrame(tick);else vehiclePaintRAF=0;};
-  vehiclePaintRAF=requestAnimationFrame(tick);
+  const startAt=Date.now(),dur=950;
+  const tick=()=>{
+    if(!testRunning||!vehicleRevealActive){if(vehiclePaintTimer)clearInterval(vehiclePaintTimer);vehiclePaintTimer=0;return}
+    vehiclePaintMix=clamp((Date.now()-startAt)/dur,0,1);
+    safeVehicleRender();
+    if(vehiclePaintMix>=1){clearInterval(vehiclePaintTimer);vehiclePaintTimer=0;vehiclePaintMix=1;safeVehicleRender();}
+  };
+  tick();vehiclePaintTimer=setInterval(tick,33);
 }
 function showVehiclePhase2ColourUI(){
   vehicleRevealStage='phase2-ready';vehiclePhase2Progress=1;renderTemplate('vehicle');
@@ -1234,28 +1252,58 @@ function showVehiclePhase2ColourUI(){
   $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>2</b><small>${t('PHASE','PHASE')}</small></div><div style="width:100%"><b>${t('Phase 2 — Finalise your car','Phase 2 — Finalise ta voiture')}</b><p>${t('The beauty reveal is complete. Try different paint colours before we move to the Test World.','La présentation est terminée. Essaie différentes couleurs avant de passer au Monde de test.')}</p><div id="vehiclePhase2Colours" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0">${swatches}</div><button type="button" id="vehicleConfirmPaint" style="padding:10px 16px;border:0;border-radius:999px;font-weight:800;cursor:pointer">${t('Use this colour','Utiliser cette couleur')}</button></div></div>`;
   $('creatorCoach').textContent=t('Choose any colour. The paint will sweep across the finished car. You can change it as many times as you want before confirming.','Choisis une couleur. La peinture balaiera la voiture finie. Tu peux la changer autant de fois que tu veux avant de confirmer.');
   document.querySelectorAll('[data-vehicle-paint]').forEach(b=>b.onclick=()=>{animateVehiclePaintChange(b.dataset.vehiclePaint);document.querySelectorAll('[data-vehicle-paint]').forEach(x=>x.style.borderColor=x===b?'#fff':'rgba(255,255,255,.35)')});
-  const confirm=$('vehicleConfirmPaint');if(confirm)confirm.onclick=()=>{vehicleRevealStage='phase2-confirmed';renderTemplate('vehicle');$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 2','PHASE 2')}</small></div><div><b>${t('Colour confirmed','Couleur confirmée')}</b><p>${t('Your finished car is ready. Phase 3 will open the Future Test World in the next build.','Ta voiture finie est prête. La Phase 3 ouvrira le Monde de test futur dans la prochaine version.')}</p></div></div>`;$('creatorCoach').textContent=t('Phase 2 complete. The finished car and paint colour are locked for this test.','Phase 2 terminée. La voiture finie et sa couleur sont verrouillées pour ce test.');window.playTone?.(true);};
+  const confirm=$('vehicleConfirmPaint');if(confirm)confirm.onclick=()=>{vehicleRevealStage='phase2-confirmed';safeVehicleRender();$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 2','PHASE 2')}</small></div><div><b>${t('Colour confirmed','Couleur confirmée')}</b><p>${t('Your finished car is ready. Phase 3 will open the Future Test World in the next build.','Ta voiture finie est prête. La Phase 3 ouvrira le Monde de test futur dans la prochaine version.')}</p></div></div>`;$('creatorCoach').textContent=t('Phase 2 complete. The finished car and paint colour are locked for this test.','Phase 2 terminée. La voiture finie et sa couleur sont verrouillées pour ce test.');window.playTone?.(true);};
+  $('creatorTestResult').scrollIntoView?.({behavior:'smooth',block:'nearest'});
 }
 function startVehiclePhaseTwoReveal(){
-  vehicleRevealStage='phase2';vehiclePhase2Progress=0;vehiclePhase2Start=performance.now();vehiclePreviousPaintColor='#9fb0ba';vehiclePaintColor='#5de4ff';vehiclePaintMix=0;
+  if(vehiclePhase2Timer)clearInterval(vehiclePhase2Timer);
+  if(vehiclePhase2RAF)cancelAnimationFrame(vehiclePhase2RAF);
+  vehiclePhase2RAF=0;vehiclePhase2Timer=0;
+  vehicleRevealStage='phase2';vehiclePhase2Progress=0;vehiclePhase2Start=Date.now();
+  vehiclePreviousPaintColor='#9fb0ba';vehiclePaintColor='#5de4ff';vehiclePaintMix=0;
   $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 2 — Beauty reveal','Phase 2 — Présentation')}</b><p>${t('Paint, lights and the presentation camera are bringing your finished car to life.','La peinture, les feux et la caméra de présentation donnent vie à ta voiture finie.')}</p></div></div>`;
   $('creatorCoach').textContent=t('Phase 2 is running automatically. Watch the finished car receive its first paint and presentation pass.','La Phase 2 démarre automatiquement. Regarde la voiture finie recevoir sa première peinture et sa présentation.');
   const duration=5200;
-  const tick=now=>{if(!testRunning||!vehicleRevealActive)return;vehiclePhase2Progress=clamp((now-vehiclePhase2Start)/duration,0,1);vehiclePaintMix=vehiclePhase2Progress;renderTemplate('vehicle');if(vehiclePhase2Progress<1){vehiclePhase2RAF=requestAnimationFrame(tick);return;}vehiclePhase2RAF=0;vehiclePaintMix=1;showVehiclePhase2ColourUI();window.playTone?.(true);};
-  vehiclePhase2RAF=requestAnimationFrame(tick);
+  const tick=()=>{
+    if(!testRunning||!vehicleRevealActive){if(vehiclePhase2Timer)clearInterval(vehiclePhase2Timer);vehiclePhase2Timer=0;return}
+    vehiclePhase2Progress=clamp((Date.now()-vehiclePhase2Start)/duration,0,1);
+    vehiclePaintMix=vehiclePhase2Progress;
+    safeVehicleRender();
+    if(vehiclePhase2Progress>=1){
+      clearInterval(vehiclePhase2Timer);vehiclePhase2Timer=0;vehiclePaintMix=1;safeVehicleRender();
+      showVehiclePhase2ColourUI();window.playTone?.(true);
+    }
+  };
+  tick();vehiclePhase2Timer=setInterval(tick,33);
 }
 function startVehiclePhaseOneReveal(){
-  stopTest(false);testRunning=true;vehicleRevealActive=true;vehicleRevealStage='phase1';vehicleRevealProgress=0;vehicleRevealStart=performance.now();vehiclePhase2Progress=0;vehiclePaintMix=1;
-  /* Test presentation is deliberately independent of whichever construction view was last used. */
+  stopTest(false);
+  testRunning=true;vehicleRevealActive=true;vehicleRevealStage='phase1';vehicleRevealProgress=0;vehicleRevealStart=Date.now();
+  vehiclePhase2Progress=0;vehiclePaintMix=1;
+  /* The final presentation always starts from one clean canonical Sport Car view. */
   vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';updateVehicleViewUI();
-  stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);simulation.className='creator-simulation active';simulation.innerHTML='';
+  stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);
+  simulation.className='creator-simulation active';simulation.innerHTML='';
   syncInstalledVehicleParts();
   $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 1 — Transformation running','Phase 1 — Transformation en cours')}</b><p>${t('The construction blueprint is merging into one clean finished Sport Car.','Le plan de construction fusionne pour devenir une voiture de sport finie et propre.')}</p></div></div>`;
   $('creatorCoach').textContent=t('Construction lines are energising, fitted pieces are merging, and all loose puzzle geometry is disappearing into the finished shell.','Les lignes de construction s’illuminent, les pièces fusionnent et toute géométrie de puzzle disparaît dans la carrosserie finie.');
   window.playTone?.(true);
+  if(vehicleRevealTimer)clearInterval(vehicleRevealTimer);
+  if(vehicleRevealRAF)cancelAnimationFrame(vehicleRevealRAF);
+  vehicleRevealRAF=0;
   const duration=6500;
-  const tick=now=>{if(!testRunning||!vehicleRevealActive)return;vehicleRevealProgress=clamp((now-vehicleRevealStart)/duration,0,1);renderTemplate('vehicle');if(vehicleRevealProgress<1){vehicleRevealRAF=requestAnimationFrame(tick);return;}vehicleRevealRAF=0;vehicleRevealProgress=1;renderTemplate('vehicle');$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 1','PHASE 1')}</small></div><div><b>${t('Finished Sport Car formed','Voiture de sport finie')}</b><p>${t('The construction views are no longer used for the finished result. The car is now one complete shell with integrated glass, wheels and lights.','Les vues de construction ne sont plus utilisées pour le résultat fini. La voiture est désormais une carrosserie complète avec vitrage, roues et feux intégrés.')}</p></div></div>`;window.playTone?.(true);setTimeout(()=>{if(testRunning&&vehicleRevealActive)startVehiclePhaseTwoReveal()},700);};
-  vehicleRevealRAF=requestAnimationFrame(tick);
+  const tick=()=>{
+    if(!testRunning||!vehicleRevealActive){if(vehicleRevealTimer)clearInterval(vehicleRevealTimer);vehicleRevealTimer=0;return}
+    vehicleRevealProgress=clamp((Date.now()-vehicleRevealStart)/duration,0,1);
+    safeVehicleRender();
+    if(vehicleRevealProgress>=1){
+      clearInterval(vehicleRevealTimer);vehicleRevealTimer=0;vehicleRevealProgress=1;safeVehicleRender();
+      $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 1','PHASE 1')}</small></div><div><b>${t('Finished Sport Car formed','Voiture de sport finie')}</b><p>${t('The construction views are no longer used for the finished result. The car is now one complete shell with integrated glass, wheels and lights.','Les vues de construction ne sont plus utilisées pour le résultat fini. La voiture est désormais une carrosserie complète avec vitrage, roues et feux intégrés.')}</p></div></div>`;
+      window.playTone?.(true);
+      setTimeout(()=>{if(testRunning&&vehicleRevealActive)startVehiclePhaseTwoReveal()},700);
+    }
+  };
+  tick();vehicleRevealTimer=setInterval(tick,33);
 }
 function startTest(){if(!active)return;
   if(active==='vehicle'){
