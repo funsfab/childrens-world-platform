@@ -249,7 +249,7 @@ const missions={
 const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('creatorTemplate'),tctx=templateCanvas.getContext('2d');
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
-let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0;
+let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePhase3Progress=0,vehiclePhase3Start=0,vehiclePhase3RAF=0,vehiclePhase3Timer=0,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0;
 const STORAGE='cw_creator_projects_v18';
 /* Keep version 9 so saved prototype cars restore through the staged final-reveal updates. */
 const VEHICLE_PUZZLE_VERSION=9;
@@ -806,6 +806,7 @@ function drawVehicleInteriorAccessLabel(){
   tctx.restore();
 }
 function drawVehicleBlueprint(){
+  if(vehicleRevealStage==='phase3'||vehicleRevealStage==='phase3-complete'){drawVehicleFutureTestWorld();syncInstalledVehicleParts();return;}
   if(vehicleRevealActive){drawCanonicalFinishedVehicle();syncInstalledVehicleParts();return;}
   if(!templateOn)return;
   if(vehicleViewMode!=='interior')drawVehicleGround();
@@ -1218,13 +1219,15 @@ function resetVehiclePhaseOneReveal(){
   if(vehicleRevealRAF)cancelAnimationFrame(vehicleRevealRAF);
   if(vehiclePhase2RAF)cancelAnimationFrame(vehiclePhase2RAF);
   if(vehiclePaintRAF)cancelAnimationFrame(vehiclePaintRAF);
+  if(vehiclePhase3RAF)cancelAnimationFrame(vehiclePhase3RAF);
   if(vehicleRevealTimer)clearInterval(vehicleRevealTimer);
   if(vehiclePhase2Timer)clearInterval(vehiclePhase2Timer);
+  if(vehiclePhase3Timer)clearInterval(vehiclePhase3Timer);
   if(vehiclePaintTimer)clearInterval(vehiclePaintTimer);
-  vehicleRevealRAF=vehiclePhase2RAF=vehiclePaintRAF=0;
-  vehicleRevealTimer=vehiclePhase2Timer=vehiclePaintTimer=0;
+  vehicleRevealRAF=vehiclePhase2RAF=vehiclePhase3RAF=vehiclePaintRAF=0;
+  vehicleRevealTimer=vehiclePhase2Timer=vehiclePhase3Timer=vehiclePaintTimer=0;
   vehicleRevealActive=false;vehicleRevealProgress=0;vehicleRevealStart=0;vehicleRevealStage='idle';
-  vehiclePhase2Progress=0;vehiclePhase2Start=0;vehiclePaintMix=1;
+  vehiclePhase2Progress=0;vehiclePhase2Start=0;vehiclePhase3Progress=0;vehiclePhase3Start=0;vehiclePaintMix=1;
   [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.installed==='1').forEach(o=>{o.style.filter='';});
   if(active==='vehicle'){syncInstalledVehicleParts();safeVehicleRender();}
 }
@@ -1252,7 +1255,7 @@ function showVehiclePhase2ColourUI(){
   $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>2</b><small>${t('PHASE','PHASE')}</small></div><div style="width:100%"><b>${t('Phase 2 — Finalise your car','Phase 2 — Finalise ta voiture')}</b><p>${t('The beauty reveal is complete. Try different paint colours before we move to the Test World.','La présentation est terminée. Essaie différentes couleurs avant de passer au Monde de test.')}</p><div id="vehiclePhase2Colours" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0">${swatches}</div><button type="button" id="vehicleConfirmPaint" style="padding:10px 16px;border:0;border-radius:999px;font-weight:800;cursor:pointer">${t('Use this colour','Utiliser cette couleur')}</button></div></div>`;
   $('creatorCoach').textContent=t('Choose any colour. The paint will sweep across the finished car. You can change it as many times as you want before confirming.','Choisis une couleur. La peinture balaiera la voiture finie. Tu peux la changer autant de fois que tu veux avant de confirmer.');
   document.querySelectorAll('[data-vehicle-paint]').forEach(b=>b.onclick=()=>{animateVehiclePaintChange(b.dataset.vehiclePaint);document.querySelectorAll('[data-vehicle-paint]').forEach(x=>x.style.borderColor=x===b?'#fff':'rgba(255,255,255,.35)')});
-  const confirm=$('vehicleConfirmPaint');if(confirm)confirm.onclick=()=>{vehicleRevealStage='phase2-confirmed';safeVehicleRender();$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 2','PHASE 2')}</small></div><div><b>${t('Colour confirmed','Couleur confirmée')}</b><p>${t('Your finished car is ready. Phase 3 will open the Future Test World in the next build.','Ta voiture finie est prête. La Phase 3 ouvrira le Monde de test futur dans la prochaine version.')}</p></div></div>`;$('creatorCoach').textContent=t('Phase 2 complete. The finished car and paint colour are locked for this test.','Phase 2 terminée. La voiture finie et sa couleur sont verrouillées pour ce test.');window.playTone?.(true);};
+  const confirm=$('vehicleConfirmPaint');if(confirm)confirm.onclick=()=>{vehicleRevealStage='phase2-confirmed';safeVehicleRender();$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 2','PHASE 2')}</small></div><div><b>${t('Colour confirmed','Couleur confirmée')}</b><p>${t('Your finished car is ready. Opening Phase 3 — Future Test World now.','Ta voiture finie est prête. Ouverture de la Phase 3 — Monde de test futur.')}</p></div></div>`;$('creatorCoach').textContent=t('Phase 2 complete. The finished car and paint colour are locked. Phase 3 is opening now.','Phase 2 terminée. La voiture finie et sa couleur sont verrouillées. La Phase 3 s’ouvre maintenant.');window.playTone?.(true);setTimeout(()=>{if(testRunning&&vehicleRevealActive)startVehiclePhaseThreeWorld()},700);};
   $('creatorTestResult').scrollIntoView?.({behavior:'smooth',block:'nearest'});
 }
 function startVehiclePhaseTwoReveal(){
@@ -1275,6 +1278,173 @@ function startVehiclePhaseTwoReveal(){
     }
   };
   tick();vehiclePhase2Timer=setInterval(tick,33);
+}
+
+function drawRoundedPanel(x,y,w,h,r,fill='rgba(10,25,37,.72)',stroke='rgba(147,232,255,.28)'){
+  tctx.beginPath();
+  tctx.moveTo(x+r,y);
+  tctx.lineTo(x+w-r,y);tctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  tctx.lineTo(x+w,y+h-r);tctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  tctx.lineTo(x+r,y+h);tctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  tctx.lineTo(x,y+r);tctx.quadraticCurveTo(x,y,x+r,y);
+  tctx.closePath();
+  tctx.fillStyle=fill;tctx.fill();
+  tctx.strokeStyle=stroke;tctx.lineWidth=1.1;tctx.stroke();
+}
+function drawFutureWorldLabel(x,y,text){
+  tctx.save();
+  tctx.font='700 12px system-ui';
+  const w=Math.max(64,tctx.measureText(text).width+18),h=24;
+  drawRoundedPanel(x-w/2,y-h/2,w,h,10,'rgba(10,28,42,.78)','rgba(147,232,255,.24)');
+  tctx.fillStyle='rgba(236,247,255,.95)';tctx.textAlign='center';tctx.textBaseline='middle';
+  tctx.fillText(text,x,y+0.5);
+  tctx.restore();
+}
+function drawFutureTree(x,baseY,s=1){
+  tctx.save();tctx.translate(x,baseY);tctx.scale(s,s);
+  tctx.fillStyle='#6f4f33';tctx.fillRect(-4,-24,8,24);
+  tctx.beginPath();tctx.arc(0,-34,18,0,Math.PI*2);tctx.fillStyle='#5bd08a';tctx.fill();
+  tctx.beginPath();tctx.arc(-13,-28,12,0,Math.PI*2);tctx.arc(13,-28,12,0,Math.PI*2);tctx.fill();
+  tctx.restore();
+}
+function drawFutureBuilding(x,baseY,w,h,color='#415d7c',windows=4){
+  tctx.save();
+  tctx.fillStyle=color;tctx.fillRect(x,baseY-h,w,h);
+  tctx.fillStyle='rgba(170,225,255,.30)';
+  for(let r=0;r<Math.max(2,Math.floor(h/28));r++)for(let c=0;c<windows;c++)tctx.fillRect(x+10+c*((w-20)/Math.max(1,windows-1))-8,baseY-h+12+r*22,12,10);
+  tctx.restore();
+}
+function drawFutureSupermarket(x,baseY){
+  tctx.save();
+  tctx.fillStyle='#8ea6c2';tctx.fillRect(x,baseY-66,108,66);
+  tctx.fillStyle='#ff6f8a';tctx.fillRect(x+4,baseY-66,100,18);
+  tctx.fillStyle='#f2f7fb';tctx.fillRect(x+10,baseY-38,84,28);
+  tctx.fillStyle='#27435e';tctx.fillRect(x+40,baseY-26,18,16);
+  tctx.font='700 12px system-ui';tctx.fillStyle='#fff';tctx.textAlign='center';tctx.fillText(t('Market','Marché'),x+54,baseY-52);
+  tctx.restore();
+}
+function drawFutureStation(x,baseY,electric=false){
+  tctx.save();
+  tctx.fillStyle='#6f86a4';tctx.fillRect(x+6,baseY-52,70,52);
+  tctx.fillStyle=electric?'#57e3ff':'#ffb85c';tctx.fillRect(x,baseY-70,82,14);
+  tctx.fillStyle='rgba(238,246,255,.95)';tctx.fillRect(x+16,baseY-44,24,28);
+  tctx.fillRect(x+46,baseY-44,18,28);
+  tctx.strokeStyle='rgba(17,35,49,.95)';tctx.lineWidth=3;
+  if(electric){tctx.beginPath();tctx.moveTo(x+27,baseY-40);tctx.lineTo(x+18,baseY-28);tctx.lineTo(x+26,baseY-28);tctx.lineTo(x+20,baseY-18);tctx.lineTo(x+33,baseY-32);tctx.lineTo(x+25,baseY-32);tctx.stroke();}
+  else{tctx.strokeRect(x+20,baseY-41,16,24);tctx.beginPath();tctx.moveTo(x+36,baseY-36);tctx.lineTo(x+44,baseY-44);tctx.lineTo(x+47,baseY-34);tctx.stroke();}
+  tctx.restore();
+}
+function drawFutureRoundabout(x,baseY){
+  tctx.save();
+  tctx.strokeStyle='rgba(210,236,255,.38)';tctx.lineWidth=8;tctx.beginPath();tctx.ellipse(x,baseY-18,46,16,0,0,Math.PI*2);tctx.stroke();
+  tctx.fillStyle='#6ddc8f';tctx.beginPath();tctx.ellipse(x,baseY-18,24,9,0,0,Math.PI*2);tctx.fill();
+  tctx.fillStyle='rgba(239,246,252,.92)';tctx.font='700 11px system-ui';tctx.textAlign='center';tctx.fillText(t('Roundabout','Rond-point'),x,baseY-42);
+  tctx.restore();
+}
+function drawPhase3VehicleAt(cx,cy,scale,opts={}){
+  const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,angle=opts.angle||0,flight=!!opts.flight,water=!!opts.water;
+  const body=[[-255,26],[-218,-5],[-156,-22],[-99,-36],[-52,-90],[77,-89],[135,-39],[224,-21],[273,17],[255,50],[-208,55]];
+  const upper=[[-99,-36],[-52,-90],[77,-89],[135,-39],[106,-33],[-74,-31]];
+  const hood=[[-255,26],[-218,-5],[-99,-36],[-74,-31],[-156,11],[-224,38]];
+  const rearDeck=[[106,-33],[135,-39],[224,-21],[273,17],[213,17],[148,-11]];
+  const lower=[[-208,55],[255,50],[231,66],[-188,71]];
+  const windscreen=[[-74,-39],[-46,-79],[-4,-79],[-3,-40]];
+  const sideWindow=[[4,-79],[70,-76],[116,-40],[6,-40]];
+  const rearQuarter=[[74,-73],[116,-40],[131,-38],[105,-65]];
+  const paintDark=vehicleShade(paint,-72),paintLight=vehicleShade(paint,72);
+  const path=pts=>{tctx.beginPath();pts.forEach((p,i)=>i?tctx.lineTo(p[0],p[1]):tctx.moveTo(p[0],p[1]));tctx.closePath();};
+  tctx.save();tctx.translate(cx,cy);tctx.scale(scale,scale);tctx.rotate(angle);
+  if(glow){tctx.shadowColor='rgba(91,230,255,.95)';tctx.shadowBlur=14+glow*18;}
+  path(body);const g=tctx.createLinearGradient(-250,-90,255,55);g.addColorStop(0,paintLight);g.addColorStop(.36,paint);g.addColorStop(.72,paintDark);g.addColorStop(1,paint);tctx.fillStyle=g;tctx.fill();tctx.strokeStyle='rgba(224,244,250,.82)';tctx.lineWidth=2.2;tctx.stroke();
+  path(lower);tctx.fillStyle='rgba(21,33,42,.96)';tctx.fill();
+  [windscreen,sideWindow,rearQuarter].forEach(sh=>{path(sh);const gg=tctx.createLinearGradient(sh[0][0],sh[0][1],sh[2][0],sh[2][1]);gg.addColorStop(0,'rgba(127,211,239,.72)');gg.addColorStop(.48,'rgba(26,66,90,.94)');gg.addColorStop(1,'rgba(7,26,42,.98)');tctx.fillStyle=gg;tctx.fill();tctx.strokeStyle='rgba(224,248,255,.72)';tctx.lineWidth=1.5;tctx.stroke()});
+  tctx.strokeStyle='rgba(12,32,44,.46)';tctx.lineWidth=1.6;tctx.beginPath();tctx.moveTo(6,-34);tctx.lineTo(8,39);tctx.lineTo(127,37);tctx.lineTo(131,-34);tctx.stroke();
+  tctx.beginPath();tctx.moveTo(-98,-31);tctx.lineTo(-157,11);tctx.stroke();
+  tctx.fillStyle=paintDark;tctx.beginPath();tctx.ellipse(-77,-32,10,5,-.25,0,Math.PI*2);tctx.fill();
+  if(flight){
+    tctx.globalAlpha=.78;path([[13,-10],[109,-11],[93,9],[25,11]]);tctx.fillStyle=paintDark;tctx.fill();tctx.globalAlpha=1;
+    if(vehicleFlightSystem==='propeller'){[[205,15],[-130,18]].forEach(([px,py])=>{tctx.save();tctx.translate(px,py);tctx.rotate(wheelSpin*1.4);tctx.strokeStyle='rgba(223,246,255,.92)';tctx.lineWidth=3;for(let i=0;i<3;i++){tctx.beginPath();tctx.moveTo(0,0);tctx.lineTo(0,22);tctx.stroke();tctx.rotate(Math.PI*2/3)}tctx.restore()});}
+    if(vehicleFlightSystem==='jet'){[[208,8],[228,16]].forEach(([jx,jy],i)=>{const fg=tctx.createLinearGradient(jx,jy,jx+34,jy);fg.addColorStop(0,'rgba(255,180,90,.0)');fg.addColorStop(.35,'rgba(255,180,90,.88)');fg.addColorStop(1,'rgba(255,98,64,.0)');tctx.fillStyle=fg;tctx.beginPath();tctx.moveTo(jx,jy-8);tctx.lineTo(jx+34,jy);tctx.lineTo(jx,jy+8);tctx.closePath();tctx.fill();});}
+    if(vehicleFlightSystem==='drone'){[[-84,-92],[34,-108],[98,-86],[170,-18]].forEach(([rx,ry],i)=>{tctx.save();tctx.translate(rx,ry);tctx.rotate(wheelSpin*1.5);tctx.strokeStyle='rgba(238,248,255,.92)';tctx.lineWidth=2.8;tctx.beginPath();tctx.moveTo(-12,0);tctx.lineTo(12,0);tctx.moveTo(0,-12);tctx.lineTo(0,12);tctx.stroke();tctx.restore();});}
+  }
+  if(water){tctx.strokeStyle='rgba(83,225,240,.65)';tctx.lineWidth=4; tctx.beginPath();tctx.moveTo(-185,59);tctx.quadraticCurveTo(25,80,229,57);tctx.stroke();}
+  [[-130,47],[178,40]].forEach(([wx,wy],i)=>{const r=34;tctx.save();tctx.translate(wx,wy);if(!(water&&opts.retractWheels)){tctx.beginPath();tctx.arc(0,0,r,0,Math.PI*2);tctx.fillStyle='#10161b';tctx.fill();tctx.beginPath();tctx.arc(0,0,r*.61,0,Math.PI*2);const rg=tctx.createRadialGradient(-r*.12,-r*.18,2,0,0,r*.62);rg.addColorStop(0,'#f8fbfd');rg.addColorStop(.45,'#b7c3ca');rg.addColorStop(1,'#40515b');tctx.fillStyle=rg;tctx.fill();tctx.strokeStyle='rgba(245,250,252,.82)';tctx.lineWidth=1.5;for(let k=0;k<6;k++){const a=wheelSpin+(k*Math.PI/3);tctx.beginPath();tctx.moveTo(0,0);tctx.lineTo(Math.cos(a)*r*.49,Math.sin(a)*r*.49);tctx.stroke()}tctx.beginPath();tctx.arc(0,0,r*.13,0,Math.PI*2);tctx.fillStyle='#17232b';tctx.fill();}else{tctx.strokeStyle='rgba(225,244,252,.55)';tctx.lineWidth=3;tctx.strokeRect(-8,-8,16,16);}tctx.restore();});
+  [[-234,16,'rgba(226,250,255,.98)'],[249,14,'rgba(255,67,86,.98)']].forEach(([x,y,c])=>{tctx.save();tctx.shadowBlur=16;tctx.shadowColor=c;tctx.fillStyle=c;tctx.beginPath();tctx.ellipse(x,y,16,7,0,0,Math.PI*2);tctx.fill();tctx.restore()});
+  tctx.restore();
+}
+function drawVehicleFutureTestWorld(){
+  const W=templateCanvas.width,H=templateCanvas.height,p=clamp(vehiclePhase3Progress,0,1),baseRoadY=338,route=1360,cam=p*route;
+  tctx.save();
+  const sky=tctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#14354d');sky.addColorStop(.58,'#1e4667');sky.addColorStop(1,'#27455e');tctx.fillStyle=sky;tctx.fillRect(0,0,W,H);
+  const haze=tctx.createLinearGradient(0,225,0,H);haze.addColorStop(0,'rgba(255,255,255,0)');haze.addColorStop(1,'rgba(140,210,255,.08)');tctx.fillStyle=haze;tctx.fillRect(0,0,W,H);
+  tctx.fillStyle='rgba(255,230,153,.95)';tctx.beginPath();tctx.arc(702,70,26,0,Math.PI*2);tctx.fill();
+  const cloud=(x,y,s)=>{tctx.save();tctx.translate(x,y);tctx.scale(s,s);tctx.fillStyle='rgba(244,249,255,.78)';[[0,0,22],[-18,6,14],[19,8,16]].forEach(([cx,cy,r])=>{tctx.beginPath();tctx.arc(cx,cy,r,0,Math.PI*2);tctx.fill()});tctx.fillRect(-24,0,48,16);tctx.restore();};
+  cloud(120-cam*.08,82,1);cloud(314-cam*.05,58,.8);cloud(585-cam*.09,104,1.1);
+  tctx.fillStyle='#24405a';tctx.beginPath();tctx.moveTo(0,245);tctx.quadraticCurveTo(140,184,264,228);tctx.quadraticCurveTo(390,178,545,216);tctx.quadraticCurveTo(650,189,800,236);tctx.lineTo(800,285);tctx.lineTo(0,285);tctx.closePath();tctx.fill();
+  tctx.fillStyle='#2a5974';tctx.beginPath();tctx.moveTo(0,265);tctx.quadraticCurveTo(180,214,342,247);tctx.quadraticCurveTo(525,213,800,260);tctx.lineTo(800,300);tctx.lineTo(0,300);tctx.closePath();tctx.fill();
+  const worldX=(x,speed=1)=>x-cam*speed;
+  drawFutureBuilding(worldX(120,0.55),252,54,56,'#476585',3);drawFutureBuilding(worldX(188,0.55),252,68,88,'#3e5978',4);drawFutureBuilding(worldX(272,0.55),252,46,68,'#587493',2);
+  drawFutureTree(worldX(92,0.8),294,.9);drawFutureTree(worldX(168,0.8),298,1.15);drawFutureTree(worldX(332,0.8),296,1.05);drawFutureTree(worldX(686,0.8),296,1.1);drawFutureTree(worldX(1058,0.8),296,1.1);
+  drawFutureSupermarket(worldX(438),288);
+  drawFutureStation(worldX(684),292,vehiclePowertrain==='electric');
+  if(vehiclePowertrain==='hybrid'){drawFutureStation(worldX(784),300,true)}
+  drawFutureRoundabout(worldX(958),322);
+  drawFutureBuilding(worldX(1165),268,94,72,'#4d6886',5);
+  const waterStart=worldX(1138),waterWidth=220;
+  tctx.fillStyle='#30536f';tctx.fillRect(0,baseRoadY+10,W,H-baseRoadY-10);
+  tctx.fillStyle='rgba(255,255,255,.14)';for(let i=0;i<6;i++)tctx.fillRect((i*160-(cam*1.6)%120),baseRoadY+42,70,4);
+  tctx.fillStyle='#3a6381';tctx.fillRect(0,baseRoadY-4,W,14);
+  if(vehicleFutureAbility==='water'){
+    tctx.fillStyle='#2f7fb2';tctx.fillRect(Math.max(0,waterStart),baseRoadY+6,Math.min(W-waterStart,waterWidth),H-(baseRoadY+6));
+    tctx.strokeStyle='rgba(194,240,255,.45)';tctx.lineWidth=2;for(let i=0;i<5;i++){const yy=baseRoadY+26+i*22;tctx.beginPath();tctx.moveTo(Math.max(0,waterStart)+8,yy);tctx.quadraticCurveTo(worldX(1188)+36,yy+8,Math.min(W,worldX(1346)),yy);tctx.stroke();}
+    tctx.fillStyle='#d1d9df';tctx.fillRect(Math.max(0,worldX(1104)),baseRoadY-4,40,10);tctx.fillRect(Math.max(0,worldX(1348)),baseRoadY-4,38,10);
+  }
+  drawFutureWorldLabel(worldX(486),210,t('Supermarket','Supermarché'));
+  drawFutureWorldLabel(worldX(722),206,vehiclePowertrain==='electric'?t('EV Charge','Recharge EV'):t('Fuel stop','Station'));
+  if(vehiclePowertrain==='hybrid')drawFutureWorldLabel(worldX(816),214,t('Hybrid option','Option hybride'));
+  drawFutureWorldLabel(worldX(1168),204,t('Test Lab','Laboratoire'));
+  if(vehicleFutureAbility==='water')drawFutureWorldLabel(worldX(1246),200,t('Water zone','Zone aquatique'));
+  else if(vehicleFutureAbility==='flight')drawFutureWorldLabel(worldX(1186),204,t('Flight lane','Couloir aérien'));
+  const seg2=clamp((p-.22)/.22,0,1),seg3=clamp((p-.72)/.28,0,1);
+  let carX=220,carY=baseRoadY-28,carAngle=0,flightMode=false,waterMode=false,retractWheels=false;
+  if(vehicleFutureAbility==='flight'&&p>.72){flightMode=true;carX=220+seg3*170;carY=baseRoadY-28-(Math.sin(seg3*Math.PI*.82)*110+seg3*34);carAngle=-.08-.26*seg3;}
+  if(vehicleFutureAbility==='water'&&p>.72){waterMode=true;carX=220+seg3*112;carY=baseRoadY+8+Math.sin(seg3*Math.PI*2)*2;retractWheels=seg3>.2;}
+  drawPhase3VehicleAt(carX,carY,.58,{paint:vehiclePaintColor,glow:.72,wheelSpin:p*8,angle:carAngle,flight:flightMode,water:waterMode,retractWheels});
+  if(flightMode){cloud(468,94,.92);cloud(610,138,.74);}
+  drawRoundedPanel(18,16,204,78,16,'rgba(8,25,36,.68)','rgba(147,232,255,.22)');
+  tctx.fillStyle='rgba(235,247,255,.96)';tctx.textAlign='left';tctx.font='800 15px system-ui';tctx.fillText(t('Phase 3 — Future Test World','Phase 3 — Monde de test du futur'),32,40);
+  tctx.font='600 12px system-ui';tctx.fillStyle='rgba(185,225,246,.92)';tctx.fillText(`${t('Power','Énergie')}: ${vehiclePowertrainLabel()}`,32,61);
+  tctx.fillText(`${t('Future','Futur')}: ${vehicleFutureAbilityLabel()}${vehicleFutureAbility==='flight'&&vehicleFlightSystem?` · ${vehicleFlightSystemLabel()}`:''}`,32,79);
+  drawRoundedPanel(572,18,210,48,14,'rgba(8,25,36,.62)','rgba(147,232,255,.18)');
+  tctx.fillStyle='rgba(227,246,255,.94)';tctx.textAlign='center';tctx.font='700 12px system-ui';
+  const status=vehicleFutureAbility==='flight'&&p>.72?t('Flight test active','Test de vol actif'):vehicleFutureAbility==='water'&&p>.72?t('Water test active','Test aquatique actif'):t('Road test active','Test routier actif');
+  tctx.fillText(status,677,39);
+  tctx.fillStyle='rgba(179,221,244,.88)';tctx.fillText(t('Roads • town • station • roundabout • special zone','Routes • ville • station • rond-point • zone spéciale'),677,56);
+  tctx.restore();
+}
+function startVehiclePhaseThreeWorld(){
+  if(vehiclePhase3Timer)clearInterval(vehiclePhase3Timer);
+  if(vehiclePhase3RAF)cancelAnimationFrame(vehiclePhase3RAF);
+  vehiclePhase3RAF=0;vehiclePhase3Timer=0;
+  vehicleRevealStage='phase3';vehiclePhase3Progress=0;vehiclePhase3Start=Date.now();
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 3 — Future Test World','Phase 3 — Monde de test du futur')}</b><p>${t('The finished car is leaving the reveal area and entering a living test world with roads, town landmarks and a special zone for its future ability.','La voiture finie quitte la zone de présentation et entre dans un monde de test vivant avec routes, repères urbains et zone spéciale pour sa capacité future.')}</p></div></div>`;
+  $('creatorCoach').textContent=t('Watch the finished car drive through the town, pass the service area and use its future ability in the last zone.','Regarde la voiture finie traverser la ville, passer par la zone de service et utiliser sa capacité future dans la dernière zone.');
+  const duration=12800;
+  const tick=()=>{
+    if(!testRunning||!vehicleRevealActive){if(vehiclePhase3Timer)clearInterval(vehiclePhase3Timer);vehiclePhase3Timer=0;return}
+    vehiclePhase3Progress=clamp((Date.now()-vehiclePhase3Start)/duration,0,1);
+    safeVehicleRender();
+    if(vehiclePhase3Progress>=1){
+      clearInterval(vehiclePhase3Timer);vehiclePhase3Timer=0;vehicleRevealStage='phase3-complete';vehiclePhase3Progress=1;safeVehicleRender();
+      const futureSummary=vehicleFutureAbility==='flight'
+        ?`${vehicleFlightSystemLabel()} ${t('flight test completed','terminé')}`
+        :t('Amphibious water-zone test completed','Test de la zone aquatique amphibie terminé');
+      $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 3','PHASE 3')}</small></div><div><b>${t('Future Test World complete','Monde de test terminé')}</b><p>${t('Your finished car has completed its town-road test, service-area pass and special future-ability zone.','Ta voiture finie a terminé son test sur route en ville, son passage par la zone de service et sa zone spéciale de capacité future.')}</p><ul><li class="pass">✓ ${vehiclePowertrainLabel()} ${t('power system tested in the world','testé dans le monde')}</li><li class="pass">✓ ${futureSummary}</li><li class="pass">✓ ${t('Paint colour stayed locked on the final car','La couleur est restée verrouillée sur la voiture finale')}</li></ul><p>${t('Phase 4 can build on this same finished car in the next update.','La Phase 4 pourra s’appuyer sur cette même voiture finie dans la prochaine mise à jour.')}</p></div></div>`;
+      $('creatorCoach').textContent=t('Phase 3 complete. Stop the test to return to edit mode, or keep this result as the finished prototype flow so far.','Phase 3 terminée. Arrête le test pour revenir au mode édition, ou garde ce résultat comme flux prototype final pour le moment.');
+      window.playTone?.(true);
+    }
+  };
+  tick();vehiclePhase3Timer=setInterval(tick,33);
 }
 function startVehiclePhaseOneReveal(){
   stopTest(false);
