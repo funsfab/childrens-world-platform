@@ -249,7 +249,7 @@ const missions={
 const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('creatorTemplate'),tctx=templateCanvas.getContext('2d');
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
-let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealStart=0;
+let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealStart=0,vehiclePresentationPhase=0,vehiclePhase2Progress=0,vehiclePaintColour='#5de4ff',vehiclePreviousPaintColour='#8298a5',vehicleColourSweep=1,vehicleColourSweepRAF=0,vehiclePreTestView=null;
 const STORAGE='cw_creator_projects_v18';
 /* Keep version 9 so saved prototype cars restore through the staged final-reveal updates. */
 const VEHICLE_PUZZLE_VERSION=9;
@@ -707,68 +707,116 @@ function vehicleRevealPath(points){
   if(!points?.length)return;
   tctx.beginPath();points.forEach((q,i)=>i?tctx.lineTo(q.x,q.y):tctx.moveTo(q.x,q.y));tctx.closePath();
 }
+function vehicleHexRgb(hex){
+  const h=(hex||'#5de4ff').replace('#','');
+  const v=h.length===3?h.split('').map(x=>x+x).join(''):h;
+  return{r:parseInt(v.slice(0,2),16)||93,g:parseInt(v.slice(2,4),16)||228,b:parseInt(v.slice(4,6),16)||255};
+}
+function vehiclePaintRGBA(alpha=1,shade=0,hex=vehiclePaintColour){
+  const c=vehicleHexRgb(hex),adj=n=>clamp(Math.round(n+shade),0,255);
+  return`rgba(${adj(c.r)},${adj(c.g)},${adj(c.b)},${alpha})`;
+}
+function vehicleShellFaces(){
+  const edges=vehicleMainEdges(),a=edges[0],b=edges[1],faces=[];
+  const add=(pts,tone,kind)=>faces.push({pts,tone,kind,depth:pts.reduce((sum,p)=>sum+rotateVehiclePoint(p,vehicleYaw,vehiclePitch)[1],0)/pts.length});
+  add(a,-18,'side');add([...b].reverse(),-6,'side');
+  for(let i=0;i<a.length;i++){
+    const j=(i+1)%a.length;
+    add([a[i],a[j],b[j],b[i]],i>=4&&i<=7?20:(i<=2||i>=9?-22:2),'bridge');
+  }
+  return faces.sort((x,y)=>x.depth-y.depth);
+}
 function drawFinishedVehicleReveal(){
   if(!vehicleRevealActive)return;
-  const bodyT=vehicleRevealEase(.23,.64),glassT=vehicleRevealEase(.42,.76),wheelT=vehicleRevealEase(.50,.82),lightT=vehicleRevealEase(.72,.96);
+  const p1=vehiclePresentationPhase===1?vehicleRevealProgress:1;
+  const bodyT=vehiclePresentationPhase===1?vehicleRevealEase(.20,.62,p1):1;
+  const glassT=vehiclePresentationPhase===1?vehicleRevealEase(.40,.76,p1):1;
+  const wheelT=vehiclePresentationPhase===1?vehicleRevealEase(.48,.82,p1):1;
+  const lightT=vehiclePresentationPhase===1?vehicleRevealEase(.70,.96,p1):1;
   if(bodyT<=0)return;
-  const side=vehicleMainEdges()[1].map(vehicleProjectPoint),xs=side.map(q=>q.x),ys=side.map(q=>q.y);
-  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
   tctx.save();
-  vehicleRevealPath(side);
-  const paint=tctx.createLinearGradient(minX,minY,maxX,maxY);
-  paint.addColorStop(0,`rgba(214,229,238,${.94*bodyT})`);
-  paint.addColorStop(.28,`rgba(78,112,132,${.98*bodyT})`);
-  paint.addColorStop(.62,`rgba(33,67,87,${.99*bodyT})`);
-  paint.addColorStop(1,`rgba(121,151,167,${.96*bodyT})`);
-  tctx.fillStyle=paint;tctx.fill();
-  tctx.strokeStyle=`rgba(226,245,252,${.55*bodyT})`;tctx.lineWidth=1.8;tctx.stroke();
-  tctx.save();vehicleRevealPath(side);tctx.clip();
-  const shine=tctx.createLinearGradient(minX,minY,maxX,minY);
-  shine.addColorStop(0,'rgba(255,255,255,0)');shine.addColorStop(.34,`rgba(255,255,255,${.22*bodyT})`);shine.addColorStop(.46,'rgba(255,255,255,0)');
-  tctx.fillStyle=shine;tctx.fillRect(minX,minY,maxX-minX,maxY-minY);tctx.restore();
 
-  /* Glass becomes a finished dark reflective surface instead of a puzzle patch. */
-  const glassIds=new Set(['window','windscreen','rear-window']);
-  vehicleSlotDefinitions().map(vehicleSlotProjection).filter(pr=>pr&&pr.visible&&glassIds.has(pr.partId)).forEach(pr=>{
-    const pts=pr.shapeCorners||pr.corners;vehicleRevealPath(pts);
-    const g=tctx.createLinearGradient(pr.cx-pr.w/2,pr.cy-pr.h/2,pr.cx+pr.w/2,pr.cy+pr.h/2);
-    g.addColorStop(0,`rgba(131,210,236,${.68*glassT})`);g.addColorStop(.45,`rgba(25,63,84,${.92*glassT})`);g.addColorStop(1,`rgba(8,28,43,${.96*glassT})`);
-    tctx.fillStyle=g;tctx.fill();tctx.strokeStyle=`rgba(218,247,255,${.72*glassT})`;tctx.lineWidth=1.2;tctx.stroke();
+  /* Closed 3D shell: every construction view resolves to the same complete car. */
+  const faces=vehicleShellFaces();
+  const shellScreen=faces.flatMap(f=>f.pts.map(vehicleProjectPoint)),shellXs=shellScreen.map(q=>q.x);
+  const shellMinX=Math.min(...shellXs),shellMaxX=Math.max(...shellXs),shellSpan=Math.max(1,shellMaxX-shellMinX);
+  faces.forEach((face,idx)=>{
+    const pts=face.pts.map(vehicleProjectPoint);vehicleRevealPath(pts);
+    const neutral=vehiclePresentationPhase===1;
+    let base;
+    if(neutral)base=`rgba(${clamp(115+face.tone,50,220)},${clamp(145+face.tone,65,235)},${clamp(160+face.tone,75,245)},${.96*bodyT})`;
+    else if(vehicleColourSweep<.999){
+      const g=tctx.createLinearGradient(shellMinX,0,shellMaxX,0),a=clamp(vehicleColourSweep-.035,0,1),b=clamp(vehicleColourSweep+.035,0,1);
+      g.addColorStop(0,vehiclePaintRGBA(.97*bodyT,face.tone,vehiclePaintColour));
+      g.addColorStop(a,vehiclePaintRGBA(.97*bodyT,face.tone,vehiclePaintColour));
+      g.addColorStop(b,vehiclePaintRGBA(.97*bodyT,face.tone,vehiclePreviousPaintColour));
+      g.addColorStop(1,vehiclePaintRGBA(.97*bodyT,face.tone,vehiclePreviousPaintColour));
+      base=g;
+    }else base=vehiclePaintRGBA(.97*bodyT,face.tone);
+    tctx.fillStyle=base;tctx.fill();
+    tctx.strokeStyle=neutral?`rgba(225,246,252,${.42*bodyT})`:`rgba(238,252,255,${.46*bodyT})`;
+    tctx.lineWidth=1.05;tctx.stroke();
   });
 
-  /* Subtle panel seams keep the finished car readable without looking like a blueprint. */
-  const seamIds=new Set(['door','hood','trunk','roof','mirror']);
-  vehicleSlotDefinitions().map(vehicleSlotProjection).filter(pr=>pr&&pr.visible&&seamIds.has(pr.partId)).forEach(pr=>{
-    vehicleRevealPath(pr.shapeCorners||pr.corners);tctx.fillStyle='rgba(255,255,255,0)';tctx.fill();
-    tctx.strokeStyle=`rgba(14,39,54,${.45*bodyT})`;tctx.lineWidth=1.15;tctx.stroke();
-  });
-
-  /* Proper tyre and rim treatment replaces the construction wheel pieces. */
-  const wheelSlots=vehicleSlotDefinitions().filter(sl=>sl.partId==='wheel').map(vehicleSlotProjection).filter(pr=>pr&&pr.visible);
-  wheelSlots.forEach(pr=>{
-    const r=Math.max(7,Math.min(pr.w,pr.h)*.50);
-    tctx.save();tctx.globalAlpha=wheelT;
-    tctx.beginPath();tctx.arc(pr.cx,pr.cy,r,0,Math.PI*2);tctx.fillStyle='#111820';tctx.fill();
-    tctx.beginPath();tctx.arc(pr.cx,pr.cy,r*.61,0,Math.PI*2);
-    const rg=tctx.createRadialGradient(pr.cx-r*.18,pr.cy-r*.18,r*.08,pr.cx,pr.cy,r*.62);
-    rg.addColorStop(0,'#f4f8fb');rg.addColorStop(.45,'#9aaab5');rg.addColorStop(1,'#364956');tctx.fillStyle=rg;tctx.fill();
-    tctx.strokeStyle='rgba(244,250,253,.78)';tctx.lineWidth=1.1;
-    for(let i=0;i<6;i++){const a=i*Math.PI/3;tctx.beginPath();tctx.moveTo(pr.cx,pr.cy);tctx.lineTo(pr.cx+Math.cos(a)*r*.50,pr.cy+Math.sin(a)*r*.50);tctx.stroke()}
-    tctx.beginPath();tctx.arc(pr.cx,pr.cy,r*.14,0,Math.PI*2);tctx.fillStyle='#17232b';tctx.fill();tctx.restore();
-  });
-
-  /* Head/tail lights wake up at the end of Phase 1. */
-  if(lightT>0){
-    const prof=vehicleProfile(),L=prof.length,W=prof.width;
-    [[[-L*.47,W*.49,.56],'rgba(222,250,255,.98)'],[[L*.47,W*.49,.53],'rgba(255,72,92,.94)']].forEach(([pt,c])=>{
-      const q=vehicleProjectPoint(pt),r=7+lightT*8;tctx.save();tctx.globalAlpha=lightT;tctx.shadowBlur=18;tctx.shadowColor=c;tctx.fillStyle=c;tctx.beginPath();tctx.ellipse(q.x,q.y,r,r*.45,0,0,Math.PI*2);tctx.fill();tctx.restore();
-    });
+  /* Paint sweep during Phase 2 or when the child tries another colour. */
+  if(vehiclePresentationPhase>=2&&vehicleColourSweep<1){
+    const all=faces.flatMap(f=>f.pts.map(vehicleProjectPoint)),xs=all.map(q=>q.x),ys=all.map(q=>q.y);
+    const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+    const sweepX=minX+(maxX-minX)*vehicleColourSweep;
+    tctx.save();
+    tctx.globalCompositeOperation='screen';
+    const g=tctx.createLinearGradient(minX,0,maxX,0);
+    const a=clamp(vehicleColourSweep-.13,0,1),b=clamp(vehicleColourSweep+.06,0,1);
+    g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(a,'rgba(255,255,255,0)');g.addColorStop(clamp(vehicleColourSweep,0,1),'rgba(255,255,255,.48)');g.addColorStop(b,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,255,255,0)');
+    tctx.fillStyle=g;tctx.fillRect(minX,minY,maxX-minX,maxY-minY);tctx.restore();
   }
 
-  /* Keep installed Future Tech visually present on the finished body. */
-  vehicleFutureSlots().map(vehicleSlotProjection).filter(pr=>pr&&pr.visible&&installedVehicleKeys().has(pr.key)).forEach(pr=>{
+  /* Finished glass overlays the solid shell; side and front/rear glass use their exact puzzle contours. */
+  const glassIds=new Set(['window','windscreen','rear-window']);
+  vehicleSlotDefinitions().map(vehicleSlotProjection).filter(pr=>pr&&glassIds.has(pr.partId)&&Math.abs(pr.facing)>.08).forEach(pr=>{
     const pts=pr.shapeCorners||pr.corners;vehicleRevealPath(pts);
-    const f=vehiclePartFill(pr.partId);tctx.fillStyle=f.fill;tctx.strokeStyle=f.stroke;tctx.lineWidth=1.4;tctx.fill();tctx.stroke();
+    const g=tctx.createLinearGradient(pr.cx-pr.w/2,pr.cy-pr.h/2,pr.cx+pr.w/2,pr.cy+pr.h/2);
+    g.addColorStop(0,`rgba(150,225,246,${.72*glassT})`);g.addColorStop(.46,`rgba(35,80,105,${.94*glassT})`);g.addColorStop(1,`rgba(8,30,47,${.97*glassT})`);
+    tctx.fillStyle=g;tctx.fill();tctx.strokeStyle=`rgba(221,249,255,${.68*glassT})`;tctx.lineWidth=1.05;tctx.stroke();
+  });
+
+  /* Panel seams sit exactly on their fitted puzzle contours; no loose side/cabin patch remains. */
+  const seamIds=new Set(['door','hood','trunk','roof']);
+  vehicleSlotDefinitions().map(vehicleSlotProjection).filter(pr=>pr&&seamIds.has(pr.partId)&&Math.abs(pr.facing)>.05).forEach(pr=>{
+    vehicleRevealPath(pr.shapeCorners||pr.corners);
+    tctx.strokeStyle=`rgba(12,37,51,${.38*bodyT})`;tctx.lineWidth=1.05;tctx.stroke();
+  });
+
+  /* Mirrors are small finished components rather than floating construction pieces. */
+  vehicleSlotDefinitions().map(vehicleSlotProjection).filter(pr=>pr&&pr.partId==='mirror'&&Math.abs(pr.facing)>.12).forEach(pr=>{
+    vehicleRevealPath(pr.shapeCorners||pr.corners);tctx.fillStyle=vehiclePresentationPhase===1?'rgba(125,151,164,.88)':vehiclePaintRGBA(.92,-18);tctx.fill();tctx.strokeStyle='rgba(229,246,252,.65)';tctx.stroke();
+  });
+
+  /* Four wheels are rendered from their real 3D positions so front/rear/top views remain coherent. */
+  const wheelSlots=vehicleSlotDefinitions().filter(sl=>sl.partId==='wheel').map(vehicleSlotProjection);
+  wheelSlots.sort((a,b)=>a.depth-b.depth).forEach(pr=>{
+    const face=Math.abs(pr.facing),r=Math.max(5,Math.min(pr.w,pr.h)*(.43+.08*face));
+    tctx.save();tctx.globalAlpha=wheelT*clamp(.40+face,0,1);
+    tctx.beginPath();tctx.ellipse(pr.cx,pr.cy,r*Math.max(.28,face),r,pr.screenAngle*Math.PI/180,0,Math.PI*2);tctx.fillStyle='#10171d';tctx.fill();
+    tctx.beginPath();tctx.ellipse(pr.cx,pr.cy,r*.58*Math.max(.35,face),r*.58,pr.screenAngle*Math.PI/180,0,Math.PI*2);
+    const rg=tctx.createRadialGradient(pr.cx-r*.12,pr.cy-r*.12,r*.05,pr.cx,pr.cy,r*.58);rg.addColorStop(0,'#f6fafc');rg.addColorStop(.48,'#9eacb5');rg.addColorStop(1,'#394a55');tctx.fillStyle=rg;tctx.fill();
+    tctx.beginPath();tctx.arc(pr.cx,pr.cy,Math.max(2,r*.12),0,Math.PI*2);tctx.fillStyle='#17232b';tctx.fill();tctx.restore();
+  });
+
+  /* Proper lamps replace any last unmatched construction-light shapes. */
+  const lampIds=new Set(['headlight','taillight']);
+  vehicleSlotDefinitions().map(vehicleSlotProjection).filter(pr=>pr&&lampIds.has(pr.partId)&&Math.abs(pr.facing)>.08).forEach(pr=>{
+    vehicleRevealPath(pr.shapeCorners||pr.corners);
+    const front=pr.partId==='headlight',c=front?'rgba(226,251,255,.98)':'rgba(255,67,91,.96)';
+    tctx.save();tctx.globalAlpha=lightT;tctx.shadowBlur=16*lightT;tctx.shadowColor=c;tctx.fillStyle=c;tctx.fill();tctx.restore();
+  });
+
+  /* Hidden power/safety/underbody mechanisms disappear into the finished vehicle.
+     Only Future Tech that is genuinely external remains visible. */
+  const externalFuture=new Set(['wing','propeller','jet','water-jet','stabiliser','drone-lift']);
+  vehicleFutureSlots().map(vehicleSlotProjection).filter(pr=>pr&&installedVehicleKeys().has(pr.key)&&externalFuture.has(pr.partId)&&Math.abs(pr.facing)>.04).forEach(pr=>{
+    const pts=pr.shapeCorners||pr.corners;vehicleRevealPath(pts);
+    const f=vehiclePartFill(pr.partId);tctx.fillStyle=f.fill;tctx.strokeStyle=f.stroke;tctx.lineWidth=1.3;tctx.fill();tctx.stroke();
   });
   tctx.restore();
 }
@@ -1195,29 +1243,80 @@ function setVehicleRevealWheelOpacity(alpha,glow=0){
   });
 }
 function resetVehiclePhaseOneReveal(){
-  if(vehicleRevealRAF)cancelAnimationFrame(vehicleRevealRAF);vehicleRevealRAF=0;vehicleRevealActive=false;vehicleRevealProgress=0;vehicleRevealStart=0;
+  if(vehicleRevealRAF)cancelAnimationFrame(vehicleRevealRAF);vehicleRevealRAF=0;
+  if(vehicleColourSweepRAF)cancelAnimationFrame(vehicleColourSweepRAF);vehicleColourSweepRAF=0;
+  vehicleRevealActive=false;vehicleRevealProgress=0;vehicleRevealStart=0;vehiclePresentationPhase=0;vehiclePhase2Progress=0;vehicleColourSweep=1;
   [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.installed==='1').forEach(o=>{o.style.filter='';});
+  if(vehiclePreTestView){vehicleYaw=vehiclePreTestView.yaw;vehiclePitch=vehiclePreTestView.pitch;vehicleViewMode=vehiclePreTestView.mode;vehiclePreTestView=null;updateVehicleViewUI();}
   if(active==='vehicle'){syncInstalledVehicleParts();renderTemplate('vehicle');}
 }
+function vehicleEaseInOut(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+function vehiclePhase2ColourPanel(){
+  const paints=[
+    ['#5de4ff','Aqua'],['#5d6cff','Electric blue'],['#9b6dff','Violet'],['#ffd45b','Solar gold'],['#5ee3a4','Emerald'],
+    ['#ff9d5d','Orange'],['#ff77b7','Pink'],['#ff647c','Red'],['#f8fbff','Pearl white'],['#1d3147','Midnight']
+  ];
+  $('creatorTestResult').innerHTML=`<div class="creator-report" style="display:block"><div style="display:flex;align-items:center;gap:12px;margin-bottom:10px"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 2','PHASE 2')}</small></div><div><b>${t('Finished-car reveal complete','Révélation de la voiture terminée')}</b><p>${t('Try colours on your finished car. You can change it as many times as you want before continuing.','Essaie des couleurs sur ta voiture terminée. Tu peux la changer autant de fois que tu veux avant de continuer.')}</p></div></div><div id="vehiclePaintChoices" style="display:flex;flex-wrap:wrap;gap:9px;margin:12px 0">${paints.map(([c,n])=>`<button type="button" data-vehicle-paint="${c}" title="${n}" aria-label="${n}" style="width:38px;height:38px;border-radius:999px;background:${c};border:${c===vehiclePaintColour?'4px solid #fff':'2px solid rgba(255,255,255,.45)'};box-shadow:0 2px 10px rgba(0,0,0,.28);cursor:pointer"></button>`).join('')}</div><button type="button" id="vehicleConfirmPaint" class="creator-tool" style="padding:10px 16px;font-weight:800">${t('Use this colour — Phase 2 complete','Utiliser cette couleur — Phase 2 terminée')}</button><p id="vehiclePhase2Note" style="margin-top:10px;opacity:.8">${t('Phase 3 — Future Test World — is the next build step.','La Phase 3 — Monde de test futur — est la prochaine étape à construire.')}</p></div>`;
+  document.querySelectorAll('[data-vehicle-paint]').forEach(b=>b.onclick=()=>selectVehiclePaintColour(b.dataset.vehiclePaint));
+  const confirm=$('vehicleConfirmPaint');if(confirm)confirm.onclick=()=>{
+    $('creatorCoach').textContent=t('Phase 2 locked for this test. Your finished car and chosen colour are ready for Phase 3 — Future Test World.','Phase 2 validée pour ce test. Ta voiture terminée et sa couleur sont prêtes pour la Phase 3 — Monde de test futur.');
+    confirm.disabled=true;confirm.textContent=t('✓ Colour confirmed','✓ Couleur confirmée');
+    const note=$('vehiclePhase2Note');if(note)note.textContent=t('Next: we will build the Future Test World without changing your completed vehicle.','Prochaine étape : nous construirons le Monde de test futur sans modifier ton véhicule terminé.');
+    window.playTone?.(true);
+  };
+}
+function selectVehiclePaintColour(next){
+  if(!/^#[0-9a-f]{6}$/i.test(next||'')||next===vehiclePaintColour)return;
+  if(vehicleColourSweepRAF)cancelAnimationFrame(vehicleColourSweepRAF);
+  vehiclePreviousPaintColour=vehiclePaintColour;vehiclePaintColour=next;vehicleColourSweep=0;
+  const start=performance.now(),duration=1250;
+  const tick=now=>{
+    if(!testRunning||!vehicleRevealActive||vehiclePresentationPhase<2)return;
+    vehicleColourSweep=clamp((now-start)/duration,0,1);renderTemplate('vehicle');
+    if(vehicleColourSweep<1){vehicleColourSweepRAF=requestAnimationFrame(tick);return}
+    vehicleColourSweepRAF=0;vehiclePhase2ColourPanel();window.playTone?.(true);
+  };
+  vehicleColourSweepRAF=requestAnimationFrame(tick);
+}
+function startVehiclePhaseTwoReveal(){
+  if(!testRunning||!vehicleRevealActive)return;
+  vehiclePresentationPhase=2;vehiclePhase2Progress=0;vehiclePreviousPaintColour='#8298a5';vehicleColourSweep=0;
+  const phaseStart=performance.now(),duration=7600;
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 2 — Finished-car reveal','Phase 2 — Révélation de la voiture finie')}</b><p>${t('Paint, lights and a cinematic camera move are presenting the same car you built.','Peinture, feux et mouvement de caméra cinématique présentent la même voiture que tu as construite.')}</p></div></div>`;
+  $('creatorCoach').textContent=t('Phase 2 is presenting your completed car. The colour chooser will appear when the camera settles.','La Phase 2 présente ta voiture terminée. Le choix de couleur apparaîtra lorsque la caméra se stabilisera.');
+  const tick=now=>{
+    if(!testRunning||!vehicleRevealActive||vehiclePresentationPhase!==2)return;
+    const q=clamp((now-phaseStart)/duration,0,1),e=vehicleEaseInOut(q);vehiclePhase2Progress=q;
+    vehicleColourSweep=clamp(q/.42,0,1);
+    if(q<.55){const a=vehicleEaseInOut(q/.55);vehicleYaw=-.72+(1.42*a);}else{const a=vehicleEaseInOut((q-.55)/.45);vehicleYaw=.70+(-1.30*a);}
+    vehiclePitch=.075+Math.sin(q*Math.PI)*.055;vehicleViewMode='orbit';updateVehicleViewUI();renderTemplate('vehicle');
+    if(q<1){vehicleRevealRAF=requestAnimationFrame(tick);return}
+    vehicleRevealRAF=0;vehicleYaw=-.60;vehiclePitch=.085;vehicleViewMode='orbit';vehicleColourSweep=1;updateVehicleViewUI();renderTemplate('vehicle');vehiclePhase2ColourPanel();
+    $('creatorCoach').textContent=t('Phase 2 reveal complete. Try another paint colour if you want, then confirm the one you like.','Révélation de la Phase 2 terminée. Essaie une autre couleur si tu veux, puis confirme celle que tu préfères.');window.playTone?.(true);
+  };
+  vehicleRevealRAF=requestAnimationFrame(tick);
+}
 function startVehiclePhaseOneReveal(){
-  stopTest(false);testRunning=true;vehicleRevealActive=true;vehicleRevealProgress=0;vehicleRevealStart=performance.now();
-  vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';updateVehicleViewUI();
+  stopTest(false);testRunning=true;vehicleRevealActive=true;vehicleRevealProgress=0;vehicleRevealStart=performance.now();vehiclePresentationPhase=1;vehiclePhase2Progress=0;
+  vehiclePreTestView={yaw:vehicleYaw,pitch:vehiclePitch,mode:vehicleViewMode};
+  /* The finished presentation always starts from one canonical three-quarter camera,
+     regardless of the construction view the child used last. */
+  vehicleYaw=-.60;vehiclePitch=.085;vehicleViewMode='orbit';updateVehicleViewUI();
   stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);simulation.className='creator-simulation active';simulation.innerHTML='';
   $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 1 — Transformation running','Phase 1 — Transformation en cours')}</b><p>${t('Watch the completed blueprint merge into one finished vehicle.','Regarde le plan terminé fusionner pour devenir un véhicule fini.')}</p></div></div>`;
-  $('creatorCoach').textContent=t('Construction lines are energising. The fitted puzzle is becoming one finished car.','Les lignes de construction s’illuminent. Le puzzle assemblé devient une voiture finie.');
+  $('creatorCoach').textContent=t('Construction lines are energising. Every fitted panel is merging into one closed, finished car.','Les lignes de construction s’illuminent. Chaque panneau fixé fusionne pour former une voiture finie et fermée.');
   window.playTone?.(true);
   const duration=7200;
   const tick=now=>{
-    if(!testRunning||!vehicleRevealActive)return;
+    if(!testRunning||!vehicleRevealActive||vehiclePresentationPhase!==1)return;
     vehicleRevealProgress=clamp((now-vehicleRevealStart)/duration,0,1);
     const pieceFade=1-vehicleRevealEase(.28,.68),pieceGlow=Math.sin(Math.min(1,vehicleRevealProgress/.34)*Math.PI);
-    setVehicleRevealWheelOpacity(Math.max(0,pieceFade),pieceGlow);
-    renderTemplate('vehicle');
-    if(vehicleRevealProgress<1){vehicleRevealRAF=requestAnimationFrame(tick);return;}
-    vehicleRevealRAF=0;setVehicleRevealWheelOpacity(0,0);renderTemplate('vehicle');
-    $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 1','PHASE 1')}</small></div><div><b>${t('Finished vehicle formed','Véhicule fini formé')}</b><p>${t('The puzzle pieces have merged, gaps have closed, blueprint lines have faded, glass and finished wheels are in place, and the lights are on.','Les pièces du puzzle ont fusionné, les espaces se sont fermés, les lignes du plan se sont effacées, le vitrage et les roues finies sont en place et les feux sont allumés.')}</p></div></div>`;
-    $('creatorCoach').textContent=t('Phase 1 complete. This neutral finished-car reveal is ready for you to test before we add Phase 2 paint and camera presentation.','Phase 1 terminée. Cette révélation neutre de la voiture finie est prête à être testée avant d’ajouter en Phase 2 la peinture et la présentation caméra.');
-    window.playTone?.(true);
+    setVehicleRevealWheelOpacity(Math.max(0,pieceFade),pieceGlow);renderTemplate('vehicle');
+    if(vehicleRevealProgress<1){vehicleRevealRAF=requestAnimationFrame(tick);return}
+    vehicleRevealRAF=0;setVehicleRevealWheelOpacity(0,0);vehicleRevealProgress=1;renderTemplate('vehicle');
+    $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 1','PHASE 1')}</small></div><div><b>${t('Finished vehicle formed','Véhicule fini formé')}</b><p>${t('The construction shell is now closed: side, roof, front, rear and hidden underbody pieces have merged into one coherent vehicle.','La coque de construction est maintenant fermée : côtés, toit, avant, arrière et pièces cachées sous la caisse ont fusionné en un seul véhicule cohérent.')}</p></div></div>`;
+    $('creatorCoach').textContent=t('Phase 1 complete. Moving automatically into Phase 2 — the finished-car beauty reveal.','Phase 1 terminée. Passage automatique à la Phase 2 — révélation esthétique de la voiture finie.');window.playTone?.(true);
+    setTimeout(()=>{if(testRunning&&vehicleRevealActive&&vehiclePresentationPhase===1)startVehiclePhaseTwoReveal()},650);
   };
   vehicleRevealRAF=requestAnimationFrame(tick);
 }
@@ -1252,7 +1351,6 @@ function startTest(){if(!active)return;
       $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the Future Tech stage','Termine l’étape Technologie future')}</b><p>${t(`${future.done} of ${future.total} required Future Tech pieces are fitted.`,`${future.done} pièces de technologie future requises sur ${future.total} sont fixées.`)}</p></div>`;
       $('creatorCoach').textContent=vehicleFutureAbility==='flight'?t('Use Top, Rear and Interior views to finish the flying-car hardware.','Utilise les vues Dessus, Arrière et Intérieur pour terminer les équipements de la voiture volante.'):t('Use Interior and Rear views to finish the amphibious system.','Utilise les vues Intérieur et Arrière pour terminer le système amphibie.');return;
     }
-    vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';renderTemplate('vehicle');updateVehicleViewUI();
     startVehiclePhaseOneReveal();return;
   }
   const m=missions[active],objectCount=objectLayer.children.length,enough=drawStrokes>=1||objectCount>=2;if(!enough){$('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Needs more design work','Il faut encore travailler le design')}</b><p>${t('Add some drawing or at least two movable pieces before testing.','Ajoute un dessin ou au moins deux pièces avant de tester.')}</p></div>`;return}stopTest(false);testRunning=true;if(active==='vehicle')renderTemplate('vehicle');stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);simulation.className='creator-simulation active';simulation.innerHTML='';addTestClasses();const tags=testTags();let special='';if(active==='vehicle'){const travel=Math.max(65,stage.clientWidth*.20);buildLayer.style.setProperty('--test-travel',travel+'px');if(tags.has('flight')){buildLayer.classList.add('test-fly');simulation.innerHTML='<span class="flight-cloud" style="top:18%">☁️</span><span class="flight-cloud">☁️</span>';special=t('Flying test: the completed vehicle lifts and flies because flight technology is installed.','Test de vol : le véhicule s’élève grâce aux technologies de vol.')}else if(tags.has('amphibious')){buildLayer.classList.add('test-water');simulation.innerHTML='<div class="water-test"></div>';[...objectLayer.children].filter(o=>objectTags(o).includes('wheel')).forEach(o=>{o.classList.remove('test-wheel');o.classList.add('test-water-wheel')});special=t('Water test: the environment changes to water and the wheels retract while the complete vehicle travels as one build.','Test aquatique : l’environnement devient aquatique et les roues se rétractent pendant que le véhicule complet avance.')}else{buildLayer.classList.add('test-road');special=t('Road test: the whole completed vehicle drives smoothly, pauses at each side, then reverses. The tyres rotate with the direction of travel.','Test routier : le véhicule complet roule en douceur, marque une pause à chaque côté puis repart. Les pneus tournent selon le sens.')}}else if(active==='room'){simulation.innerHTML='<div class="room-scan"></div>';special=roomCollisionReport();}else if(active==='park'){simulation.innerHTML='<span class="park-visitor" style="top:34%">🚶</span><span class="park-visitor">🧑‍🦽</span><span class="park-visitor">🧒</span>';special=t('Visitor simulation is running. Watch how people move through the park, then stop and improve the layout.','La simulation des visiteurs est en cours. Observe leurs déplacements puis arrête et améliore le parc.')}else if(active==='robot'){buildLayer.classList.add('test-robot');special=t('Robot systems test is running on the assembled design. This is the foundation for robot-specific movement tests in later upgrades.','Le test des systèmes fonctionne sur le robot assemblé.')}else if(active==='story'){simulation.innerHTML='<div class="story-frame"></div>';special=t('Story preview is running. Check whether the characters, setting and props communicate the scene clearly.','L’aperçu de l’histoire est en cours. Vérifie que personnages, décor et accessoires racontent clairement la scène.')}else if(active==='mars'){simulation.innerHTML='<div class="room-scan"></div>';special=t('Base systems scan is running. Check habitats, support systems, transport and connections.','Le contrôle de la base est en cours. Vérifie habitats, survie, transport et connexions.')}const checks=(m.checks||[]).map(([tag,label])=>({label,ok:tags.has(tag)||objectCount>=4}));let score=Math.min(100,40+objectCount*4+drawStrokes*5);$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>${score}</b><small>/100</small></div><div><b>${t('Live test running','Test en direct')}</b><p>${special}</p>${checks.length?`<ul>${checks.map(c=>`<li class="${c.ok?'pass':'miss'}">${c.ok?'✓':'○'} ${c.label}</li>`).join('')}</ul>`:''}</div></div>`;$('creatorCoach').textContent=special;window.playTone?.(true);}
