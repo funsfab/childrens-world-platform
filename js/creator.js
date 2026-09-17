@@ -1229,7 +1229,7 @@ function resetVehiclePhaseOneReveal(){
   vehicleRevealActive=false;vehicleRevealProgress=0;vehicleRevealStart=0;vehicleRevealStage='idle';
   vehiclePhase2Progress=0;vehiclePhase2Start=0;vehiclePhase3Progress=0;vehiclePhase3Start=0;vehiclePaintMix=1;
   [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.installed==='1').forEach(o=>{o.style.filter='';});
-  if(active==='vehicle'){syncInstalledVehicleParts();safeVehicleRender();}
+  if(active==='vehicle'){syncInstalledVehicleParts();safeVehicleRender();updateBlueprintVisibility();}
 }
 const VEHICLE_PHASE2_COLOURS=[
   ['#5de4ff','Aqua'],['#377dff','Blue'],['#8d5cff','Purple'],['#ff4f6d','Red'],['#ff9b42','Orange'],['#ffd84d','Yellow'],['#4ed38a','Green'],['#f5f7fa','Pearl'],['#202a36','Midnight']
@@ -1343,6 +1343,9 @@ function drawFutureRoundabout(x,baseY){
 }
 function drawPhase3VehicleAt(cx,cy,scale,opts={}){
   const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,angle=opts.angle||0,flight=!!opts.flight,water=!!opts.water;
+  /* Never let an old reveal alpha make the body disappear while wheels/lights remain. */
+  tctx.globalAlpha=1;
+  tctx.globalCompositeOperation='source-over';
   const body=[[-255,26],[-218,-5],[-156,-22],[-99,-36],[-52,-90],[77,-89],[135,-39],[224,-21],[273,17],[255,50],[-208,55]];
   const upper=[[-99,-36],[-52,-90],[77,-89],[135,-39],[106,-33],[-74,-31]];
   const hood=[[-255,26],[-218,-5],[-99,-36],[-74,-31],[-156,11],[-224,38]];
@@ -1374,6 +1377,14 @@ function drawPhase3VehicleAt(cx,cy,scale,opts={}){
 }
 function drawVehicleFutureTestWorld(){
   const W=templateCanvas.width,H=templateCanvas.height,p=clamp(vehiclePhase3Progress,0,1),baseRoadY=338,route=1360,cam=p*route;
+  /* Phase 3 is a new presentation scene, not another blueprint pass. Reset any
+     opacity/transform/compositing state left by the transformation/reveal canvas. */
+  tctx.setTransform(1,0,0,1,0,0);
+  tctx.globalAlpha=1;
+  tctx.globalCompositeOperation='source-over';
+  tctx.shadowBlur=0;
+  tctx.shadowColor='transparent';
+  tctx.filter='none';
   tctx.save();
   const sky=tctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#14354d');sky.addColorStop(.58,'#1e4667');sky.addColorStop(1,'#27455e');tctx.fillStyle=sky;tctx.fillRect(0,0,W,H);
   const haze=tctx.createLinearGradient(0,225,0,H);haze.addColorStop(0,'rgba(255,255,255,0)');haze.addColorStop(1,'rgba(140,210,255,.08)');tctx.fillStyle=haze;tctx.fillRect(0,0,W,H);
@@ -1426,6 +1437,8 @@ function startVehiclePhaseThreeWorld(){
   if(vehiclePhase3Timer)clearInterval(vehiclePhase3Timer);
   if(vehiclePhase3RAF)cancelAnimationFrame(vehiclePhase3RAF);
   vehiclePhase3RAF=0;vehiclePhase3Timer=0;
+  /* The Test World must remain visible even if the child had switched the construction blueprint off. */
+  stage.classList.remove('blueprints-off');
   vehicleRevealStage='phase3';vehiclePhase3Progress=0;vehiclePhase3Start=Date.now();
   $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 3 — Future Test World','Phase 3 — Monde de test du futur')}</b><p>${t('The finished car is leaving the reveal area and entering a living test world with roads, town landmarks and a special zone for its future ability.','La voiture finie quitte la zone de présentation et entre dans un monde de test vivant avec routes, repères urbains et zone spéciale pour sa capacité future.')}</p></div></div>`;
   $('creatorCoach').textContent=t('Watch the finished car drive through the town, pass the service area and use its future ability in the last zone.','Regarde la voiture finie traverser la ville, passer par la zone de service et utiliser sa capacité future dans la dernière zone.');
