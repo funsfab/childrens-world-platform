@@ -249,7 +249,7 @@ const missions={
 const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('creatorTemplate'),tctx=templateCanvas.getContext('2d');
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
-let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePhase3Progress=0,vehiclePhase3Start=0,vehiclePhase3RAF=0,vehiclePhase3Timer=0,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0;
+let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePhase3Progress=0,vehiclePhase3Start=0,vehiclePhase3RAF=0,vehiclePhase3Timer=0,vehiclePhase4Progress=0,vehiclePhase4Start=0,vehiclePhase4RAF=0,vehiclePhase4Timer=0,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0;
 const STORAGE='cw_creator_projects_v18';
 /* Keep version 9 so saved prototype cars restore through the staged final-reveal updates. */
 const VEHICLE_PUZZLE_VERSION=9;
@@ -806,6 +806,7 @@ function drawVehicleInteriorAccessLabel(){
   tctx.restore();
 }
 function drawVehicleBlueprint(){
+  if(vehicleRevealStage==='phase4'||vehicleRevealStage==='phase4-complete'){drawVehiclePhaseFourJourney();syncInstalledVehicleParts();return;}
   if(vehicleRevealStage==='phase3'||vehicleRevealStage==='phase3-complete'){drawVehicleFutureTestWorld();syncInstalledVehicleParts();return;}
   if(vehicleRevealActive){drawCanonicalFinishedVehicle();syncInstalledVehicleParts();return;}
   if(!templateOn)return;
@@ -1220,14 +1221,16 @@ function resetVehiclePhaseOneReveal(){
   if(vehiclePhase2RAF)cancelAnimationFrame(vehiclePhase2RAF);
   if(vehiclePaintRAF)cancelAnimationFrame(vehiclePaintRAF);
   if(vehiclePhase3RAF)cancelAnimationFrame(vehiclePhase3RAF);
+  if(vehiclePhase4RAF)cancelAnimationFrame(vehiclePhase4RAF);
   if(vehicleRevealTimer)clearInterval(vehicleRevealTimer);
   if(vehiclePhase2Timer)clearInterval(vehiclePhase2Timer);
   if(vehiclePhase3Timer)clearInterval(vehiclePhase3Timer);
+  if(vehiclePhase4Timer)clearInterval(vehiclePhase4Timer);
   if(vehiclePaintTimer)clearInterval(vehiclePaintTimer);
-  vehicleRevealRAF=vehiclePhase2RAF=vehiclePhase3RAF=vehiclePaintRAF=0;
-  vehicleRevealTimer=vehiclePhase2Timer=vehiclePhase3Timer=vehiclePaintTimer=0;
+  vehicleRevealRAF=vehiclePhase2RAF=vehiclePhase3RAF=vehiclePhase4RAF=vehiclePaintRAF=0;
+  vehicleRevealTimer=vehiclePhase2Timer=vehiclePhase3Timer=vehiclePhase4Timer=vehiclePaintTimer=0;
   vehicleRevealActive=false;vehicleRevealProgress=0;vehicleRevealStart=0;vehicleRevealStage='idle';
-  vehiclePhase2Progress=0;vehiclePhase2Start=0;vehiclePhase3Progress=0;vehiclePhase3Start=0;vehiclePaintMix=1;
+  vehiclePhase2Progress=0;vehiclePhase2Start=0;vehiclePhase3Progress=0;vehiclePhase3Start=0;vehiclePhase4Progress=0;vehiclePhase4Start=0;vehiclePaintMix=1;
   [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.installed==='1').forEach(o=>{o.style.filter='';});
   if(active==='vehicle'){syncInstalledVehicleParts();safeVehicleRender();updateBlueprintVisibility();}
 }
@@ -1449,15 +1452,111 @@ function startVehiclePhaseThreeWorld(){
     safeVehicleRender();
     if(vehiclePhase3Progress>=1){
       clearInterval(vehiclePhase3Timer);vehiclePhase3Timer=0;vehicleRevealStage='phase3-complete';vehiclePhase3Progress=1;safeVehicleRender();
-      const futureSummary=vehicleFutureAbility==='flight'
-        ?`${vehicleFlightSystemLabel()} ${t('flight test completed','terminé')}`
-        :t('Amphibious water-zone test completed','Test de la zone aquatique amphibie terminé');
-      $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 3','PHASE 3')}</small></div><div><b>${t('Future Test World complete','Monde de test terminé')}</b><p>${t('Your finished car has completed its town-road test, service-area pass and special future-ability zone.','Ta voiture finie a terminé son test sur route en ville, son passage par la zone de service et sa zone spéciale de capacité future.')}</p><ul><li class="pass">✓ ${vehiclePowertrainLabel()} ${t('power system tested in the world','testé dans le monde')}</li><li class="pass">✓ ${futureSummary}</li><li class="pass">✓ ${t('Paint colour stayed locked on the final car','La couleur est restée verrouillée sur la voiture finale')}</li></ul><p>${t('Phase 4 can build on this same finished car in the next update.','La Phase 4 pourra s’appuyer sur cette même voiture finie dans la prochaine mise à jour.')}</p></div></div>`;
-      $('creatorCoach').textContent=t('Phase 3 complete. Stop the test to return to edit mode, or keep this result as the finished prototype flow so far.','Phase 3 terminée. Arrête le test pour revenir au mode édition, ou garde ce résultat comme flux prototype final pour le moment.');
+      const phase3Special=vehicleFutureAbility==='flight'
+        ?t('The car is already airborne at the end of Phase 3. Phase 4 continues from this exact flight state — it does not restart take-off.','La voiture est déjà en vol à la fin de la Phase 3. La Phase 4 continue exactement depuis cet état de vol — elle ne redémarre pas le décollage.')
+        :t('The car is already in the water zone at the end of Phase 3. Phase 4 continues from this exact amphibious state.','La voiture est déjà dans la zone aquatique à la fin de la Phase 3. La Phase 4 continue exactement depuis cet état amphibie.');
+      $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 3','PHASE 3')}</small></div><div><b>${t('Future Test World complete','Monde de test terminé')}</b><p>${phase3Special}</p><p>${t('Continuing automatically to the full systems journey…','Passage automatique au parcours complet des systèmes…')}</p></div></div>`;
+      $('creatorCoach').textContent=t('Phase 3 is complete. Keep watching — Phase 4 continues from the car’s current position.','La Phase 3 est terminée. Continue de regarder — la Phase 4 reprend depuis la position actuelle de la voiture.');
       window.playTone?.(true);
+      setTimeout(()=>{if(testRunning&&vehicleRevealActive&&vehicleRevealStage==='phase3-complete')startVehiclePhaseFourJourney()},900);
     }
   };
   tick();vehiclePhase3Timer=setInterval(tick,33);
+}
+
+function drawPhase4Badge(x,y,label,passed){
+  tctx.save();
+  drawRoundedPanel(x,y,150,30,14,passed?'rgba(31,108,83,.80)':'rgba(12,35,50,.72)',passed?'rgba(100,245,190,.65)':'rgba(147,232,255,.18)');
+  tctx.font='800 12px system-ui';tctx.textAlign='left';tctx.textBaseline='middle';tctx.fillStyle=passed?'#d8fff0':'rgba(213,235,247,.86)';
+  tctx.fillText((passed?'✓ ':'○ ')+label,x+12,y+15);
+  tctx.restore();
+}
+function drawPhase4FlightWorld(p){
+  const W=templateCanvas.width,H=templateCanvas.height;
+  tctx.save();
+  const sky=tctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#0c3154');sky.addColorStop(.48,'#256da1');sky.addColorStop(1,'#8fc9e6');tctx.fillStyle=sky;tctx.fillRect(0,0,W,H);
+  const cloud=(x,y,s,a=.88)=>{tctx.save();tctx.globalAlpha=a;tctx.translate(x,y);tctx.scale(s,s);tctx.fillStyle='#f5fbff';[[0,0,25],[-21,7,16],[22,9,18],[4,-13,17]].forEach(([cx,cy,r])=>{tctx.beginPath();tctx.arc(cx,cy,r,0,Math.PI*2);tctx.fill()});tctx.fillRect(-27,0,55,17);tctx.restore();};
+  cloud(122+(p*58)%100,84,1.05,.82);cloud(470-(p*80)%160,118,.80,.78);cloud(692-(p*44)%110,60,.72,.72);
+  /* distant town and runway keep continuity with Phase 3 */
+  tctx.fillStyle='#2b5b75';tctx.beginPath();tctx.moveTo(0,300);tctx.quadraticCurveTo(150,246,304,286);tctx.quadraticCurveTo(470,250,800,294);tctx.lineTo(800,338);tctx.lineTo(0,338);tctx.closePath();tctx.fill();
+  tctx.fillStyle='#2e4a5f';tctx.fillRect(0,357,W,93);
+  tctx.fillStyle='#405c6d';tctx.beginPath();tctx.moveTo(72,450);tctx.lineTo(248,338);tctx.lineTo(570,338);tctx.lineTo(792,450);tctx.closePath();tctx.fill();
+  tctx.strokeStyle='rgba(246,251,255,.72)';tctx.lineWidth=4;tctx.setLineDash([22,18]);tctx.beginPath();tctx.moveTo(205,430);tctx.lineTo(395,354);tctx.lineTo(595,430);tctx.stroke();tctx.setLineDash([]);
+  const a=clamp(p/.18,0,1),b=clamp((p-.18)/.32,0,1),c=clamp((p-.50)/.28,0,1),d=clamp((p-.78)/.22,0,1);
+  let x=390,y=172,ang=-.22,sc=.58;
+  if(p<.18){x=390+70*a;y=172-38*a;ang=-.22-.07*a;}
+  else if(p<.50){x=460-215*b;y=134+Math.sin(b*Math.PI)*-42;ang=-.29+Math.sin(b*Math.PI*2)*.18;sc=.58+.04*Math.sin(b*Math.PI);}
+  else if(p<.78){x=245+300*c;y=118+52*c;ang=.12+.16*c;}
+  else{x=545-155*d;y=170+166*d;ang=.28*(1-d);sc=.58-.03*d;}
+  drawPhase3VehicleAt(x,y,sc,{paint:vehiclePaintColor,glow:.62,wheelSpin:p*18,angle:ang,flight:p<.88,water:false});
+  if(vehicleFlightSystem==='jet'&&p<.84){tctx.save();tctx.globalAlpha=.65;const fg=tctx.createLinearGradient(x-85,y,x-160,y);fg.addColorStop(0,'rgba(255,228,120,.95)');fg.addColorStop(.45,'rgba(255,95,54,.70)');fg.addColorStop(1,'rgba(255,95,54,0)');tctx.fillStyle=fg;tctx.beginPath();tctx.moveTo(x-70,y-8);tctx.lineTo(x-162,y);tctx.lineTo(x-70,y+8);tctx.closePath();tctx.fill();tctx.restore();}
+  if(d>0){tctx.save();tctx.globalAlpha=d*.75;tctx.strokeStyle='rgba(230,246,255,.82)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(390,337);tctx.lineTo(390,410);tctx.stroke();tctx.restore();}
+  tctx.restore();
+}
+function drawPhase4WaterWorld(p){
+  const W=templateCanvas.width,H=templateCanvas.height;
+  tctx.save();
+  const sky=tctx.createLinearGradient(0,0,0,240);sky.addColorStop(0,'#163b5a');sky.addColorStop(1,'#72b9da');tctx.fillStyle=sky;tctx.fillRect(0,0,W,240);
+  tctx.fillStyle='#6da989';tctx.beginPath();tctx.moveTo(0,235);tctx.quadraticCurveTo(170,200,324,230);tctx.quadraticCurveTo(540,190,800,230);tctx.lineTo(800,290);tctx.lineTo(0,290);tctx.closePath();tctx.fill();
+  const sea=tctx.createLinearGradient(0,250,0,H);sea.addColorStop(0,'#2e91c4');sea.addColorStop(1,'#155b88');tctx.fillStyle=sea;tctx.fillRect(0,240,W,H-240);
+  tctx.strokeStyle='rgba(218,248,255,.46)';tctx.lineWidth=2;for(let i=0;i<7;i++){const yy=270+i*26;tctx.beginPath();tctx.moveTo((i*75+p*180)%130-80,yy);tctx.quadraticCurveTo(320,yy+10,800,yy);tctx.stroke();}
+  /* shoreline / ramp for the return */
+  tctx.fillStyle='#d2c39c';tctx.beginPath();tctx.moveTo(585,450);tctx.lineTo(800,365);tctx.lineTo(800,450);tctx.closePath();tctx.fill();
+  tctx.fillStyle='#63747d';tctx.beginPath();tctx.moveTo(602,450);tctx.lineTo(800,382);tctx.lineTo(800,420);tctx.lineTo(664,450);tctx.closePath();tctx.fill();
+  const a=clamp(p/.26,0,1),b=clamp((p-.26)/.30,0,1),c=clamp((p-.56)/.26,0,1),d=clamp((p-.82)/.18,0,1);
+  let x=330,y=328,ang=0,sc=.56,retract=true;
+  if(p<.26){x=330+230*a;y=328+Math.sin(a*Math.PI*2)*4;}
+  else if(p<.56){x=560-270*b;y=328-50*Math.sin(b*Math.PI);ang=-.06+.18*Math.sin(b*Math.PI*2);}
+  else if(p<.82){x=290+300*c;y=327+Math.sin(c*Math.PI*2)*3;ang=.02;}
+  else{x=590+120*d;y=327+34*d;ang=.13*d;retract=d<.58;}
+  drawPhase3VehicleAt(x,y,sc,{paint:vehiclePaintColor,glow:.55,wheelSpin:p*16,angle:ang,flight:false,water:true,retractWheels:retract});
+  /* wake */
+  if(p<.86){tctx.save();tctx.strokeStyle='rgba(235,251,255,.62)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(x-115,y+28);tctx.quadraticCurveTo(x-170,y+40,x-230,y+24);tctx.stroke();tctx.restore();}
+  tctx.restore();
+}
+function drawVehiclePhaseFourJourney(){
+  /* Phase 4 owns the full canvas state so it cannot inherit opacity/composite settings. */
+  tctx.save();tctx.globalAlpha=1;tctx.globalCompositeOperation='source-over';tctx.setTransform(1,0,0,1,0,0);tctx.filter='none';tctx.shadowBlur=0;tctx.setLineDash([]);
+  tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);
+  const p=clamp(vehiclePhase4Progress,0,1);
+  if(vehicleFutureAbility==='water')drawPhase4WaterWorld(p);else drawPhase4FlightWorld(p);
+  drawRoundedPanel(18,16,242,92,16,'rgba(8,25,36,.74)','rgba(147,232,255,.24)');
+  tctx.fillStyle='rgba(235,247,255,.97)';tctx.textAlign='left';tctx.font='800 15px system-ui';tctx.fillText(t('Phase 4 — Full Systems Test','Phase 4 — Test complet des systèmes'),32,40);
+  tctx.font='600 12px system-ui';tctx.fillStyle='rgba(185,225,246,.94)';
+  tctx.fillText(vehicleFutureAbility==='flight'?t('Continuing in flight from Phase 3','Suite du vol commencé en Phase 3'):t('Continuing in water from Phase 3','Suite du trajet aquatique commencé en Phase 3'),32,61);
+  tctx.fillText(`${vehiclePowertrainLabel()} · ${vehicleFutureAbility==='flight'?vehicleFlightSystemLabel():vehicleFutureAbilityLabel()}`,32,80);
+  const pass1=p>.12,pass2=p>.30,pass3=p>.50,pass4=p>.72;
+  drawPhase4Badge(622,110,t('Movement','Mouvement'),pass1);
+  drawPhase4Badge(622,146,t('Power','Énergie'),pass2);
+  drawPhase4Badge(622,182,t('Safety','Sécurité'),pass3);
+  drawPhase4Badge(622,218,vehicleFutureAbility==='flight'?t('Flight system','Système de vol'):t('Water system','Système aquatique'),pass4);
+  tctx.restore();
+}
+function startVehiclePhaseFourJourney(){
+  if(vehiclePhase4Timer)clearInterval(vehiclePhase4Timer);
+  if(vehiclePhase4RAF)cancelAnimationFrame(vehiclePhase4RAF);
+  vehiclePhase4RAF=0;vehiclePhase4Timer=0;
+  stage.classList.remove('blueprints-off');
+  vehicleRevealStage='phase4';vehiclePhase4Progress=0;vehiclePhase4Start=Date.now();
+  const continuity=vehicleFutureAbility==='flight'
+    ?t('The car is already airborne. Phase 4 continues the flight, checks Movement, Power and Safety, then returns and lands.','La voiture est déjà en vol. La Phase 4 poursuit le vol, vérifie Mouvement, Énergie et Sécurité, puis revient et atterrit.')
+    :t('The car is already in the water. Phase 4 continues across the water, checks Movement, Power and Safety, then returns to shore and deploys the wheels.','La voiture est déjà dans l’eau. La Phase 4 poursuit le trajet aquatique, vérifie Mouvement, Énergie et Sécurité, puis revient sur la rive et redéploie les roues.');
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 4 — Full Systems Test','Phase 4 — Test complet des systèmes')}</b><p>${continuity}</p></div></div>`;
+  $('creatorCoach').textContent=continuity;
+  const duration=15800;
+  const tick=()=>{
+    if(!testRunning||!vehicleRevealActive){if(vehiclePhase4Timer)clearInterval(vehiclePhase4Timer);vehiclePhase4Timer=0;return}
+    vehiclePhase4Progress=clamp((Date.now()-vehiclePhase4Start)/duration,0,1);
+    safeVehicleRender();
+    if(vehiclePhase4Progress>=1){
+      clearInterval(vehiclePhase4Timer);vehiclePhase4Timer=0;vehicleRevealStage='phase4-complete';vehiclePhase4Progress=1;safeVehicleRender();
+      const special=vehicleFutureAbility==='flight'?t(`${vehicleFlightSystemLabel()} flight and landing complete`,`${vehicleFlightSystemLabel()} : vol et atterrissage terminés`):t('Amphibious water journey and shore return complete','Trajet amphibie et retour sur la rive terminés');
+      $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 4','PHASE 4')}</small></div><div><b>${t('Full Systems Test passed','Test complet réussi')}</b><p>${t('The same finished car completed the full test without restarting the journey.','La même voiture finie a terminé le test complet sans redémarrer le parcours.')}</p><ul><li class="pass">✓ ${t('Movement verified','Mouvement vérifié')}</li><li class="pass">✓ ${vehiclePowertrainLabel()} ${t('power verified','énergie vérifiée')}</li><li class="pass">✓ ${t('Safety systems verified','Systèmes de sécurité vérifiés')}</li><li class="pass">✓ ${special}</li></ul><p>${t('The vehicle has returned safely and is ready for Phase 5 — the final celebration and results.','Le véhicule est revenu en sécurité et est prêt pour la Phase 5 — célébration et résultats finaux.')}</p></div></div>`;
+      $('creatorCoach').textContent=t('Phase 4 complete. The car is safely returned and ready for the final Phase 5 celebration.','Phase 4 terminée. La voiture est revenue en sécurité et est prête pour la célébration finale de la Phase 5.');
+      window.playTone?.(true);
+    }
+  };
+  tick();vehiclePhase4Timer=setInterval(tick,33);
 }
 function startVehiclePhaseOneReveal(){
   stopTest(false);
