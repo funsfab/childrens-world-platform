@@ -1962,7 +1962,10 @@ function chooseLibrary(item){if(active==='vehicle'){
   currentLibraryId=item.id;
   if(changed)restoreVehicleBuildFor(item.id);
   else if(!vehicleBuildStates[item.id]){vehicleYaw=0;vehiclePitch=.10;vehicleViewMode='left';}
-  renderTemplate('vehicle');refreshLibraryCards();updateVehicleViewUI();renderModes(missions[active],activeMode);updateVehicleProgressUI();commitHistory();return
+  /* Re-render the compact vehicle picker immediately so its large preview image,
+     vehicle name/subtitle and selected option always match the newly chosen vehicle. */
+  renderLibrary(missions[active]);
+  renderTemplate('vehicle');updateVehicleViewUI();renderModes(missions[active],activeMode);updateVehicleProgressUI();commitHistory();return
 }currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
 
 function renderModes(m,preferred){
