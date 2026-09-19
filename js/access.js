@@ -21,6 +21,14 @@
   function rank(status){return status==='expired'?0:(levels[status]||0)}
   function featureFrom(el){return el.dataset.feature || el.querySelector('b,h2,h3')?.textContent?.trim() || 'this adventure'}
   function lockUrl(feature){return 'locked.html?feature='+encodeURIComponent(feature)}
+  const COMP_KEY='cw_complimentary_access_v1';
+  function compLoad(){try{return JSON.parse(localStorage.getItem(COMP_KEY)||'[]')}catch(e){return[]}}
+  function compSave(rows){localStorage.setItem(COMP_KEY,JSON.stringify(rows));return rows}
+  function compAdd(data={}){const rows=compLoad(),now=Date.now();const row={id:'comp-'+now+'-'+Math.random().toString(36).slice(2,7),name:String(data.name||'').trim(),email:String(data.email||'').trim(),type:data.type||'family',note:String(data.note||'').trim(),expires:data.expires||'',active:true,createdAt:now};rows.unshift(row);compSave(rows);return row}
+  function compUpdate(id,patch={}){const rows=compLoad().map(r=>r.id===id?Object.assign({},r,patch):r);compSave(rows);return rows.find(r=>r.id===id)}
+  function compRemove(id){compSave(compLoad().filter(r=>r.id!==id))}
+  function compApplyLocal(id){const row=compLoad().find(r=>r.id===id&&r.active!==false);if(!row)return false;const expired=row.expires&&new Date(row.expires+'T23:59:59').getTime()<Date.now();if(expired)return false;save(Object.assign(load(),{status:'active',accessType:'complimentary',complimentaryId:row.id,complimentaryName:row.name,billing:'none'}));return true}
+  window.CWComplimentary={list:compLoad,add:compAdd,update:compUpdate,remove:compRemove,applyLocal:compApplyLocal};
   const isAdmin=adminActive();
   window.CWAdmin={get:adminLoad,isActive:adminActive,login:adminLogin,logout:adminLogout};
   window.CWAccess={

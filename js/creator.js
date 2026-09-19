@@ -15,8 +15,14 @@ const lib=(id,name,img,subtitle,blueprintType='scene')=>({id,name,img,subtitle,b
 
 const AS='assets/creator/';
 const vehicleLibrary=[
- lib('vehicle-sport','Sport Car',AS+'vehicle-sport.webp','Low, fast performance coupe','vehicle'),
- lib('vehicle-executive','Executive Sedan',AS+'vehicle-executive.webp','Comfortable premium saloon','vehicle')
+ lib('vehicle-sport','Sport Car',AS+'vehicle-sport.webp','Low, fast performance coupe','vehicle')
+];
+const VEHICLE_CATALOG=[
+ {id:'vehicle-sport',name:['Sport Car','Voiture de sport'],subtitle:['Low, fast performance coupe','Coupé bas et sportif'],available:true},
+ {id:'vehicle-suv',name:['4×4 / SUV','4×4 / SUV'],subtitle:['Off-road and all-terrain vehicle','Véhicule tout-terrain'],available:false},
+ {id:'vehicle-van',name:['Van','Fourgon / Van'],subtitle:['Passenger and cargo vehicle','Véhicule passagers et chargement'],available:false},
+ {id:'vehicle-coach',name:['Intercity Coach / Bus','Autocar interurbain'],subtitle:['Long-distance passenger transport','Transport longue distance'],available:false},
+ {id:'vehicle-tractor',name:['Farm Tractor','Tracteur agricole'],subtitle:['Agricultural work vehicle','Véhicule de travail agricole'],available:false}
 ];
 const robotLibrary=[
  lib('robot-a','Classroom Helper',AS+'robot-a-classroom.webp','Friendly learning helper','robot'),
@@ -238,7 +244,7 @@ function storyModesFor(profile){const d=storyParts[profile]||storyParts['story-f
 function marsModesFor(profile){const d=marsParts[profile]||marsParts['mars-red'];return [mode('structures','🏠','Base structures','Structures','Build the settlement from small connected modules.','Construis la base avec de petits modules connectés.',d.structures),mode('systems','⚡','Life-support systems','Systèmes de survie','Add power, air, water and communication.','Ajoute énergie, air, eau et communication.',d.systems),mode('transport','🚙','Rovers, crew & cargo','Rovers, équipe et cargo','Populate and operate the base.','Peuple et fais fonctionner la base.',d.transport),mode('terrain','🪨','Mars terrain','Terrain martien','Shape the ground around the base.','Aménage le terrain autour de la base.',[part('mars-rock','🪨','Mars rock','Rocher martien'),part('crater','⭕','Crater','Cratère'),part('ridge','⛰️','Ridge','Crête'),part('ice','🧊','Ice patch','Zone de glace'),part('marker','🚩','Mission marker','Repère de mission')])];}
 
 const missions={
- vehicle:{title:['Future Vehicle','Véhicule du futur'],prompt:['Choose a vehicle, rotate its real blueprint around the car, then build it from matching parts.','Choisis un véhicule, fais tourner son vrai plan autour de la voiture, puis construis-le avec les pièces correspondantes.'],prompts:[['Who is it for?','Pour qui est-il ?'],['What problem does it solve?','Quel problème résout-il ?']],coach:['Rotate the blueprint to inspect every side. Build carefully so each part fits the selected vehicle.','Fais tourner le plan pour inspecter chaque côté. Construis avec précision pour que chaque pièce corresponde au véhicule choisi.'],checks:[['movement','Movement'],['power','Power'],['safety','Safety'],['passenger','Passenger design']],library:vehicleLibrary,modes:vehicleModes},
+ vehicle:{title:['Future Vehicle','Véhicule du futur'],prompt:['Choose a vehicle, rotate its real blueprint around the car, then build it from matching parts.','Choisis un véhicule, fais tourner son vrai plan autour de la voiture, puis construis-le avec les pièces correspondantes.'],prompts:[],coach:['Rotate the blueprint to inspect every side. Build carefully so each part fits the selected vehicle.','Fais tourner le plan pour inspecter chaque côté. Construis avec précision pour que chaque pièce corresponde au véhicule choisi.'],checks:[['movement','Movement'],['power','Power'],['safety','Safety'],['passenger','Passenger design']],library:vehicleLibrary,modes:vehicleModes},
  room:{title:['Dream Room','Chambre de rêve'],prompt:['Plan a realistic room, combine furniture with smaller objects and test lighting and layout.','Planifie une pièce réaliste, combine meubles et petits objets puis teste l’éclairage et l’agencement.'],prompts:[['Main purpose','Fonction principale'],['Who uses it?','Qui l’utilise ?']],coach:['Can someone move comfortably, use the storage, and reach everything without furniture overlapping unrealistically?','Peut-on circuler confortablement, utiliser les rangements et atteindre les objets sans chevauchement irréaliste ?'],checks:[['structure','Layout'],['furniture','Furniture'],['light','Lighting'],['storage','Storage']],modes:roomModes},
  park:{title:['Design a Park','Concevoir un parc'],prompt:['Build a large modern park from many separate pieces. Match people, facilities, nature, sports and activities to create a living place.','Construis un grand parc moderne avec de nombreux éléments séparés. Associe personnes, équipements, nature, sports et activités.'],prompts:[['Who will use it?','Qui l’utilisera ?'],['What activities should happen here?','Quelles activités doivent s’y dérouler ?']],coach:['Does the park feel alive, accessible and varied, with the right people matched to the right facilities and activities?','Le parc paraît-il vivant, accessible et varié, avec les bonnes personnes associées aux bons équipements ?'],checks:[['play','Play'],['nature','Nature'],['access','Accessibility'],['seating','Seating']],modes:parkModes},
  robot:{title:['Invent a Robot','Inventer un robot'],prompt:['Choose one or more robot designs. Their blueprints can share the board while you assemble each robot from small matching parts.','Choisis un ou plusieurs robots. Leurs plans peuvent partager la zone pendant que tu les assembles pièce par pièce.'],prompts:[['What job should it do?','Quelle mission doit-il accomplir ?'],['What makes it safe?','Qu’est-ce qui le rend sûr ?']],coach:['Which robot are you building, and have you chosen parts that make sense for its job?','Quel robot construis-tu, et les pièces choisies correspondent-elles à sa mission ?'],checks:[['movement','Movement'],['sensor','Sensors'],['tool','Useful tools'],['power','Power']],library:robotLibrary,dynamicModes:'robot'},
@@ -249,7 +255,7 @@ const missions={
 const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('creatorTemplate'),tctx=templateCanvas.getContext('2d');
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
-let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePhase3Progress=0,vehiclePhase3Start=0,vehiclePhase3RAF=0,vehiclePhase3Timer=0,vehiclePhase4Progress=0,vehiclePhase4Start=0,vehiclePhase4RAF=0,vehiclePhase4Timer=0,vehiclePhase5Progress=0,vehiclePhase5Start=0,vehiclePhase5RAF=0,vehiclePhase5Timer=0,vehicleCreationName='',vehiclePhase5Named=false,vehicleTransformationReplay=false,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0;
+let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePhase3Progress=0,vehiclePhase3Start=0,vehiclePhase3RAF=0,vehiclePhase3Timer=0,vehiclePhase4Progress=0,vehiclePhase4Start=0,vehiclePhase4RAF=0,vehiclePhase4Timer=0,vehiclePhase5Progress=0,vehiclePhase5Start=0,vehiclePhase5RAF=0,vehiclePhase5Timer=0,vehicleCreationName='',vehiclePhase5Named=false,vehicleTransformationReplay=false,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0,vehicleNoticeTimer=0,vehicleQuizState=null;
 const STORAGE='cw_creator_projects_v18';
 /* Keep version 9 so saved prototype cars restore through the staged final-reveal updates. */
 const VEHICLE_PUZZLE_VERSION=9;
@@ -270,6 +276,22 @@ const VEHICLE_FLIGHT_SYSTEMS=[
   {id:'drone',icon:'🛸',label:['Drone lift','Portance par rotors']}
 ];
 const VEHICLE_FUTURE_PART_IDS=new Set(['wing','propeller','jet','amphibious','water-jet','retract-wheel','drone-lift','stabiliser','future-sensor']);
+
+const VEHICLE_QUIZ_BANK=[
+ {id:'windscreen',scope:'body',q:['What is the main job of the windscreen?','Quel est le rôle principal du pare-brise ?'],a:[['Let the driver see while protecting the cabin','Permettre de voir tout en protégeant l’habitacle'],['Store fuel','Stocker le carburant'],['Turn the wheels','Faire tourner les roues'],['Cool the engine','Refroidir le moteur']],correct:0,why:['The windscreen protects occupants from wind and debris while keeping the road visible.','Le pare-brise protège du vent et des débris tout en gardant la route visible.']},
+ {id:'steering',scope:'body',q:['Which part lets the driver control the direction of the car?','Quelle pièce permet au conducteur de contrôler la direction ?'],a:[['Steering wheel','Volant'],['Rear light','Feu arrière'],['Fuel tank','Réservoir'],['Seat belt','Ceinture']],correct:0,why:['The steering wheel controls the steering system that changes the direction of the road wheels.','Le volant commande le système de direction qui oriente les roues.']},
+ {id:'seatbelt',scope:'safety',q:['Why is a seat belt important?','Pourquoi la ceinture de sécurité est-elle importante ?'],a:[['It helps restrain an occupant during sudden stops or crashes','Elle retient l’occupant lors d’un freinage brusque ou d’un choc'],['It charges the battery','Elle recharge la batterie'],['It turns on the headlights','Elle allume les phares'],['It makes the engine faster','Elle accélère le moteur']],correct:0,why:['A seat belt helps reduce harmful movement of an occupant during a sudden stop or collision.','La ceinture aide à limiter le déplacement dangereux d’un occupant lors d’un arrêt brusque ou d’une collision.']},
+ {id:'sensor',scope:'safety',q:['What can a collision sensor help a vehicle detect?','Que peut aider à détecter un capteur anticollision ?'],a:[['Nearby obstacles or possible impacts','Des obstacles proches ou un risque de choc'],['The colour of the paint','La couleur de la peinture'],['How many seats are fitted','Le nombre de sièges'],['The radio station','La station de radio']],correct:0,why:['Collision sensors can help safety systems detect objects or impact risks around the vehicle.','Les capteurs anticollision peuvent aider les systèmes de sécurité à détecter des objets ou des risques de choc.']},
+ {id:'petrol',scope:'petrol',q:['What stores the petrol used by a petrol-powered car?','Qu’est-ce qui stocke l’essence d’une voiture à essence ?'],a:[['Fuel tank','Réservoir de carburant'],['Traction battery','Batterie de traction'],['Airbag','Airbag'],['Windscreen','Pare-brise']],correct:0,why:['A petrol car stores its fuel in a fuel tank.','Une voiture à essence stocke son carburant dans un réservoir.']},
+ {id:'diesel',scope:'diesel',q:['Which extra component helps reduce soot particles in many diesel exhaust systems?','Quel composant aide à réduire les particules de suie dans de nombreux échappements diesel ?'],a:[['Diesel particulate filter','Filtre à particules diesel'],['Side mirror','Rétroviseur'],['Steering wheel','Volant'],['Roof panel','Panneau de toit']],correct:0,why:['A diesel particulate filter is designed to trap soot particles in the exhaust.','Un filtre à particules diesel est conçu pour retenir les particules de suie dans l’échappement.']},
+ {id:'electric',scope:'electric',q:['Which component stores most of the driving energy in a battery-electric car?','Quel composant stocke l’essentiel de l’énergie de conduite d’une voiture électrique ?'],a:[['Traction battery','Batterie de traction'],['Fuel tank','Réservoir de carburant'],['Exhaust pipe','Échappement'],['Rear bumper','Pare-chocs arrière']],correct:0,why:['The traction battery stores electrical energy for the electric motor.','La batterie de traction stocke l’énergie électrique destinée au moteur électrique.']},
+ {id:'hybrid',scope:'hybrid',q:['What makes a hybrid power system different from a petrol-only car?','Qu’est-ce qui distingue un système hybride d’une voiture uniquement à essence ?'],a:[['It combines an engine with electric drive components','Il combine un moteur thermique avec des composants électriques'],['It has no wheels','Il n’a pas de roues'],['It cannot use brakes','Il ne peut pas freiner'],['It only works in water','Il fonctionne seulement dans l’eau']],correct:0,why:['A hybrid combines a combustion engine with an electric motor and battery system.','Un hybride combine un moteur thermique avec un moteur électrique et une batterie.']},
+ {id:'propeller',scope:'propeller',q:['What provides thrust in the propeller-flight system you built?','Qu’est-ce qui fournit la poussée dans le système de vol par hélices ?'],a:[['Spinning propellers','Des hélices en rotation'],['Seat belts','Les ceintures'],['Rear windows','Les lunettes arrière'],['Fuel cap only','Le bouchon de carburant uniquement']],correct:0,why:['Rotating propellers push air to create thrust.','Les hélices en rotation déplacent l’air pour créer de la poussée.']},
+ {id:'jet',scope:'jet',q:['What is the job of the jet units in the jet-flight design?','Quel est le rôle des réacteurs dans la version à réaction ?'],a:[['Create high-speed thrust','Créer une poussée à grande vitesse'],['Hold passengers in their seats','Maintenir les passagers sur leurs sièges'],['Clean the windscreen','Nettoyer le pare-brise'],['Store luggage','Stocker les bagages']],correct:0,why:['Jet units generate thrust that pushes the vehicle through the air.','Les réacteurs génèrent une poussée qui propulse le véhicule dans l’air.']},
+ {id:'drone',scope:'drone',q:['How does the Drone Lift design begin its flight?','Comment la version Drone Lift commence-t-elle son vol ?'],a:[['With vertical lift from rotors','Par une portance verticale créée par les rotors'],['By entering water','En entrant dans l’eau'],['By removing the roof','En retirant le toit'],['By turning off the battery','En coupant la batterie']],correct:0,why:['Drone-style rotors can create vertical lift before the vehicle moves forward.','Des rotors de type drone peuvent créer une portance verticale avant le vol vers l’avant.']},
+ {id:'water',scope:'water',q:['Why do the wheels retract in the amphibious design?','Pourquoi les roues se rétractent-elles dans la version amphibie ?'],a:[['To reduce drag and let the hull move through water more cleanly','Pour réduire la traînée et permettre à la coque d’avancer plus facilement dans l’eau'],['To make the headlights brighter','Pour rendre les phares plus puissants'],['To open the doors','Pour ouvrir les portes'],['To change the paint colour','Pour changer la couleur']],correct:0,why:['Retracting the road wheels helps the water-mode shape move more efficiently through the water.','Rétracter les roues routières aide la forme aquatique à avancer plus efficacement dans l’eau.']},
+ {id:'vehicle-purpose',scope:'general',q:['Why are a sports car, 4×4, van, coach and tractor designed differently?','Pourquoi une voiture de sport, un 4×4, un van, un autocar et un tracteur sont-ils conçus différemment ?'],a:[['They are engineered for different jobs, loads and environments','Ils sont conçus pour des usages, charges et environnements différents'],['Only because they need different paint colours','Uniquement parce qu’ils ont des couleurs différentes'],['Because only one of them needs brakes','Parce qu’un seul a besoin de freins'],['Because buses do not need tyres','Parce que les bus n’ont pas besoin de pneus']],correct:0,why:['Vehicle engineering changes with purpose: passenger/cargo capacity, terrain, weight, visibility, braking and other needs.','L’ingénierie varie selon l’usage : capacité, terrain, poids, visibilité, freinage et autres besoins.']}
+];
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
 function allParts(){if(!active)return[];return modesForMission(missions[active]).flatMap(m=>m.parts||[]);}
@@ -303,18 +325,18 @@ function selectVehiclePowertrain(id){
   if(!VEHICLE_POWERTRAINS.some(x=>x.id===id))return;
   if(vehiclePowertrainLocked()&&vehiclePowertrain&&vehiclePowertrain!==id){$('creatorCoach').textContent=t('This power system is already being built. Use Change power system if you want to remove only the fitted power components and choose another one.','Ce système d’énergie est déjà en construction. Utilise Changer le système d’énergie pour retirer uniquement les composants de puissance fixés et en choisir un autre.');return;}
   if(vehiclePowertrain!==id){removeLooseVehiclePowerPieces();vehiclePowertrain=id;if(id!=='hybrid')vehicleHybridType='self';}
-  renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));commitHistory();
+  renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));updateVehicleProgressUI();commitHistory();
 }
 function selectVehicleHybridType(type){
   if(!['self','plugin'].includes(type)||vehiclePowertrain!=='hybrid')return;
   if(vehiclePowertrainLocked()&&vehicleHybridType!==type){$('creatorCoach').textContent=t('The hybrid system is already being built. Change the power system first if you want a different hybrid type.','Le système hybride est déjà en construction. Change d’abord le système d’énergie si tu veux un autre type d’hybride.');return;}
-  if(vehicleHybridType!==type){removeLooseVehiclePowerPieces();vehicleHybridType=type;renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));commitHistory();}
+  if(vehicleHybridType!==type){removeLooseVehiclePowerPieces();vehicleHybridType=type;renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));updateVehicleProgressUI();commitHistory();}
 }
 function resetVehiclePowerSystem(){
   if(!vehiclePowertrain&&!vehiclePowertrainLocked())return;
   if(!window.confirm(t('Change power system? Only the Power System parts will be removed. Your completed Body & Movement car will stay exactly as it is.','Changer le système d’énergie ? Seules les pièces du système d’énergie seront retirées. La carrosserie et le mouvement déjà terminés resteront exactement comme ils sont.')))return;
   [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&((o.dataset.targetKey||'').startsWith('power-')||VEHICLE_POWER_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1')).forEach(o=>o.remove());
-  selectObject(null);vehiclePowertrain='';vehicleHybridType='self';renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));commitHistory();
+  selectObject(null);vehiclePowertrain='';vehicleHybridType='self';renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='power'));updateVehicleProgressUI();commitHistory();
   $('creatorCoach').textContent=t('Power System cleared only. Choose Petrol, Diesel, Electric or Hybrid. Your Body & Movement build is untouched.','Seul le système d’énergie a été effacé. Choisis Essence, Diesel, Électrique ou Hybride. Ta carrosserie et ton mouvement sont intacts.');
 }
 
@@ -346,13 +368,13 @@ function selectVehicleFutureAbility(id){
     if(testRunning)stopTest(false);
     clearVehicleFuturePiecesForSwitch();
     vehicleFutureAbility=id;vehicleFlightSystem='';
-    renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
+    renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));updateVehicleProgressUI();commitHistory();
     $('creatorCoach').textContent=id==='flight'
       ?t('Flying Car selected. Choose Propeller, Jet or Drone Lift, then fit that complete system. Your Body, Power and Safety work is unchanged.','Voiture volante sélectionnée. Choisis Hélices, Réacteurs ou Rotors drone, puis installe ce système complet. Carrosserie, Énergie et Sécurité restent inchangées.')
       :t('Water / Amphibious selected. Fit the water system on this same completed car. Your Body, Power and Safety work is unchanged.','Aquatique / amphibie sélectionné. Installe le système aquatique sur cette même voiture terminée. Carrosserie, Énergie et Sécurité restent inchangées.');
     return;
   }
-  renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));
+  renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));updateVehicleProgressUI();
 }
 function selectVehicleFlightSystem(id){
   if(!VEHICLE_FLIGHT_SYSTEMS.some(x=>x.id===id)||vehicleFutureAbility!=='flight')return;
@@ -360,7 +382,7 @@ function selectVehicleFlightSystem(id){
     if(testRunning)stopTest(false);
     clearVehicleFuturePiecesForSwitch();
     vehicleFlightSystem=id;
-    renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
+    renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));updateVehicleProgressUI();commitHistory();
     $('creatorCoach').textContent=t(`${vehicleFlightSystemLabel()} selected for testing. Fit its required Future Tech pieces. The rest of your car is untouched.`,`${vehicleFlightSystemLabel()} sélectionné pour le test. Installe ses pièces de technologie future requises. Le reste de la voiture reste intact.`);
   }
 }
@@ -369,7 +391,7 @@ function resetVehicleFutureSystem(){
   if(!window.confirm(t('Change Future Tech? Only the Future Tech parts will be removed. Body & Movement, Power System and Safety will stay exactly as they are.','Changer la technologie future ? Seules les pièces de technologie future seront retirées. Carrosserie et mouvement, Système d’énergie et Sécurité resteront exactement comme ils sont.')))return;
   if(testRunning)stopTest(false);
   clearVehicleFuturePiecesForSwitch();
-  selectObject(null);vehicleFutureAbility='';vehicleFlightSystem='';renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));commitHistory();
+  selectObject(null);vehicleFutureAbility='';vehicleFlightSystem='';renderTemplate('vehicle');renderComponents(modesForMission(missions.vehicle).find(x=>x.id==='future'));updateVehicleProgressUI();commitHistory();
   $('creatorCoach').textContent=t('Future Tech cleared only. Choose Flying Car or Water / Amphibious Car. The rest of your completed vehicle is untouched.','Seule la technologie future a été effacée. Choisis Voiture volante ou Voiture aquatique / amphibie. Le reste de ton véhicule terminé est intact.');
 }
 function rotateVehiclePoint(p,yaw,pitch){
@@ -832,24 +854,27 @@ function drawVehicleBlueprint(){
   drawVehicleInteriorAccessLabel();
   tctx.save();tctx.fillStyle='rgba(145,236,255,.66)';tctx.font='700 13px system-ui';tctx.textAlign='center';
   let msg;
-  if(activeMode==='power'&&vehiclePowertrain){
-    msg=vehicleUnderAccess()
+  if(activeMode==='power'){
+    if(!vehiclePowertrain)msg=t('Power System: choose Petrol, Diesel, Electric or Hybrid below. The matching required components will then appear.','Système d’énergie : choisis Essence, Diesel, Électrique ou Hybride ci-dessous. Les composants requis correspondants apparaîtront ensuite.');
+    else msg=vehicleUnderAccess()
       ?t('Power access: fit the internal and underbody components here. Exterior power parts use their matching outside view.','Accès énergie : place ici les composants internes et sous la caisse. Les pièces d’énergie extérieures utilisent leur vue extérieure correspondante.')
-      :t('Power System selected. Use Interior/underbody for hidden components, then side or top views for external ones.','Système d’énergie sélectionné. Utilise Intérieur/sous la caisse pour les composants cachés, puis les vues latérale ou dessus pour les pièces extérieures.');
+      :t('Power System: use Interior/underbody for hidden components, then side or top views for external ones.','Système d’énergie : utilise Intérieur/sous la caisse pour les composants cachés, puis les vues latérale ou dessus pour les pièces extérieures.');
   }else if(activeMode==='safety'){
     msg=vehicleUnderAccess()
-      ?t('Safety access: fit the seat belts, airbags, safety camera, warning control and emergency stop inside the cabin.','Accès sécurité : place les ceintures, airbags, caméra de sécurité, commande d’alerte et arrêt d’urgence dans l’habitacle.')
-      :t('Safety stage: use Front, Rear and Side views for collision sensors and indicators; use Interior for cabin protection.','Étape sécurité : utilise les vues Avant, Arrière et Latérales pour les capteurs et clignotants ; utilise Intérieur pour la protection de l’habitacle.');
-  }else if(activeMode==='future'&&vehicleFutureAbility){
-    msg=vehicleUnderAccess()
+      ?t('Safety: fit the seat belts, airbags, safety camera, warning control and emergency stop inside the cabin.','Sécurité : place les ceintures, airbags, caméra de sécurité, commande d’alerte et arrêt d’urgence dans l’habitacle.')
+      :t('Safety: use Front, Rear and Side views for collision sensors and indicators; use Interior for cabin protection.','Sécurité : utilise les vues Avant, Arrière et Latérales pour les capteurs et clignotants ; utilise Intérieur pour la protection de l’habitacle.');
+  }else if(activeMode==='future'){
+    if(!vehicleFutureAbility)msg=t('Future Tech: choose Flying Car or Water / Amphibious Car below. Only the matching technology will appear.','Technologies futures : choisis Voiture volante ou Voiture aquatique / amphibie ci-dessous. Seule la technologie correspondante apparaîtra.');
+    else if(vehicleFutureAbility==='flight'&&!vehicleFlightSystem)msg=t('Flying Car selected. Choose Propeller Flight, Jet Flight or Drone Lift below before fitting the flight hardware.','Voiture volante sélectionnée. Choisis Vol par hélices, Vol par réacteurs ou Portance par rotors avant de placer les équipements de vol.');
+    else msg=vehicleUnderAccess()
       ?t('Future Tech access: fit the hidden wheel-retraction or amphibious components underneath the same car.','Accès technologie future : place sous la même voiture les mécanismes cachés de roues rétractables ou de coque amphibie.')
       :vehicleFutureAbility==='flight'
-        ?t('Flying Car selected. Use Top for wings or drone lift, Rear for propellers/jets, and Interior for retractable-wheel mechanisms.','Voiture volante sélectionnée. Utilise Dessus pour les ailes ou rotors, Arrière pour les hélices/réacteurs et Intérieur pour les mécanismes de roues rétractables.')
-        :t('Water / Amphibious selected. Use Interior for the hull and retractable wheels, then Rear for water jets and stabilisers.','Aquatique / amphibie sélectionné. Utilise Intérieur pour la coque et les roues rétractables, puis Arrière pour les propulseurs aquatiques et stabilisateurs.');
+        ?t('Flying Car: use Top for wings or drone lift, Rear for propellers/jets, and Interior for retractable-wheel mechanisms.','Voiture volante : utilise Dessus pour les ailes ou rotors, Arrière pour les hélices/réacteurs et Intérieur pour les mécanismes de roues rétractables.')
+        :t('Water / Amphibious: use Interior for the hull and retractable wheels, then Rear for water jets and stabilisers.','Aquatique / amphibie : utilise Intérieur pour la coque et les roues rétractables, puis Arrière pour les propulseurs aquatiques et stabilisateurs.');
   }else{
     msg=vehicleUnderAccess()
-      ?t('Fit the interior pieces from underneath. Fitted pieces lock permanently into the car.','Fixe les pièces intérieures par dessous. Les pièces fixées se verrouillent définitivement dans la voiture.')
-      :t('Drag the car to rotate it freely. Fitted pieces stay attached while you turn it.','Fais glisser la voiture pour la tourner librement. Les pièces fixées restent attachées pendant la rotation.');
+      ?t('Body & Movement: fit the steering wheel, seats and dashboard from underneath. Fitted pieces lock into the car.','Carrosserie et mouvement : place le volant, les sièges et le tableau de bord par dessous. Les pièces fixées se verrouillent dans la voiture.')
+      :t('Body & Movement: use the side, front, rear and top views to match the exterior pieces. Rotate freely whenever you need a better angle.','Carrosserie et mouvement : utilise les vues latérales, avant, arrière et dessus pour placer les pièces extérieures. Tourne librement si tu as besoin d’un meilleur angle.');
   }
   tctx.fillText(msg,400,425);
   tctx.restore();
@@ -866,7 +891,12 @@ function renderTemplate(id){
 }
 function updateBlueprintVisibility(){
   stage.classList.toggle('blueprints-off',!templateOn);
-  $('toggleTemplate').textContent=templateOn?t('👻 Blueprint on','👻 Plan activé'):t('👻 Blueprint off','👻 Plan désactivé');
+  const generic=$('toggleTemplate'),vehicleToggle=$('vehicleToggleTemplate'),drawingToolbar=$('creatorDrawingToolbar');
+  const label=templateOn?t('👻 Blueprint on','👻 Plan activé'):t('👻 Blueprint off','👻 Plan désactivé');
+  if(generic){generic.textContent=label;generic.hidden=active==='vehicle';}
+  if(vehicleToggle){vehicleToggle.textContent=label;vehicleToggle.classList.toggle('active',templateOn);}
+  if(drawingToolbar)drawingToolbar.hidden=active==='vehicle'&&templateOn;
+  if(active==='vehicle'&&templateOn&&tool!=='select')setTool('select');
 }
 function vehicleAngleLabel(){
   if(vehicleViewMode==='interior')return t('Interior puzzle view','Vue puzzle intérieure');
@@ -893,7 +923,22 @@ function setVehicleView(view){
   else if(view==='orbit'&&Math.abs(vehiclePitch)>.98){vehiclePitch=.12}
   renderTemplate('vehicle');updateVehicleViewUI();commitHistory();
 }
-function renderLibrary(m){const panel=$('creatorLibraryPanel'),host=$('creatorLibrary');if(!m.library){panel.hidden=true;return}panel.hidden=false;$('creatorModeStep').textContent='2 • '+t('CHOOSE A DESIGN MODE','CHOISIS UN MODE');$('creatorDesignStep').textContent='3 • '+t('YOUR DESIGN','TON DESIGN');host.innerHTML='';m.library.forEach(item=>{const b=document.createElement('button');b.type='button';b.className='creator-library-card';b.dataset.libraryId=item.id;b.dataset.status=active==='vehicle'?t('✓ selected','✓ sélectionné'):t('✓ blueprint added','✓ plan ajouté');b.innerHTML=`<img src="${item.img}" alt="${item.name}"><span><b>${item.name}</b><small>${item.subtitle}</small></span>`;b.onclick=()=>chooseLibrary(item);host.appendChild(b)});refreshLibraryCards();}
+function renderLibrary(m){
+  const panel=$('creatorLibraryPanel'),host=$('creatorLibrary');if(!m.library){panel.hidden=true;return}
+  panel.hidden=false;$('creatorModeStep').textContent='2 • '+t('CHOOSE A DESIGN MODE','CHOISIS UN MODE');$('creatorDesignStep').textContent='3 • '+t('YOUR DESIGN','TON DESIGN');host.innerHTML='';
+  if(active==='vehicle'){
+    $('creatorLibraryTitle').textContent=t('Choose your vehicle.','Choisis ton véhicule.');
+    $('creatorLibraryHelp').textContent=t('One vehicle is shown at a time. Choose a vehicle from the compact list; more vehicle blueprints will unlock as they are built.','Un seul véhicule est affiché à la fois. Choisis-le dans la liste compacte ; d’autres plans seront disponibles au fur et à mesure.');
+    const current=vehicleLibrary.find(v=>v.id===currentLibraryId)||vehicleLibrary[0];currentLibraryId=current.id;
+    const opts=VEHICLE_CATALOG.map(v=>`<option value="${v.id}" ${v.id===currentLibraryId?'selected':''} ${v.available?'':'disabled'}>${L(v.name)}${v.available?'':` — ${t('coming soon','bientôt')}`}</option>`).join('');
+    host.className='creator-library-grid creator-vehicle-picker';
+    host.innerHTML=`<div class="creator-vehicle-preview"><img src="${current.img}" alt="${current.name}"><div class="creator-vehicle-preview-copy"><span><b>${current.name}</b><small>${current.subtitle}</small></span><strong>${t('Selected','Sélectionné')} ✓</strong></div></div><div class="creator-vehicle-picker-control"><label for="vehiclePickerSelect">${t('Vehicle list','Liste des véhicules')}</label><select id="vehiclePickerSelect">${opts}</select><small>${t('Sport Car is ready now. 4×4 / SUV, Van, Intercity Coach and Farm Tractor are reserved for the next vehicle builds.','La voiture de sport est prête. Le 4×4 / SUV, le Van, l’Autocar interurbain et le Tracteur agricole sont réservés aux prochaines constructions.')}</small></div>`;
+    const select=$('vehiclePickerSelect');if(select)select.onchange=()=>{const item=vehicleLibrary.find(v=>v.id===select.value);if(item)chooseLibrary(item)};
+    return;
+  }
+  host.className='creator-library-grid';
+  m.library.forEach(item=>{const b=document.createElement('button');b.type='button';b.className='creator-library-card';b.dataset.libraryId=item.id;b.dataset.status=t('✓ blueprint added','✓ plan ajouté');b.innerHTML=`<img src="${item.img}" alt="${item.name}"><span><b>${item.name}</b><small>${item.subtitle}</small></span>`;b.onclick=()=>chooseLibrary(item);host.appendChild(b)});refreshLibraryCards();
+}
 function refreshLibraryCards(){document.querySelectorAll('.creator-library-card').forEach(card=>{const exists=active==='vehicle'?card.dataset.libraryId===currentLibraryId:[...objectLayer.children].some(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===card.dataset.libraryId);card.classList.toggle('active',exists)});}
 function chooseLibrary(item){if(active==='vehicle'){
   const changed=!!currentLibraryId&&currentLibraryId!==item.id;
@@ -901,7 +946,19 @@ function chooseLibrary(item){if(active==='vehicle'){
   currentLibraryId=item.id;vehicleYaw=0;vehiclePitch=.10;vehicleViewMode='left';renderTemplate('vehicle');refreshLibraryCards();updateVehicleViewUI();renderModes(missions[active],activeMode);commitHistory();return
 }currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
 
-function renderModes(m,preferred){const modes=modesForMission(m);if(!modes.length)return;activeMode=(preferred&&modes.some(x=>x.id===preferred))?preferred:(activeMode&&modes.some(x=>x.id===activeMode)?activeMode:modes[0].id);const host=$('creatorModes');host.innerHTML='';modes.forEach(md=>{const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'');b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${L(md.help)}</small>`;b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);commitHistory()};host.appendChild(b)});const selected=modes.find(x=>x.id===activeMode);$('creatorModeHelp').textContent=L(selected.help);renderComponents(selected);}
+function renderModes(m,preferred){
+  const modes=modesForMission(m);if(!modes.length)return;
+  activeMode=(preferred&&modes.some(x=>x.id===preferred))?preferred:(activeMode&&modes.some(x=>x.id===activeMode)?activeMode:modes[0].id);
+  const host=$('creatorModes');host.innerHTML='';
+  modes.forEach(md=>{
+    const complete=active==='vehicle'&&vehicleModeComplete(md.id);
+    const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'')+(complete?' is-complete':'');b.dataset.modeId=md.id;
+    b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${L(md.help)}</small>${complete?`<small class="creator-mode-status">✓ ${t('Complete','Terminé')}</small>`:''}`;
+    b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}commitHistory()};host.appendChild(b)
+  });
+  const selected=modes.find(x=>x.id===activeMode);$('creatorModeHelp').textContent=L(selected.help);renderComponents(selected);
+  if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}
+}
 function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots(),...vehicleFutureSlots()];}
 function vehicleModePartIds(){const md=modesForMission(missions.vehicle).find(x=>x.id===activeMode);return new Set((md?.parts||[]).map(x=>x.id));}
 function vehiclePartRequirement(id){return vehicleAllPuzzleSlots().filter(s=>s.partId===id).length;}
@@ -971,7 +1028,7 @@ function renderComponents(md){
 function appendVehiclePartButton(host,p){const b=document.createElement('button');b.type='button';b.className='creator-component';b.dataset.partId=p.id;const need=active==='vehicle'?vehiclePartRequirement(p.id):0,done=active==='vehicle'?vehicleInstalledPartCount(p.id):0;b.innerHTML=`<span>${paletteVisual(p)}</span><small>${L(p.label)}${need?` <em data-part-counter>${done}/${need}</em>`:''}</small>`;b.onclick=()=>addPalettePart(p);host.appendChild(b);}
 function paletteVisual(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;if(p.className==='park-bench')return '<span class="creator-mini-bench"><i></i><i></i><i></i></span>';if(p.className==='shelf')return '▤';if(p.className==='sofa')return '🛋️';if(p.className==='fluorescent')return '▬';if(p.className==='chassis')return '▰';if(p.className==='amphibious')return '⛴️';if(p.className==='wing')return '🪽';return p.icon||'◆';}
 
-function renderPlan(m,saved={}){const host=$('creatorPlanFields');host.innerHTML='';m.prompts.forEach((q,i)=>{const l=document.createElement('label');l.textContent=L(q);const inp=document.createElement('input');inp.dataset.plan=i;inp.value=saved.plan?.[i]||'';l.appendChild(inp);host.appendChild(l)});$('creatorNotes').value=saved.notes||'';}
+function renderPlan(m,saved={}){const host=$('creatorPlanFields');host.innerHTML='';host.hidden=active==='vehicle';if(active!=='vehicle')m.prompts.forEach((q,i)=>{const l=document.createElement('label');l.textContent=L(q);const inp=document.createElement('input');inp.dataset.plan=i;inp.value=saved.plan?.[i]||'';l.appendChild(inp);host.appendChild(l)});$('creatorNotes').value=saved.notes||'';}
 
 function vehiclePartSvg(id){
   const common='class="creator-object-icon creator-vehicle-part" viewBox="0 0 120 80" aria-hidden="true"';
@@ -1108,6 +1165,9 @@ function tryVehicleSnap(el,announce=true){
     renderTemplate('vehicle');
     selectObject(null);
     refreshVehicleComponentButtons();
+    updateVehicleProgressUI();
+    const completedMode=activeMode;
+    if(vehicleModeComplete(completedMode))setTimeout(()=>advanceVehicleAfterCompletion(completedMode),260);
     if(announce){
       const fitted=installedVehicleKeys().size,total=vehicleAllPuzzleSlots().filter(x=>x.required).length;
       $('creatorCoach').textContent=t(`CLICK — piece fitted to the vehicle. ${fitted} pieces are installed and will stay attached while you rotate the car.`,`CLIC — pièce fixée au véhicule. ${fitted} pièces sont installées et resteront attachées pendant la rotation.`);
@@ -1141,6 +1201,40 @@ function vehicleFutureProgress(){
 function vehiclePuzzleProgress(){
   const body=vehicleBodyProgress(),power=vehiclePowerProgress(),safety=vehicleSafetyProgress(),future=vehicleFutureProgress();
   return{done:body.done+power.done+safety.done+future.done,total:body.total+power.total+safety.total+future.total,body,power,safety,future};
+}
+
+function vehicleModeComplete(id){
+  if(active!=='vehicle')return false;
+  if(id==='body'){const p=vehicleBodyProgress();return p.total>0&&p.done>=p.total;}
+  if(id==='power'){const p=vehiclePowerProgress();return p.chosen&&p.total>0&&p.done>=p.total;}
+  if(id==='safety'){const p=vehicleSafetyProgress();return p.total>0&&p.done>=p.total;}
+  if(id==='future'){const p=vehicleFutureProgress();return p.chosen&&p.ready&&p.total>0&&p.done>=p.total;}
+  return false;
+}
+function vehicleReadyForTest(){return ['body','power','safety','future'].every(vehicleModeComplete)}
+function vehicleModeLabel(id){const md=modesForMission(missions.vehicle).find(x=>x.id===id);return md?L(md.label):id}
+function updateVehicleProgressUI(){
+  if(active!=='vehicle')return;
+  document.querySelectorAll('#creatorModes .creator-mode[data-mode-id]').forEach(b=>{const complete=vehicleModeComplete(b.dataset.modeId);b.classList.toggle('is-complete',complete);let st=b.querySelector('.creator-mode-status');if(complete&&!st){st=document.createElement('small');st.className='creator-mode-status';st.textContent='✓ '+t('Complete','Terminé');b.appendChild(st)}else if(!complete&&st)st.remove();});
+  const ready=vehicleReadyForTest(),btn=$('testCreation');if(btn){btn.disabled=!ready;btn.classList.toggle('vehicle-ready',ready);btn.title=ready?t('Your vehicle is ready to test.','Ton véhicule est prêt à être testé.'):t('Complete Body & Movement, Power System, Safety and Future Tech first.','Termine Carrosserie et mouvement, Système d’énergie, Sécurité et Technologies futures.');}
+}
+function showVehicleStageNotice(title,detail,opts={}){
+  const box=$('vehicleStageNotice');if(!box||active!=='vehicle')return;
+  clearTimeout(vehicleNoticeTimer);box.innerHTML=`<b>${title}</b><span>${detail||''}</span>${opts.buttonLabel?`<button type="button" id="vehicleNoticeAction">${opts.buttonLabel}</button>`:''}`;box.hidden=false;
+  const action=$('vehicleNoticeAction');if(action)action.onclick=()=>{opts.onAction?.();box.hidden=true;};
+  if(opts.duration!==0)vehicleNoticeTimer=setTimeout(()=>{box.hidden=true},opts.duration||4200);
+}
+function hideVehicleStageNotice(){const box=$('vehicleStageNotice');if(box)box.hidden=true;clearTimeout(vehicleNoticeTimer);}
+function advanceVehicleAfterCompletion(completedMode){
+  if(active!=='vehicle'||!vehicleModeComplete(completedMode))return;
+  const order=['body','power','safety','future'],start=order.indexOf(completedMode);let next=null;
+  for(let step=1;step<=order.length;step++){const id=order[(start+step)%order.length];if(!vehicleModeComplete(id)){next=id;break}}
+  if(next){
+    activeMode=next;renderModes(missions.vehicle,next);renderTemplate('vehicle');updateVehicleProgressUI();
+    showVehicleStageNotice(`✓ ${vehicleModeLabel(completedMode)} ${t('complete','terminé')}`,`${t('Next build area','Zone suivante')}: ${vehicleModeLabel(next)}. ${t('You can still choose any unfinished area yourself.','Tu peux toujours choisir toi-même une autre zone non terminée.')}`);
+  }else{
+    updateVehicleProgressUI();showVehicleStageNotice(t('Vehicle ready to test','Véhicule prêt à tester'),t('All four build areas are complete. Test My Creation is now unlocked.','Les quatre zones de construction sont terminées. Tester ma création est maintenant déverrouillé.'),{duration:6000});window.playTone?.(true);
+  }
 }
 function softSnap(el){
   if(active==='vehicle'){tryVehicleSnap(el,true);return}
@@ -1199,10 +1293,10 @@ function updateHistoryButtons(){$('undoDraw').disabled=historyIndex<=0;$('redoDr
 function restoreDrawing(data,cb){ctx.clearRect(0,0,canvas.width,canvas.height);if(!data){cb?.();return}const img=new Image();img.onload=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);cb?.()};img.onerror=()=>cb?.();img.src=data;}
 function restoreSnapshot(s){restoring=true;templateOn=s.templateOn!==false;gridOn=!!s.gridOn;activeMode=s.activeMode;currentLibraryId=s.currentLibraryId;vehicleYaw=Number.isFinite(s.vehicleYaw)?s.vehicleYaw:vehicleYaw;vehiclePitch=Number.isFinite(s.vehiclePitch)?s.vehiclePitch:vehiclePitch;vehicleViewMode=s.vehicleViewMode||vehicleViewMode;vehiclePowertrain=s.vehiclePowertrain||'';vehicleHybridType=s.vehicleHybridType||'self';vehicleFutureAbility=s.vehicleFutureAbility||'';vehicleFlightSystem=s.vehicleFlightSystem||'';stage.classList.toggle('show-grid',gridOn);updateBlueprintVisibility();renderTemplate(active);updateVehicleViewUI();renderModes(missions[active],activeMode);restoreDrawing(s.drawing,()=>{restoreObjects(s.objects);restoring=false;updateHistoryButtons()});}
 
-function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;vehicleYaw=Number.isFinite(saved.vehicleYaw)?saved.vehicleYaw:0;vehiclePitch=Number.isFinite(saved.vehiclePitch)?saved.vehiclePitch:.10;vehicleViewMode=saved.vehicleViewMode||'left';vehiclePowertrain=id==='vehicle'?(saved.vehiclePowertrain||''):'';vehicleHybridType=id==='vehicle'?(saved.vehicleHybridType||'self'):'self';vehicleFutureAbility=id==='vehicle'?(saved.vehicleFutureAbility||''):'';vehicleFlightSystem=id==='vehicle'?(saved.vehicleFlightSystem||''):'';vehicleCreationName=id==='vehicle'?(saved.vehicleCreationName||''):'';vehiclePaintColor=id==='vehicle'?(saved.vehiclePaintColor||'#5de4ff'):'#5de4ff';vehiclePhase5Named=!!vehicleCreationName;stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(saved.objects||[]);drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
+function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;if(id==='vehicle'&&!vehicleLibrary.some(v=>v.id===currentLibraryId))currentLibraryId='vehicle-sport';if(id==='vehicle'&&!activeMode)activeMode='body';vehicleYaw=Number.isFinite(saved.vehicleYaw)?saved.vehicleYaw:0;vehiclePitch=Number.isFinite(saved.vehiclePitch)?saved.vehiclePitch:.10;vehicleViewMode=saved.vehicleViewMode||'left';vehiclePowertrain=id==='vehicle'?(saved.vehiclePowertrain||''):'';vehicleHybridType=id==='vehicle'?(saved.vehicleHybridType||'self'):'self';vehicleFutureAbility=id==='vehicle'?(saved.vehicleFutureAbility||''):'';vehicleFlightSystem=id==='vehicle'?(saved.vehicleFlightSystem||''):'';vehicleCreationName=id==='vehicle'?(saved.vehicleCreationName||''):'';vehiclePaintColor=id==='vehicle'?(saved.vehiclePaintColor||'#5de4ff'):'#5de4ff';vehiclePhase5Named=!!vehicleCreationName;stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(saved.objects||[]);drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);updateBlueprintVisibility();if(id==='vehicle')updateVehicleProgressUI();resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
 
 function save(){if(!active)return;const all=loadStore();const plan=[...document.querySelectorAll('#creatorPlanFields [data-plan]')].map(i=>i.value.trim());all[active]={plan,notes:$('creatorNotes').value.trim(),drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain:active==='vehicle'?vehiclePowertrain:undefined,vehicleHybridType:active==='vehicle'?vehicleHybridType:undefined,vehicleFutureAbility:active==='vehicle'?vehicleFutureAbility:undefined,vehicleFlightSystem:active==='vehicle'?vehicleFlightSystem:undefined,vehicleCreationName:active==='vehicle'?vehicleCreationName:undefined,vehiclePaintColor:active==='vehicle'?vehiclePaintColor:undefined,vehiclePuzzleVersion:active==='vehicle'?VEHICLE_PUZZLE_VERSION:undefined,updatedAt:Date.now()};try{saveStore(all);$('creatorSaved').textContent=t('✅ Project saved. You can return and continue later.','✅ Projet enregistré. Tu peux revenir plus tard.')}catch(_){$('creatorSaved').textContent=t('This design is too large to save on this device.','Ce design est trop volumineux pour cet appareil.')}window.CWState?.setProgress?.('creator',Math.min(95,Object.keys(all).length*16),{lastMission:active});window.CWState?.logActivity?.({id:'creator-'+active,title:`Creator Studio: ${missions[active].title[0]}`,icon:'🎨',detail:'Saved interactive design',href:'creator.html'});}
-function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);if(active==='vehicle'){vehiclePowertrain='';vehicleHybridType='self';vehicleFutureAbility='';vehicleFlightSystem='';vehicleCreationName='';vehiclePhase5Named=false;vehiclePaintColor='#5de4ff';vehiclePreviousPaintColor='#5de4ff';}const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);resetHistory();closeClearDialog();}
+function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);if(active==='vehicle'){vehiclePowertrain='';vehicleHybridType='self';vehicleFutureAbility='';vehicleFlightSystem='';vehicleCreationName='';vehiclePhase5Named=false;vehiclePaintColor='#5de4ff';vehiclePreviousPaintColor='#5de4ff';activeMode='body';currentLibraryId='vehicle-sport';templateOn=true;vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';}const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);renderModes(missions[active],activeMode);updateBlueprintVisibility();if(active==='vehicle'){renderTemplate('vehicle');updateVehicleViewUI();updateVehicleProgressUI();}resetHistory();closeClearDialog();}
 function openClearDialog(){$('creatorClearDialog').hidden=false;document.body.classList.add('creator-dialog-open');setTimeout(()=>$('keepProject').focus(),0)}
 function closeClearDialog(){$('creatorClearDialog').hidden=true;document.body.classList.remove('creator-dialog-open')}
 
@@ -1258,11 +1352,11 @@ function animateVehiclePaintChange(next){
 function showVehiclePhase2ColourUI(){
   vehicleRevealStage='phase2-ready';vehiclePhase2Progress=1;renderTemplate('vehicle');
   const swatches=VEHICLE_PHASE2_COLOURS.map(([hex,name])=>`<button type="button" data-vehicle-paint="${hex}" title="${name}" aria-label="${name}" style="width:36px;height:36px;border-radius:50%;border:3px solid ${hex===vehiclePaintColor?'#fff':'rgba(255,255,255,.35)'};background:${hex};box-shadow:0 0 0 2px rgba(20,45,64,.55);cursor:pointer"></button>`).join('');
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>2</b><small>${t('PHASE','PHASE')}</small></div><div style="width:100%"><b>${t('Phase 2 — Finalise your car','Phase 2 — Finalise ta voiture')}</b><p>${t('The beauty reveal is complete. Try different paint colours before we move to the Test World.','La présentation est terminée. Essaie différentes couleurs avant de passer au Monde de test.')}</p><div id="vehiclePhase2Colours" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0">${swatches}</div><button type="button" id="vehicleConfirmPaint" style="padding:10px 16px;border:0;border-radius:999px;font-weight:800;cursor:pointer">${t('Use this colour','Utiliser cette couleur')}</button></div></div>`;
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div style="width:100%"><b>${t('Choose your paint colour','Choisis la couleur de ta voiture')}</b><p>${t('The beauty reveal is complete. Try different paint colours before we move to the Test World.','La présentation est terminée. Essaie différentes couleurs avant de passer au Monde de test.')}</p><div id="vehiclePhase2Colours" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0">${swatches}</div><button type="button" id="vehicleConfirmPaint" style="padding:10px 16px;border:0;border-radius:999px;font-weight:800;cursor:pointer">${t('Use this colour','Utiliser cette couleur')}</button></div></div>`;
   $('creatorCoach').textContent=t('Choose any colour. The paint will sweep across the finished car. You can change it as many times as you want before confirming.','Choisis une couleur. La peinture balaiera la voiture finie. Tu peux la changer autant de fois que tu veux avant de confirmer.');
   document.querySelectorAll('[data-vehicle-paint]').forEach(b=>b.onclick=()=>{animateVehiclePaintChange(b.dataset.vehiclePaint);document.querySelectorAll('[data-vehicle-paint]').forEach(x=>x.style.borderColor=x===b?'#fff':'rgba(255,255,255,.35)')});
-  const confirm=$('vehicleConfirmPaint');if(confirm)confirm.onclick=()=>{vehicleRevealStage='phase2-confirmed';safeVehicleRender();$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 2','PHASE 2')}</small></div><div><b>${t('Colour confirmed','Couleur confirmée')}</b><p>${t('Your finished car is ready. Opening Phase 3 — Future Test World now.','Ta voiture finie est prête. Ouverture de la Phase 3 — Monde de test futur.')}</p></div></div>`;$('creatorCoach').textContent=t('Phase 2 complete. The finished car and paint colour are locked. Phase 3 is opening now.','Phase 2 terminée. La voiture finie et sa couleur sont verrouillées. La Phase 3 s’ouvre maintenant.');window.playTone?.(true);setTimeout(()=>{if(testRunning&&vehicleRevealActive)startVehiclePhaseThreeWorld()},700);};
-  $('creatorTestResult').scrollIntoView?.({behavior:'smooth',block:'nearest'});
+  const confirm=$('vehicleConfirmPaint');if(confirm)confirm.onclick=()=>{vehicleRevealStage='phase2-confirmed';safeVehicleRender();$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Colour confirmed','Couleur confirmée')}</b><p>${t('Your finished car is ready. Opening the Future Test World now.','Ta voiture finie est prête. Ouverture du Monde de test futur.')}</p></div></div>`;$('creatorCoach').textContent=t('Your finished car and paint colour are locked. The Future Test World is opening now.','Ta voiture finie et sa couleur sont verrouillées. Le Monde de test futur s’ouvre maintenant.');showVehicleStageNotice(t('Colour confirmed','Couleur confirmée'),t('Opening the Future Test World…','Ouverture du Monde de test futur…'),{duration:2400});window.playTone?.(true);setTimeout(()=>{if(testRunning&&vehicleRevealActive)startVehiclePhaseThreeWorld()},700);};
+  showVehicleStageNotice(t('Choose your colour','Choisis ta couleur'),t('Try colours, then confirm the one you want.','Essaie plusieurs couleurs, puis confirme celle que tu veux.'),{buttonLabel:t('Choose colour','Choisir la couleur'),onAction:()=>$('creatorTestResult').scrollIntoView?.({behavior:'smooth',block:'center'}),duration:0});
 }
 function startVehiclePhaseTwoReveal(){
   if(vehiclePhase2Timer)clearInterval(vehiclePhase2Timer);
@@ -1270,8 +1364,8 @@ function startVehiclePhaseTwoReveal(){
   vehiclePhase2RAF=0;vehiclePhase2Timer=0;
   vehicleRevealStage='phase2';vehiclePhase2Progress=0;vehiclePhase2Start=Date.now();
   vehiclePreviousPaintColor='#9fb0ba';vehiclePaintColor='#5de4ff';vehiclePaintMix=0;
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 2 — Beauty reveal','Phase 2 — Présentation')}</b><p>${t('Paint, lights and the presentation camera are bringing your finished car to life.','La peinture, les feux et la caméra de présentation donnent vie à ta voiture finie.')}</p></div></div>`;
-  $('creatorCoach').textContent=t('Phase 2 is running automatically. Watch the finished car receive its first paint and presentation pass.','La Phase 2 démarre automatiquement. Regarde la voiture finie recevoir sa première peinture et sa présentation.');
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Finishing your car','Finition de ta voiture')}</b><p>${t('Paint, lights and the presentation camera are bringing your finished car to life.','La peinture, les feux et la caméra de présentation donnent vie à ta voiture finie.')}</p></div></div>`;
+  $('creatorCoach').textContent=t('Watch the finished car receive its first paint and presentation pass.','Regarde la voiture finie recevoir sa première peinture et sa présentation.');
   const duration=5200;
   const tick=()=>{
     if(!testRunning||!vehicleRevealActive){if(vehiclePhase2Timer)clearInterval(vehiclePhase2Timer);vehiclePhase2Timer=0;return}
@@ -1412,24 +1506,32 @@ function drawVehicleFutureTestWorld(){
   tctx.fillStyle='rgba(255,255,255,.14)';for(let i=0;i<6;i++)tctx.fillRect((i*160-(cam*1.6)%120),baseRoadY+42,70,4);
   tctx.fillStyle='#3a6381';tctx.fillRect(0,baseRoadY-4,W,14);
   if(vehicleFutureAbility==='water'){
-    tctx.fillStyle='#2f7fb2';tctx.fillRect(Math.max(0,waterStart),baseRoadY+6,Math.min(W-waterStart,waterWidth),H-(baseRoadY+6));
-    tctx.strokeStyle='rgba(194,240,255,.45)';tctx.lineWidth=2;for(let i=0;i<5;i++){const yy=baseRoadY+26+i*22;tctx.beginPath();tctx.moveTo(Math.max(0,waterStart)+8,yy);tctx.quadraticCurveTo(worldX(1188)+36,yy+8,Math.min(W,worldX(1346)),yy);tctx.stroke();}
-    tctx.fillStyle='#d1d9df';tctx.fillRect(Math.max(0,worldX(1104)),baseRoadY-4,40,10);tctx.fillRect(Math.max(0,worldX(1348)),baseRoadY-4,38,10);
+    /* A readable shore: road -> launch ramp -> water -> open-water zone. */
+    const shoreX=Math.max(0,waterStart-34),seaX=Math.max(0,waterStart+22);
+    const sea=tctx.createLinearGradient(0,baseRoadY,0,H);sea.addColorStop(0,'#43a9d0');sea.addColorStop(1,'#17638f');tctx.fillStyle=sea;tctx.fillRect(seaX,baseRoadY+2,Math.max(0,W-seaX),H-baseRoadY-2);
+    tctx.fillStyle='#dbc99e';tctx.beginPath();tctx.moveTo(shoreX,baseRoadY+4);tctx.lineTo(seaX+52,baseRoadY+58);tctx.lineTo(seaX+86,H);tctx.lineTo(shoreX,H);tctx.closePath();tctx.fill();
+    tctx.fillStyle='#778891';tctx.beginPath();tctx.moveTo(shoreX-18,baseRoadY-5);tctx.lineTo(seaX+28,baseRoadY+45);tctx.lineTo(seaX+58,baseRoadY+45);tctx.lineTo(seaX+2,baseRoadY-5);tctx.closePath();tctx.fill();
+    tctx.strokeStyle='rgba(215,249,255,.55)';tctx.lineWidth=2;for(let i=0;i<5;i++){const yy=baseRoadY+28+i*22;tctx.beginPath();tctx.moveTo(seaX+48,yy);tctx.quadraticCurveTo(seaX+112,yy+8,W,yy);tctx.stroke();}
+    /* buoys / marina detail kept away from the driving path */
+    [[seaX+118,baseRoadY+68],[seaX+170,baseRoadY+112]].forEach(([bx,by])=>{tctx.fillStyle='#ff8d55';tctx.beginPath();tctx.arc(bx,by,6,0,Math.PI*2);tctx.fill();tctx.strokeStyle='rgba(255,255,255,.7)';tctx.beginPath();tctx.moveTo(bx,by+6);tctx.lineTo(bx,by+18);tctx.stroke();});
   }
   drawFutureWorldLabel(worldX(486),210,t('Supermarket','Supermarché'));
   drawFutureWorldLabel(worldX(722),206,vehiclePowertrain==='electric'?t('EV Charge','Recharge EV'):t('Fuel stop','Station'));
   if(vehiclePowertrain==='hybrid')drawFutureWorldLabel(worldX(816),214,t('Hybrid option','Option hybride'));
-  drawFutureWorldLabel(worldX(1168),204,t('Test Lab','Laboratoire'));
   if(vehicleFutureAbility==='water')drawFutureWorldLabel(worldX(1246),200,t('Water zone','Zone aquatique'));
   else if(vehicleFutureAbility==='flight')drawFutureWorldLabel(worldX(1186),204,t('Flight lane','Couloir aérien'));
   const seg2=clamp((p-.22)/.22,0,1),seg3=clamp((p-.72)/.28,0,1);
   let carX=220,carY=baseRoadY-28,carAngle=0,flightMode=false,waterMode=false,retractWheels=false;
   if(vehicleFutureAbility==='flight'&&p>.72){flightMode=true;carX=220+seg3*170;carY=baseRoadY-28-(Math.sin(seg3*Math.PI*.82)*110+seg3*34);carAngle=-.08-.26*seg3;}
-  if(vehicleFutureAbility==='water'&&p>.72){waterMode=true;carX=220+seg3*112;carY=baseRoadY+8+Math.sin(seg3*Math.PI*2)*2;retractWheels=seg3>.2;}
+  if(vehicleFutureAbility==='water'&&p>.72){
+    const enter=clamp(seg3/.48,0,1),cruise=clamp((seg3-.48)/.52,0,1);waterMode=seg3>.18;retractWheels=seg3>.38;
+    carX=220+enter*112+cruise*66;carY=baseRoadY-28+enter*44+Math.sin(cruise*Math.PI*2)*2;carAngle=enter*.08*(1-cruise);
+    if(seg3>.18&&seg3<.58){tctx.save();tctx.globalAlpha=.65*Math.sin(clamp((seg3-.18)/.4,0,1)*Math.PI);tctx.fillStyle='rgba(229,250,255,.82)';for(let i=0;i<6;i++){tctx.beginPath();tctx.arc(carX-38+i*14,carY+35+(i%2)*5,4+i%3,0,Math.PI*2);tctx.fill()}tctx.restore();}
+  }
   drawPhase3VehicleAt(carX,carY,.58,{paint:vehiclePaintColor,glow:.72,wheelSpin:p*8,angle:carAngle,flight:flightMode,water:waterMode,retractWheels});
   if(flightMode){cloud(468,94,.92);cloud(610,138,.74);}
   drawRoundedPanel(18,16,204,78,16,'rgba(8,25,36,.68)','rgba(147,232,255,.22)');
-  tctx.fillStyle='rgba(235,247,255,.96)';tctx.textAlign='left';tctx.font='800 15px system-ui';tctx.fillText(t('Phase 3 — Future Test World','Phase 3 — Monde de test du futur'),32,40);
+  tctx.fillStyle='rgba(235,247,255,.96)';tctx.textAlign='left';tctx.font='800 15px system-ui';tctx.fillText(t('Future Test World','Monde de test du futur'),32,40);
   tctx.font='600 12px system-ui';tctx.fillStyle='rgba(185,225,246,.92)';tctx.fillText(`${t('Power','Énergie')}: ${vehiclePowertrainLabel()}`,32,61);
   tctx.fillText(`${t('Future','Futur')}: ${vehicleFutureAbilityLabel()}${vehicleFutureAbility==='flight'&&vehicleFlightSystem?` · ${vehicleFlightSystemLabel()}`:''}`,32,79);
   drawRoundedPanel(572,18,210,48,14,'rgba(8,25,36,.62)','rgba(147,232,255,.18)');
@@ -1446,7 +1548,7 @@ function startVehiclePhaseThreeWorld(){
   /* The Test World must remain visible even if the child had switched the construction blueprint off. */
   stage.classList.remove('blueprints-off');
   vehicleRevealStage='phase3';vehiclePhase3Progress=0;vehiclePhase3Start=Date.now();
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 3 — Future Test World','Phase 3 — Monde de test du futur')}</b><p>${t('The finished car is leaving the reveal area and entering a living test world with roads, town landmarks and a special zone for its future ability.','La voiture finie quitte la zone de présentation et entre dans un monde de test vivant avec routes, repères urbains et zone spéciale pour sa capacité future.')}</p></div></div>`;
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Future Test World','Monde de test du futur')}</b><p>${t('Your finished car is entering a living world with roads, useful places and a special zone for its future ability.','Ta voiture finie entre dans un monde vivant avec routes, lieux utiles et une zone spéciale pour sa capacité future.')}</p></div></div>`;showVehicleStageNotice(t('Entering Test World','Entrée dans le Monde de test'),t('Road test first, then your special vehicle ability.','D’abord le test routier, puis la capacité spéciale du véhicule.'),{duration:3500});
   $('creatorCoach').textContent=t('Watch the finished car drive through the town, pass the service area and use its future ability in the last zone.','Regarde la voiture finie traverser la ville, passer par la zone de service et utiliser sa capacité future dans la dernière zone.');
   const duration=12800;
   const tick=()=>{
@@ -1456,10 +1558,10 @@ function startVehiclePhaseThreeWorld(){
     if(vehiclePhase3Progress>=1){
       clearInterval(vehiclePhase3Timer);vehiclePhase3Timer=0;vehicleRevealStage='phase3-complete';vehiclePhase3Progress=1;safeVehicleRender();
       const phase3Special=vehicleFutureAbility==='flight'
-        ?t('The car is already airborne at the end of Phase 3. Phase 4 continues from this exact flight state — it does not restart take-off.','La voiture est déjà en vol à la fin de la Phase 3. La Phase 4 continue exactement depuis cet état de vol — elle ne redémarre pas le décollage.')
-        :t('The car is already in the water zone at the end of Phase 3. Phase 4 continues from this exact amphibious state.','La voiture est déjà dans la zone aquatique à la fin de la Phase 3. La Phase 4 continue exactement depuis cet état amphibie.');
-      $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 3','PHASE 3')}</small></div><div><b>${t('Future Test World complete','Monde de test terminé')}</b><p>${phase3Special}</p><p>${t('Continuing automatically to the full systems journey…','Passage automatique au parcours complet des systèmes…')}</p></div></div>`;
-      $('creatorCoach').textContent=t('Phase 3 is complete. Keep watching — Phase 4 continues from the car’s current position.','La Phase 3 est terminée. Continue de regarder — la Phase 4 reprend depuis la position actuelle de la voiture.');
+        ?t('The car is already airborne. The full systems journey continues from this exact flight state — it does not restart take-off.','La voiture est déjà en vol. Le test complet continue exactement depuis cet état — sans redémarrer le décollage.')
+        :t('The car is now genuinely in open water. The full systems journey continues from this exact amphibious state.','La voiture est maintenant réellement en eau libre. Le test complet continue depuis cet état amphibie.');
+      $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Future Test World complete','Monde de test terminé')}</b><p>${phase3Special}</p><p>${t('Continuing automatically to the full systems journey…','Passage automatique au parcours complet des systèmes…')}</p></div></div>`;
+      $('creatorCoach').textContent=t('Keep watching — the full systems test continues from the car’s current position.','Continue de regarder — le test complet reprend depuis la position actuelle de la voiture.');showVehicleStageNotice(t('Special zone reached','Zone spéciale atteinte'),t('Full systems test continuing…','Suite du test complet des systèmes…'),{duration:2500});
       window.playTone?.(true);
       setTimeout(()=>{if(testRunning&&vehicleRevealActive&&vehicleRevealStage==='phase3-complete')startVehiclePhaseFourJourney()},900);
     }
@@ -1503,15 +1605,16 @@ function drawPhase4WaterWorld(p){
   tctx.fillStyle='#6da989';tctx.beginPath();tctx.moveTo(0,235);tctx.quadraticCurveTo(170,200,324,230);tctx.quadraticCurveTo(540,190,800,230);tctx.lineTo(800,290);tctx.lineTo(0,290);tctx.closePath();tctx.fill();
   const sea=tctx.createLinearGradient(0,250,0,H);sea.addColorStop(0,'#2e91c4');sea.addColorStop(1,'#155b88');tctx.fillStyle=sea;tctx.fillRect(0,240,W,H-240);
   tctx.strokeStyle='rgba(218,248,255,.46)';tctx.lineWidth=2;for(let i=0;i<7;i++){const yy=270+i*26;tctx.beginPath();tctx.moveTo((i*75+p*180)%130-80,yy);tctx.quadraticCurveTo(320,yy+10,800,yy);tctx.stroke();}
-  /* shoreline / ramp for the return */
-  tctx.fillStyle='#d2c39c';tctx.beginPath();tctx.moveTo(585,450);tctx.lineTo(800,365);tctx.lineTo(800,450);tctx.closePath();tctx.fill();
-  tctx.fillStyle='#63747d';tctx.beginPath();tctx.moveTo(602,450);tctx.lineTo(800,382);tctx.lineTo(800,420);tctx.lineTo(664,450);tctx.closePath();tctx.fill();
+  /* shoreline appears to the far right as the vehicle returns, never in front of it at the start. */
+  const shoreA=clamp((p-.70)/.30,0,1);tctx.save();tctx.globalAlpha=shoreA;
+  tctx.fillStyle='#d2c39c';tctx.beginPath();tctx.moveTo(650,450);tctx.lineTo(800,350);tctx.lineTo(800,450);tctx.closePath();tctx.fill();
+  tctx.fillStyle='#63747d';tctx.beginPath();tctx.moveTo(670,450);tctx.lineTo(800,373);tctx.lineTo(800,414);tctx.lineTo(720,450);tctx.closePath();tctx.fill();tctx.restore();
   const a=clamp(p/.26,0,1),b=clamp((p-.26)/.30,0,1),c=clamp((p-.56)/.26,0,1),d=clamp((p-.82)/.18,0,1);
   let x=330,y=328,ang=0,sc=.56,retract=true;
   if(p<.26){x=330+230*a;y=328+Math.sin(a*Math.PI*2)*4;}
   else if(p<.56){x=560-270*b;y=328-50*Math.sin(b*Math.PI);ang=-.06+.18*Math.sin(b*Math.PI*2);}
   else if(p<.82){x=290+300*c;y=327+Math.sin(c*Math.PI*2)*3;ang=.02;}
-  else{x=590+120*d;y=327+34*d;ang=.13*d;retract=d<.58;}
+  else{x=590+150*d;y=327+46*d;ang=.16*d;retract=d<.62;}
   drawPhase3VehicleAt(x,y,sc,{paint:vehiclePaintColor,glow:.55,wheelSpin:p*16,angle:ang,flight:false,water:true,retractWheels:retract});
   /* wake */
   if(p<.86){tctx.save();tctx.strokeStyle='rgba(235,251,255,.62)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(x-115,y+28);tctx.quadraticCurveTo(x-170,y+40,x-230,y+24);tctx.stroke();tctx.restore();}
@@ -1524,9 +1627,9 @@ function drawVehiclePhaseFourJourney(){
   const p=clamp(vehiclePhase4Progress,0,1);
   if(vehicleFutureAbility==='water')drawPhase4WaterWorld(p);else drawPhase4FlightWorld(p);
   drawRoundedPanel(18,16,242,92,16,'rgba(8,25,36,.74)','rgba(147,232,255,.24)');
-  tctx.fillStyle='rgba(235,247,255,.97)';tctx.textAlign='left';tctx.font='800 15px system-ui';tctx.fillText(t('Phase 4 — Full Systems Test','Phase 4 — Test complet des systèmes'),32,40);
+  tctx.fillStyle='rgba(235,247,255,.97)';tctx.textAlign='left';tctx.font='800 15px system-ui';tctx.fillText(t('Full Systems Test','Test complet des systèmes'),32,40);
   tctx.font='600 12px system-ui';tctx.fillStyle='rgba(185,225,246,.94)';
-  tctx.fillText(vehicleFutureAbility==='flight'?t('Continuing in flight from Phase 3','Suite du vol commencé en Phase 3'):t('Continuing in water from Phase 3','Suite du trajet aquatique commencé en Phase 3'),32,61);
+  tctx.fillText(vehicleFutureAbility==='flight'?t('Continuing the flight from the Test World','Suite du vol depuis le Monde de test'):t('Continuing the amphibious journey','Suite du trajet amphibie'),32,61);
   tctx.fillText(`${vehiclePowertrainLabel()} · ${vehicleFutureAbility==='flight'?vehicleFlightSystemLabel():vehicleFutureAbilityLabel()}`,32,80);
   const pass1=p>.12,pass2=p>.30,pass3=p>.50,pass4=p>.72;
   drawPhase4Badge(622,110,t('Movement','Mouvement'),pass1);
@@ -1542,9 +1645,9 @@ function startVehiclePhaseFourJourney(){
   stage.classList.remove('blueprints-off');
   vehicleRevealStage='phase4';vehiclePhase4Progress=0;vehiclePhase4Start=Date.now();
   const continuity=vehicleFutureAbility==='flight'
-    ?t('The car is already airborne. Phase 4 continues the flight, checks Movement, Power and Safety, then returns and lands.','La voiture est déjà en vol. La Phase 4 poursuit le vol, vérifie Mouvement, Énergie et Sécurité, puis revient et atterrit.')
-    :t('The car is already in the water. Phase 4 continues across the water, checks Movement, Power and Safety, then returns to shore and deploys the wheels.','La voiture est déjà dans l’eau. La Phase 4 poursuit le trajet aquatique, vérifie Mouvement, Énergie et Sécurité, puis revient sur la rive et redéploie les roues.');
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 4 — Full Systems Test','Phase 4 — Test complet des systèmes')}</b><p>${continuity}</p></div></div>`;
+    ?t('The car is already airborne. The test continues the flight, checks Movement, Power and Safety, then returns and lands.','La voiture est déjà en vol. Le test poursuit le vol, vérifie Mouvement, Énergie et Sécurité, puis revient et atterrit.')
+    :t('The car is already in open water. The test continues across the water, checks Movement, Power and Safety, then returns to shore and deploys the wheels.','La voiture est déjà en eau libre. Le test poursuit le trajet aquatique, vérifie Mouvement, Énergie et Sécurité, puis revient sur la rive et redéploie les roues.');
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Full Systems Test','Test complet des systèmes')}</b><p>${continuity}</p></div></div>`;showVehicleStageNotice(t('Full Systems Test','Test complet des systèmes'),vehicleFutureAbility==='flight'?t('Flight, power and safety checks are running.','Les contrôles de vol, énergie et sécurité sont en cours.'):t('Water, power and safety checks are running.','Les contrôles aquatiques, énergie et sécurité sont en cours.'),{duration:3400});
   $('creatorCoach').textContent=continuity;
   const duration=15800;
   const tick=()=>{
@@ -1554,8 +1657,8 @@ function startVehiclePhaseFourJourney(){
     if(vehiclePhase4Progress>=1){
       clearInterval(vehiclePhase4Timer);vehiclePhase4Timer=0;vehicleRevealStage='phase4-complete';vehiclePhase4Progress=1;safeVehicleRender();
       const special=vehicleFutureAbility==='flight'?t(`${vehicleFlightSystemLabel()} flight and landing complete`,`${vehicleFlightSystemLabel()} : vol et atterrissage terminés`):t('Amphibious water journey and shore return complete','Trajet amphibie et retour sur la rive terminés');
-      $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 4','PHASE 4')}</small></div><div><b>${t('Full Systems Test passed','Test complet réussi')}</b><p>${t('The same finished car completed the full test without restarting the journey.','La même voiture finie a terminé le test complet sans redémarrer le parcours.')}</p><ul><li class="pass">✓ ${t('Movement verified','Mouvement vérifié')}</li><li class="pass">✓ ${vehiclePowertrainLabel()} ${t('power verified','énergie vérifiée')}</li><li class="pass">✓ ${t('Safety systems verified','Systèmes de sécurité vérifiés')}</li><li class="pass">✓ ${special}</li></ul><p>${t('The vehicle has returned safely and is ready for Phase 5 — the final celebration and results.','Le véhicule est revenu en sécurité et est prêt pour la Phase 5 — célébration et résultats finaux.')}</p></div></div>`;
-      $('creatorCoach').textContent=t('Phase 4 complete. The car is safely returned. Keep watching — Phase 5 starts automatically.','Phase 4 terminée. La voiture est revenue en sécurité. Continue de regarder — la Phase 5 démarre automatiquement.');
+      $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Full Systems Test passed','Test complet réussi')}</b><p>${t('The same finished car completed the full test without restarting the journey.','La même voiture finie a terminé le test complet sans redémarrer le parcours.')}</p><ul><li class="pass">✓ ${t('Movement verified','Mouvement vérifié')}</li><li class="pass">✓ ${vehiclePowertrainLabel()} ${t('power verified','énergie vérifiée')}</li><li class="pass">✓ ${t('Safety systems verified','Systèmes de sécurité vérifiés')}</li><li class="pass">✓ ${special}</li></ul><p>${t('The vehicle has returned safely. The final celebration and results are starting now.','Le véhicule est revenu en sécurité. La célébration et les résultats finaux commencent maintenant.')}</p></div></div>`;
+      $('creatorCoach').textContent=t('The car is safely returned. Keep watching — the final celebration starts automatically.','La voiture est revenue en sécurité. Continue de regarder — la célébration finale démarre automatiquement.');showVehicleStageNotice(t('All systems passed','Tous les systèmes ont réussi'),t('Mission celebration starting…','La célébration de mission commence…'),{duration:2400});
       window.playTone?.(true);
       setTimeout(()=>{if(testRunning&&vehicleRevealActive&&vehicleRevealStage==='phase4-complete')startVehiclePhaseFiveCelebration()},900);
     }
@@ -1599,13 +1702,12 @@ function drawVehiclePhaseFiveCelebration(){
   const titleA=clamp((p-.30)/.28,0,1);
   tctx.save();tctx.globalAlpha=titleA;tctx.textAlign='center';tctx.shadowColor='rgba(82,228,255,.65)';tctx.shadowBlur=16;tctx.fillStyle='#f4fbff';tctx.font='900 26px system-ui';tctx.fillText(t('MISSION COMPLETE','MISSION TERMINÉE'),400,64);tctx.shadowBlur=0;tctx.fillStyle='rgba(169,231,255,.94)';tctx.font='800 13px system-ui';tctx.fillText(t('Future Vehicle Engineer','Ingénieur du véhicule du futur'),400,88);tctx.restore();
   const badgeA=clamp((p-.48)/.28,0,1);
-  tctx.save();tctx.globalAlpha=badgeA;drawRoundedPanel(274,105,252,46,20,'rgba(26,103,79,.78)','rgba(103,245,189,.62)');tctx.textAlign='center';tctx.textBaseline='middle';tctx.fillStyle='#dffff1';tctx.font='800 14px system-ui';tctx.fillText('🏅  '+t('Future Vehicle Engineer — Mission Complete','Ingénieur du véhicule du futur — Mission terminée'),400,128);tctx.restore();
+  tctx.save();tctx.globalAlpha=badgeA;tctx.textAlign='center';tctx.fillStyle='rgba(220,255,241,.96)';tctx.font='800 14px system-ui';tctx.fillText('🏅  '+t('Achievement unlocked','Récompense débloquée'),400,122);tctx.restore();
   if(vehicleRevealStage!=='phase5-view'){
     const resultA=clamp((p-.62)/.28,0,1);tctx.save();tctx.globalAlpha=resultA;
-    drawRoundedPanel(24,360,752,70,18,'rgba(7,24,36,.72)','rgba(147,232,255,.20)');
-    tctx.fillStyle='rgba(225,244,255,.96)';tctx.font='800 12px system-ui';tctx.textAlign='left';
-    const items=[t('Body & Movement ✓','Carrosserie et mouvement ✓'),`${vehiclePowertrainLabel()} ✓`,t('Safety ✓','Sécurité ✓'),`${vehicleFinalTechLabel()} ✓`,t('Full Systems Test ✓','Test complet ✓')];
-    items.forEach((s,i)=>tctx.fillText(s,44+i*145,390));
+    tctx.fillStyle='rgba(223,245,255,.96)';tctx.font='800 11px system-ui';tctx.textAlign='center';
+    const items=[t('Body & Movement ✓','Carrosserie et mouvement ✓'),`${vehiclePowertrainLabel()} ✓`,t('Safety ✓','Sécurité ✓'),`${vehicleFinalTechLabel()} ✓`,t('Full Test ✓','Test complet ✓')];
+    const xs=[120,265,400,535,680];items.forEach((label,i)=>{drawRoundedPanel(xs[i]-60,397,120,28,13,'rgba(7,24,36,.62)','rgba(147,232,255,.18)');tctx.fillText(label,xs[i],415)});
     tctx.restore();
   }
   if(vehicleRevealStage==='phase5-view'){
@@ -1615,9 +1717,27 @@ function drawVehiclePhaseFiveCelebration(){
 }
 function vehiclePhaseFiveFinalHTML(){
   const name=vehicleCreationName||t('My Future Vehicle','Mon véhicule du futur');
-  return `<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 5','PHASE 5')}</small></div><div style="width:100%"><b>${t('Mission complete','Mission terminée')} — ${name}</b><p>${t('You designed, built and tested a complete Future Vehicle.','Tu as conçu, construit et testé un véhicule du futur complet.')}</p><ul><li class="pass">✓ ${vehicleModelLabel()}</li><li class="pass">✓ ${vehiclePowertrainLabel()}</li><li class="pass">✓ ${t('Safety system complete','Système de sécurité terminé')}</li><li class="pass">✓ ${vehicleFinalTechLabel()}</li><li class="pass">✓ ${t('Full Systems Test passed','Test complet des systèmes réussi')}</li></ul><p><b>🏅 ${t('Future Vehicle Engineer — Mission Complete','Ingénieur du véhicule du futur — Mission terminée')}</b></p><div id="vehiclePhase5Actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" id="vehicleReplayFullTest" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">▶ ${t('Replay Full Test','Rejouer le test complet')}</button><button type="button" id="vehicleReplayTransform" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">✨ ${t('Watch Transformation Again','Revoir la transformation')}</button><button type="button" id="vehicleViewFinalCar" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🚘 ${t('View My Car','Voir ma voiture')}</button><button type="button" id="vehicleReturnCreator" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🛠 ${t('Return to Creator Studio','Retour au Creator Studio')}</button></div><small style="display:block;margin-top:10px;opacity:.78">${t('Prototype note: use Save project to keep this build on this browser. The final My Garage will use account/server saving later.','Note prototype : utilise Enregistrer le projet pour garder cette création dans ce navigateur. Le futur Mon Garage utilisera plus tard la sauvegarde serveur du compte.')}</small></div></div>`;
+  const adminNote=document.documentElement.dataset.admin==='true'?`<small class="admin-only-note" style="display:block;margin-top:10px;opacity:.78">${t('Admin note: Save project currently keeps this build on this browser. My Garage will use account/server saving in production.','Note admin : Enregistrer le projet conserve actuellement cette création dans ce navigateur. Mon Garage utilisera la sauvegarde serveur du compte en production.')}</small>`:'';
+  return `<div class="creator-report"><div style="width:100%"><b>${t('Mission complete','Mission terminée')} — ${name}</b><p>${t('You designed, built and tested a complete Future Vehicle.','Tu as conçu, construit et testé un véhicule du futur complet.')}</p><ul><li class="pass">✓ ${vehicleModelLabel()}</li><li class="pass">✓ ${vehiclePowertrainLabel()}</li><li class="pass">✓ ${t('Safety system complete','Système de sécurité terminé')}</li><li class="pass">✓ ${vehicleFinalTechLabel()}</li><li class="pass">✓ ${t('Full Systems Test passed','Test complet des systèmes réussi')}</li></ul><p><b>🏅 ${t('Achievement unlocked: Future Vehicle Engineer','Récompense débloquée : Ingénieur du véhicule du futur')}</b></p><div id="vehiclePhase5Actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" id="vehicleKnowledgeQuiz" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🧠 ${t('Test What You Learned','Teste ce que tu as appris')}</button><button type="button" id="vehicleReplayFullTest" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">▶ ${t('Replay Full Test','Rejouer le test complet')}</button><button type="button" id="vehicleReplayTransform" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">✨ ${t('Watch Transformation Again','Revoir la transformation')}</button><button type="button" id="vehicleViewFinalCar" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🚘 ${t('View My Car','Voir ma voiture')}</button><button type="button" id="vehicleReturnCreator" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🛠 ${t('Return to Creator Studio','Retour au Creator Studio')}</button></div>${adminNote}</div></div>`;
 }
+function vehicleQuizPool(){
+  const scopes=new Set(['body','safety','general',vehiclePowertrain,vehicleFutureAbility==='water'?'water':vehicleFlightSystem]);
+  return VEHICLE_QUIZ_BANK.filter(q=>scopes.has(q.scope));
+}
+function startVehicleKnowledgeQuiz(){
+  const pool=[...vehicleQuizPool()].sort(()=>Math.random()-.5),questions=pool.slice(0,Math.min(5,pool.length));vehicleQuizState={questions,index:0,score:0,answered:false};renderVehicleKnowledgeQuestion();
+}
+function renderVehicleKnowledgeQuestion(){
+  const st=vehicleQuizState;if(!st)return;const host=$('creatorTestResult');
+  if(st.index>=st.questions.length){host.innerHTML=`<div class="creator-report"><div class="vehicle-quiz"><div class="vehicle-quiz-head"><b>🧠 ${t('Vehicle Knowledge Challenge complete','Défi connaissances véhicule terminé')}</b><span class="vehicle-quiz-progress">${st.score}/${st.questions.length}</span></div><p>${st.score===st.questions.length?t('Excellent — you remembered every answer.','Excellent — tu as retenu toutes les réponses.'):t('Good work. Review the explanations and try another set when you want.','Bravo. Relis les explications et essaie une autre série quand tu veux.')}</p><div class="vehicle-quiz-actions"><button id="vehicleQuizAgain">↻ ${t('Try another 5','Essayer 5 autres')}</button><button id="vehicleQuizBack">← ${t('Back to mission results','Retour aux résultats')}</button></div></div></div>`;$('vehicleQuizAgain').onclick=startVehicleKnowledgeQuiz;$('vehicleQuizBack').onclick=()=>{$('creatorTestResult').innerHTML=vehiclePhaseFiveFinalHTML();bindVehiclePhaseFiveActions();};return;}
+  const q=st.questions[st.index];const order=q.a.map((_,i)=>i).sort(()=>Math.random()-.5);st.optionOrder=order;st.answered=false;
+  host.innerHTML=`<div class="creator-report"><div class="vehicle-quiz"><div class="vehicle-quiz-head"><b>🧠 ${t('Test What You Learned','Teste ce que tu as appris')}</b><span class="vehicle-quiz-progress">${st.index+1}/${st.questions.length}</span></div><div class="vehicle-quiz-question">${L(q.q)}</div><div class="vehicle-quiz-options">${order.map(i=>`<button type="button" class="vehicle-quiz-option" data-answer="${i}">${L(q.a[i])}</button>`).join('')}</div><div class="vehicle-quiz-feedback" id="vehicleQuizFeedback"></div><div class="vehicle-quiz-actions"><button id="vehicleQuizNext" disabled>${t('Next question','Question suivante')} →</button><button id="vehicleQuizBack">${t('Back to results','Retour aux résultats')}</button></div></div></div>`;
+  document.querySelectorAll('.vehicle-quiz-option').forEach(b=>b.onclick=()=>{if(st.answered)return;st.answered=true;const chosen=+b.dataset.answer,correct=q.correct;if(chosen===correct){st.score++;b.classList.add('correct')}else{b.classList.add('wrong');document.querySelector(`.vehicle-quiz-option[data-answer="${correct}"]`)?.classList.add('correct')};document.querySelectorAll('.vehicle-quiz-option').forEach(x=>x.disabled=true);$('vehicleQuizFeedback').textContent=(chosen===correct?t('Correct. ','Correct. '):t('Not quite. ','Pas tout à fait. ')) + L(q.why);$('vehicleQuizNext').disabled=false;window.playTone?.(chosen===correct);});
+  $('vehicleQuizNext').onclick=()=>{st.index++;renderVehicleKnowledgeQuestion()};$('vehicleQuizBack').onclick=()=>{$('creatorTestResult').innerHTML=vehiclePhaseFiveFinalHTML();bindVehiclePhaseFiveActions();};
+}
+
 function bindVehiclePhaseFiveActions(){
+  const quiz=$('vehicleKnowledgeQuiz');if(quiz)quiz.onclick=startVehicleKnowledgeQuiz;
   const replay=$('vehicleReplayFullTest');if(replay)replay.onclick=()=>{vehiclePhase5Named=!!vehicleCreationName;startVehiclePhaseThreeWorld();};
   const transform=$('vehicleReplayTransform');if(transform)transform.onclick=startVehiclePhaseFiveTransformationReplay;
   const view=$('vehicleViewFinalCar');if(view)view.onclick=()=>{vehicleRevealStage='phase5-view';safeVehicleRender();$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Viewing your finished car','Vue de ta voiture finie')}</b><p>${t('This is the vehicle you completed and tested.','Voici le véhicule que tu as terminé et testé.')}</p><button type="button" id="vehicleBackToResults" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">← ${t('Back to results','Retour aux résultats')}</button></div></div>`;const back=$('vehicleBackToResults');if(back)back.onclick=()=>{vehicleRevealStage='phase5-complete';safeVehicleRender();$('creatorTestResult').innerHTML=vehiclePhaseFiveFinalHTML();bindVehiclePhaseFiveActions();};};
@@ -1626,22 +1746,22 @@ function bindVehiclePhaseFiveActions(){
 function showVehiclePhaseFiveNameUI(){
   vehicleRevealStage='phase5-ready';vehiclePhase5Progress=1;safeVehicleRender();
   const suggested=vehicleCreationName||'Nova X1';
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>5</b><small>${t('PHASE','PHASE')}</small></div><div style="width:100%"><b>${t('Phase 5 — Name your creation','Phase 5 — Nomme ta création')}</b><p>${t('All systems passed. Give your finished vehicle a name to complete the mission.','Tous les systèmes ont réussi. Donne un nom à ton véhicule pour terminer la mission.')}</p><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px"><input id="vehicleCreationNameInput" type="text" maxlength="28" value="${String(suggested).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\"/g,'&quot;')}" aria-label="${t('Vehicle name','Nom du véhicule')}" style="min-width:180px;flex:1;padding:11px 14px;border-radius:12px;border:1px solid rgba(147,232,255,.35);background:rgba(8,25,36,.72);color:#fff;font-weight:800"><button type="button" id="vehicleConfirmName" style="padding:11px 16px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🏁 ${t('Complete Mission','Terminer la mission')}</button></div></div></div>`;
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div style="width:100%"><b>${t('Name your creation','Nomme ta création')}</b><p>${t('All systems passed. Give your finished vehicle a name to complete the mission.','Tous les systèmes ont réussi. Donne un nom à ton véhicule pour terminer la mission.')}</p><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px"><input id="vehicleCreationNameInput" type="text" maxlength="28" value="${String(suggested).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\"/g,'&quot;')}" aria-label="${t('Vehicle name','Nom du véhicule')}" style="min-width:180px;flex:1;padding:11px 14px;border-radius:12px;border:1px solid rgba(147,232,255,.35);background:rgba(8,25,36,.72);color:#fff;font-weight:800"><button type="button" id="vehicleConfirmName" style="padding:11px 16px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🏁 ${t('Complete Mission','Terminer la mission')}</button></div></div></div>`;
   $('creatorCoach').textContent=t('Choose a name for the vehicle. You can use the suggestion or type your own name.','Choisis un nom pour le véhicule. Tu peux utiliser la suggestion ou saisir ton propre nom.');
   const input=$('vehicleCreationNameInput'),confirm=$('vehicleConfirmName');
   if(confirm)confirm.onclick=()=>{
     vehicleCreationName=(input?.value||'').trim().replace(/[<>]/g,'').slice(0,28)||'Nova X1';vehiclePhase5Named=true;vehicleRevealStage='phase5-complete';safeVehicleRender();
     $('creatorTestResult').innerHTML=vehiclePhaseFiveFinalHTML();bindVehiclePhaseFiveActions();
     $('creatorCoach').textContent=t('Future Vehicle mission complete. Replay the tests, admire the finished car or return to Creator Studio.','Mission Véhicule du futur terminée. Rejoue les tests, admire la voiture finie ou retourne au Creator Studio.');
-    window.playTone?.(true);
+    window.playTone?.(true);showVehicleStageNotice(t('Mission complete','Mission terminée'),`${vehicleCreationName} · ${t('Future Vehicle Engineer','Ingénieur du véhicule du futur')}`,{duration:4200});
   };
   $('creatorTestResult').scrollIntoView?.({behavior:'smooth',block:'nearest'});
 }
 function startVehiclePhaseFiveCelebration(){
   if(vehiclePhase5Timer)clearInterval(vehiclePhase5Timer);if(vehiclePhase5RAF)cancelAnimationFrame(vehiclePhase5RAF);
   vehiclePhase5RAF=0;vehiclePhase5Timer=0;vehicleRevealStage='phase5';vehiclePhase5Progress=0;vehiclePhase5Start=Date.now();
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 5 — Mission Complete','Phase 5 — Mission terminée')}</b><p>${t('The vehicle has returned safely. Final results and the Future Vehicle Engineer celebration are starting now.','Le véhicule est revenu en sécurité. Les résultats finaux et la célébration Ingénieur du véhicule du futur commencent maintenant.')}</p></div></div>`;
-  $('creatorCoach').textContent=t('The final celebration is running. Your car, chosen paint, power system and Future Tech are all being carried into the result.','La célébration finale est en cours. Ta voiture, sa couleur, son énergie et sa technologie future sont conservées dans le résultat.');
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Mission Complete','Mission terminée')}</b><p>${t('The vehicle has returned safely. Final results and the Future Vehicle Engineer celebration are starting now.','Le véhicule est revenu en sécurité. Les résultats finaux et la célébration Ingénieur du véhicule du futur commencent maintenant.')}</p></div></div>`;
+  $('creatorCoach').textContent=t('The final celebration is running. Your car, chosen paint, power system and Future Tech are all being carried into the result.','La célébration finale est en cours. Ta voiture, sa couleur, son énergie et sa technologie future sont conservées dans le résultat.');showVehicleStageNotice(t('Mission complete','Mission terminée'),t('Your Future Vehicle Engineer celebration is starting.','Ta célébration Ingénieur du véhicule du futur commence.'),{duration:3000});
   const duration=5200;
   const tick=()=>{
     if(!testRunning||!vehicleRevealActive){if(vehiclePhase5Timer)clearInterval(vehiclePhase5Timer);vehiclePhase5Timer=0;return}
@@ -1671,7 +1791,7 @@ function startVehiclePhaseOneReveal(){
   stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);
   simulation.className='creator-simulation active';simulation.innerHTML='';
   syncInstalledVehicleParts();
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Phase 1 — Transformation running','Phase 1 — Transformation en cours')}</b><p>${t('The construction blueprint is merging into one clean finished Sport Car.','Le plan de construction fusionne pour devenir une voiture de sport finie et propre.')}</p></div></div>`;
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Vehicle transformation','Transformation du véhicule')}</b><p>${t('The construction blueprint is merging into one clean finished Sport Car.','Le plan de construction fusionne pour devenir une voiture de sport finie et propre.')}</p></div></div>`;
   $('creatorCoach').textContent=t('Construction lines are energising, fitted pieces are merging, and all loose puzzle geometry is disappearing into the finished shell.','Les lignes de construction s’illuminent, les pièces fusionnent et toute géométrie de puzzle disparaît dans la carrosserie finie.');
   window.playTone?.(true);
   if(vehicleRevealTimer)clearInterval(vehicleRevealTimer);
@@ -1684,14 +1804,15 @@ function startVehiclePhaseOneReveal(){
     safeVehicleRender();
     if(vehicleRevealProgress>=1){
       clearInterval(vehicleRevealTimer);vehicleRevealTimer=0;vehicleRevealProgress=1;safeVehicleRender();
-      $('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>✓</b><small>${t('PHASE 1','PHASE 1')}</small></div><div><b>${t('Finished Sport Car formed','Voiture de sport finie')}</b><p>${t('The construction views are no longer used for the finished result. The car is now one complete shell with integrated glass, wheels and lights.','Les vues de construction ne sont plus utilisées pour le résultat fini. La voiture est désormais une carrosserie complète avec vitrage, roues et feux intégrés.')}</p></div></div>`;
-      window.playTone?.(true);
+      $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Finished Sport Car formed','Voiture de sport finie')}</b><p>${t('The construction views are no longer used for the finished result. The car is now one complete shell with integrated glass, wheels and lights.','Les vues de construction ne sont plus utilisées pour le résultat fini. La voiture est désormais une carrosserie complète avec vitrage, roues et feux intégrés.')}</p></div></div>`;
+      window.playTone?.(true);showVehicleStageNotice(t('Vehicle transformed','Véhicule transformé'),t('Your finished car is ready for paint and final styling.','Ta voiture finie est prête pour la couleur et la finition.'),{duration:2600});
       setTimeout(()=>{if(testRunning&&vehicleRevealActive)startVehiclePhaseTwoReveal()},700);
     }
   };
   tick();vehicleRevealTimer=setInterval(tick,33);
 }
 function startTest(){if(!active)return;
+  if(active==='vehicle'&&!vehicleReadyForTest()){updateVehicleProgressUI();return;}
   if(active==='vehicle'){
     const body=vehicleBodyProgress(),power=vehiclePowerProgress(),safety=vehicleSafetyProgress(),future=vehicleFutureProgress();
     if(body.done<body.total){
@@ -1726,7 +1847,7 @@ function startTest(){if(!active)return;
     startVehiclePhaseOneReveal();return;
   }
   const m=missions[active],objectCount=objectLayer.children.length,enough=drawStrokes>=1||objectCount>=2;if(!enough){$('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Needs more design work','Il faut encore travailler le design')}</b><p>${t('Add some drawing or at least two movable pieces before testing.','Ajoute un dessin ou au moins deux pièces avant de tester.')}</p></div>`;return}stopTest(false);testRunning=true;if(active==='vehicle')renderTemplate('vehicle');stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);simulation.className='creator-simulation active';simulation.innerHTML='';addTestClasses();const tags=testTags();let special='';if(active==='vehicle'){const travel=Math.max(65,stage.clientWidth*.20);buildLayer.style.setProperty('--test-travel',travel+'px');if(tags.has('flight')){buildLayer.classList.add('test-fly');simulation.innerHTML='<span class="flight-cloud" style="top:18%">☁️</span><span class="flight-cloud">☁️</span>';special=t('Flying test: the completed vehicle lifts and flies because flight technology is installed.','Test de vol : le véhicule s’élève grâce aux technologies de vol.')}else if(tags.has('amphibious')){buildLayer.classList.add('test-water');simulation.innerHTML='<div class="water-test"></div>';[...objectLayer.children].filter(o=>objectTags(o).includes('wheel')).forEach(o=>{o.classList.remove('test-wheel');o.classList.add('test-water-wheel')});special=t('Water test: the environment changes to water and the wheels retract while the complete vehicle travels as one build.','Test aquatique : l’environnement devient aquatique et les roues se rétractent pendant que le véhicule complet avance.')}else{buildLayer.classList.add('test-road');special=t('Road test: the whole completed vehicle drives smoothly, pauses at each side, then reverses. The tyres rotate with the direction of travel.','Test routier : le véhicule complet roule en douceur, marque une pause à chaque côté puis repart. Les pneus tournent selon le sens.')}}else if(active==='room'){simulation.innerHTML='<div class="room-scan"></div>';special=roomCollisionReport();}else if(active==='park'){simulation.innerHTML='<span class="park-visitor" style="top:34%">🚶</span><span class="park-visitor">🧑‍🦽</span><span class="park-visitor">🧒</span>';special=t('Visitor simulation is running. Watch how people move through the park, then stop and improve the layout.','La simulation des visiteurs est en cours. Observe leurs déplacements puis arrête et améliore le parc.')}else if(active==='robot'){buildLayer.classList.add('test-robot');special=t('Robot systems test is running on the assembled design. This is the foundation for robot-specific movement tests in later upgrades.','Le test des systèmes fonctionne sur le robot assemblé.')}else if(active==='story'){simulation.innerHTML='<div class="story-frame"></div>';special=t('Story preview is running. Check whether the characters, setting and props communicate the scene clearly.','L’aperçu de l’histoire est en cours. Vérifie que personnages, décor et accessoires racontent clairement la scène.')}else if(active==='mars'){simulation.innerHTML='<div class="room-scan"></div>';special=t('Base systems scan is running. Check habitats, support systems, transport and connections.','Le contrôle de la base est en cours. Vérifie habitats, survie, transport et connexions.')}const checks=(m.checks||[]).map(([tag,label])=>({label,ok:tags.has(tag)||objectCount>=4}));let score=Math.min(100,40+objectCount*4+drawStrokes*5);$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>${score}</b><small>/100</small></div><div><b>${t('Live test running','Test en direct')}</b><p>${special}</p>${checks.length?`<ul>${checks.map(c=>`<li class="${c.ok?'pass':'miss'}">${c.ok?'✓':'○'} ${c.label}</li>`).join('')}</ul>`:''}</div></div>`;$('creatorCoach').textContent=special;window.playTone?.(true);}
-function stopTest(showMessage=true){if(!testRunning&&showMessage)return;if(vehicleRevealActive)resetVehiclePhaseOneReveal();testRunning=false;stage.classList.remove('testing','test-active');$('stopCreationTest').hidden=true;simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();if(active==='vehicle')renderTemplate('vehicle');if(showMessage){$('creatorCoach').textContent=t('Test stopped. Adjust any part, resize it or add something new, then test again.','Test arrêté. Modifie une pièce, redimensionne-la ou ajoute un élément puis reteste.');$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Test stopped — back to edit mode','Test arrêté — retour au mode édition')}</b><p>${t('Build → Test → Stop → Improve → Test again.','Construis → Teste → Arrête → Améliore → Reteste.')}</p></div></div>`;}}
+function stopTest(showMessage=true){hideVehicleStageNotice();if(!testRunning&&showMessage)return;if(vehicleRevealActive)resetVehiclePhaseOneReveal();testRunning=false;stage.classList.remove('testing','test-active');$('stopCreationTest').hidden=true;simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}if(showMessage){$('creatorCoach').textContent=t('Test stopped. Adjust any part, resize it or add something new, then test again.','Test arrêté. Modifie une pièce, redimensionne-la ou ajoute un élément puis reteste.');$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Test stopped — back to edit mode','Test arrêté — retour au mode édition')}</b><p>${t('Build → Test → Stop → Improve → Test again.','Construis → Teste → Arrête → Améliore → Reteste.')}</p></div></div>`;}}
 function roomCollisionReport(){const objects=[...objectLayer.children].filter(o=>o.dataset.kind==='part'),large=objects.filter(o=>objectTags(o).includes('collision-large')),issues=[];for(let i=0;i<large.length;i++){for(let j=i+1;j<large.length;j++){const a=large[i].getBoundingClientRect(),b=large[j].getBoundingClientRect();const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left)),h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));const overlap=w*h,small=Math.min(a.width*a.height,b.width*b.height);if(small&&overlap/small>.28)issues.push(`${large[i].dataset.label} / ${large[j].dataset.label}`)}}return issues.length?t(`Furniture collision found: ${issues[0]}. Move one object so the room remains usable.`,`Collision de mobilier : ${issues[0]}. Déplace un objet pour garder la pièce utilisable.`):t('Room simulation is running. Lighting is switched on and no major furniture collision was detected.','La simulation de la pièce est en cours. L’éclairage est allumé et aucune collision importante n’a été détectée.');}
 
 function setObjectSize(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.size=clamp(v,24,420);selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
@@ -1738,7 +1859,7 @@ function layerSelected(front){if(!selectedObject)return;front?objectLayer.append
 // Controls
 document.querySelectorAll('[data-mission]').forEach(b=>b.onclick=()=>openMission(b.dataset.mission));
 $('toolSelect').onclick=()=>setTool('select');$('toolPen').onclick=()=>setTool('pen');$('toolEraser').onclick=()=>setTool('eraser');$('toolLine').onclick=()=>setTool('line');$('toolCurve').onclick=()=>setTool('curve');$('toolRect').onclick=()=>setTool('rect');$('toolCircle').onclick=()=>setTool('circle');
-$('toggleTemplate').onclick=()=>{templateOn=!templateOn;renderTemplate(active);updateBlueprintVisibility();commitHistory()};
+const toggleBlueprint=()=>{templateOn=!templateOn;if(active==='vehicle'&&templateOn)setTool('select');renderTemplate(active);updateBlueprintVisibility();commitHistory();showVehicleStageNotice(templateOn?t('Build mode restored','Mode construction restauré'):t('Creative drawing tools available','Outils de dessin disponibles'),templateOn?t('Fit the matching vehicle pieces to the blueprint.','Place les pièces correspondantes sur le plan.'):t('The blueprint is hidden. Draw or decorate freely, then turn it back on to continue building.' ,'Le plan est masqué. Dessine ou décore librement, puis réactive-le pour continuer la construction.'),{duration:3000});};$('toggleTemplate').onclick=toggleBlueprint;if($('vehicleToggleTemplate'))$('vehicleToggleTemplate').onclick=toggleBlueprint;
 $('toggleGrid').onclick=()=>{gridOn=!gridOn;stage.classList.toggle('show-grid',gridOn);$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');commitHistory()};
 $('undoDraw').onclick=()=>{if(historyIndex<=0)return;historyIndex--;restoreSnapshot(history[historyIndex])};$('redoDraw').onclick=()=>{if(historyIndex>=history.length-1)return;historyIndex++;restoreSnapshot(history[historyIndex])};
 $('objectSize').addEventListener('input',e=>setObjectSize(+e.target.value));$('objectSize').addEventListener('change',()=>commitHistory());$('objectRotate').addEventListener('input',e=>setObjectRotation(+e.target.value));$('objectRotate').addEventListener('change',()=>commitHistory());
@@ -1747,5 +1868,5 @@ $('testCreation').onclick=startTest;$('stopCreationTest').onclick=()=>stopTest(t
 $('closeCreatorWorkspace').onclick=()=>{stopTest(false);$('creatorWorkspace').hidden=true;document.querySelector('.creator-grid').scrollIntoView({behavior:'smooth',block:'start'})};
 document.querySelectorAll('[data-vehicle-view]').forEach(b=>b.onclick=()=>setVehicleView(b.dataset.vehicleView));
 $('vehicleResetOrbit').onclick=()=>{vehicleYaw=0;vehiclePitch=.04;vehicleViewMode='left';renderTemplate('vehicle');updateVehicleViewUI();commitHistory()};
-renderColours();setTool('select');updateHistoryButtons();updateVehicleViewUI();
+renderColours();setTool('select');updateHistoryButtons();updateVehicleViewUI();updateBlueprintVisibility();
 })();
