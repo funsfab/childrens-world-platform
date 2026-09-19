@@ -255,7 +255,7 @@ const missions={
 const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('creatorTemplate'),tctx=templateCanvas.getContext('2d');
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
-let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePhase3Progress=0,vehiclePhase3Start=0,vehiclePhase3RAF=0,vehiclePhase3Timer=0,vehiclePhase4Progress=0,vehiclePhase4Start=0,vehiclePhase4RAF=0,vehiclePhase4Timer=0,vehiclePhase5Progress=0,vehiclePhase5Start=0,vehiclePhase5RAF=0,vehiclePhase5Timer=0,vehicleCreationName='',vehiclePhase5Named=false,vehicleTransformationReplay=false,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0,vehicleNoticeTimer=0,vehicleQuizState=null;
+let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePhase3Progress=0,vehiclePhase3Start=0,vehiclePhase3RAF=0,vehiclePhase3Timer=0,vehiclePhase4Progress=0,vehiclePhase4Start=0,vehiclePhase4RAF=0,vehiclePhase4Timer=0,vehiclePhase5Progress=0,vehiclePhase5Start=0,vehiclePhase5RAF=0,vehiclePhase5Timer=0,vehicleCreationName='',vehiclePhase5Named=false,vehicleTransformationReplay=false,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0,vehicleNoticeTimer=0,vehicleQuizState=null,vehicleQuizRecentIds=[];
 const STORAGE='cw_creator_projects_v18';
 /* Keep version 9 so saved prototype cars restore through the staged final-reveal updates. */
 const VEHICLE_PUZZLE_VERSION=9;
@@ -278,19 +278,936 @@ const VEHICLE_FLIGHT_SYSTEMS=[
 const VEHICLE_FUTURE_PART_IDS=new Set(['wing','propeller','jet','amphibious','water-jet','retract-wheel','drone-lift','stabiliser','future-sensor']);
 
 const VEHICLE_QUIZ_BANK=[
- {id:'windscreen',scope:'body',q:['What is the main job of the windscreen?','Quel est le rôle principal du pare-brise ?'],a:[['Let the driver see while protecting the cabin','Permettre de voir tout en protégeant l’habitacle'],['Store fuel','Stocker le carburant'],['Turn the wheels','Faire tourner les roues'],['Cool the engine','Refroidir le moteur']],correct:0,why:['The windscreen protects occupants from wind and debris while keeping the road visible.','Le pare-brise protège du vent et des débris tout en gardant la route visible.']},
- {id:'steering',scope:'body',q:['Which part lets the driver control the direction of the car?','Quelle pièce permet au conducteur de contrôler la direction ?'],a:[['Steering wheel','Volant'],['Rear light','Feu arrière'],['Fuel tank','Réservoir'],['Seat belt','Ceinture']],correct:0,why:['The steering wheel controls the steering system that changes the direction of the road wheels.','Le volant commande le système de direction qui oriente les roues.']},
- {id:'seatbelt',scope:'safety',q:['Why is a seat belt important?','Pourquoi la ceinture de sécurité est-elle importante ?'],a:[['It helps restrain an occupant during sudden stops or crashes','Elle retient l’occupant lors d’un freinage brusque ou d’un choc'],['It charges the battery','Elle recharge la batterie'],['It turns on the headlights','Elle allume les phares'],['It makes the engine faster','Elle accélère le moteur']],correct:0,why:['A seat belt helps reduce harmful movement of an occupant during a sudden stop or collision.','La ceinture aide à limiter le déplacement dangereux d’un occupant lors d’un arrêt brusque ou d’une collision.']},
- {id:'sensor',scope:'safety',q:['What can a collision sensor help a vehicle detect?','Que peut aider à détecter un capteur anticollision ?'],a:[['Nearby obstacles or possible impacts','Des obstacles proches ou un risque de choc'],['The colour of the paint','La couleur de la peinture'],['How many seats are fitted','Le nombre de sièges'],['The radio station','La station de radio']],correct:0,why:['Collision sensors can help safety systems detect objects or impact risks around the vehicle.','Les capteurs anticollision peuvent aider les systèmes de sécurité à détecter des objets ou des risques de choc.']},
- {id:'petrol',scope:'petrol',q:['What stores the petrol used by a petrol-powered car?','Qu’est-ce qui stocke l’essence d’une voiture à essence ?'],a:[['Fuel tank','Réservoir de carburant'],['Traction battery','Batterie de traction'],['Airbag','Airbag'],['Windscreen','Pare-brise']],correct:0,why:['A petrol car stores its fuel in a fuel tank.','Une voiture à essence stocke son carburant dans un réservoir.']},
- {id:'diesel',scope:'diesel',q:['Which extra component helps reduce soot particles in many diesel exhaust systems?','Quel composant aide à réduire les particules de suie dans de nombreux échappements diesel ?'],a:[['Diesel particulate filter','Filtre à particules diesel'],['Side mirror','Rétroviseur'],['Steering wheel','Volant'],['Roof panel','Panneau de toit']],correct:0,why:['A diesel particulate filter is designed to trap soot particles in the exhaust.','Un filtre à particules diesel est conçu pour retenir les particules de suie dans l’échappement.']},
- {id:'electric',scope:'electric',q:['Which component stores most of the driving energy in a battery-electric car?','Quel composant stocke l’essentiel de l’énergie de conduite d’une voiture électrique ?'],a:[['Traction battery','Batterie de traction'],['Fuel tank','Réservoir de carburant'],['Exhaust pipe','Échappement'],['Rear bumper','Pare-chocs arrière']],correct:0,why:['The traction battery stores electrical energy for the electric motor.','La batterie de traction stocke l’énergie électrique destinée au moteur électrique.']},
- {id:'hybrid',scope:'hybrid',q:['What makes a hybrid power system different from a petrol-only car?','Qu’est-ce qui distingue un système hybride d’une voiture uniquement à essence ?'],a:[['It combines an engine with electric drive components','Il combine un moteur thermique avec des composants électriques'],['It has no wheels','Il n’a pas de roues'],['It cannot use brakes','Il ne peut pas freiner'],['It only works in water','Il fonctionne seulement dans l’eau']],correct:0,why:['A hybrid combines a combustion engine with an electric motor and battery system.','Un hybride combine un moteur thermique avec un moteur électrique et une batterie.']},
- {id:'propeller',scope:'propeller',q:['What provides thrust in the propeller-flight system you built?','Qu’est-ce qui fournit la poussée dans le système de vol par hélices ?'],a:[['Spinning propellers','Des hélices en rotation'],['Seat belts','Les ceintures'],['Rear windows','Les lunettes arrière'],['Fuel cap only','Le bouchon de carburant uniquement']],correct:0,why:['Rotating propellers push air to create thrust.','Les hélices en rotation déplacent l’air pour créer de la poussée.']},
- {id:'jet',scope:'jet',q:['What is the job of the jet units in the jet-flight design?','Quel est le rôle des réacteurs dans la version à réaction ?'],a:[['Create high-speed thrust','Créer une poussée à grande vitesse'],['Hold passengers in their seats','Maintenir les passagers sur leurs sièges'],['Clean the windscreen','Nettoyer le pare-brise'],['Store luggage','Stocker les bagages']],correct:0,why:['Jet units generate thrust that pushes the vehicle through the air.','Les réacteurs génèrent une poussée qui propulse le véhicule dans l’air.']},
- {id:'drone',scope:'drone',q:['How does the Drone Lift design begin its flight?','Comment la version Drone Lift commence-t-elle son vol ?'],a:[['With vertical lift from rotors','Par une portance verticale créée par les rotors'],['By entering water','En entrant dans l’eau'],['By removing the roof','En retirant le toit'],['By turning off the battery','En coupant la batterie']],correct:0,why:['Drone-style rotors can create vertical lift before the vehicle moves forward.','Des rotors de type drone peuvent créer une portance verticale avant le vol vers l’avant.']},
- {id:'water',scope:'water',q:['Why do the wheels retract in the amphibious design?','Pourquoi les roues se rétractent-elles dans la version amphibie ?'],a:[['To reduce drag and let the hull move through water more cleanly','Pour réduire la traînée et permettre à la coque d’avancer plus facilement dans l’eau'],['To make the headlights brighter','Pour rendre les phares plus puissants'],['To open the doors','Pour ouvrir les portes'],['To change the paint colour','Pour changer la couleur']],correct:0,why:['Retracting the road wheels helps the water-mode shape move more efficiently through the water.','Rétracter les roues routières aide la forme aquatique à avancer plus efficacement dans l’eau.']},
- {id:'vehicle-purpose',scope:'general',q:['Why are a sports car, 4×4, van, coach and tractor designed differently?','Pourquoi une voiture de sport, un 4×4, un van, un autocar et un tracteur sont-ils conçus différemment ?'],a:[['They are engineered for different jobs, loads and environments','Ils sont conçus pour des usages, charges et environnements différents'],['Only because they need different paint colours','Uniquement parce qu’ils ont des couleurs différentes'],['Because only one of them needs brakes','Parce qu’un seul a besoin de freins'],['Because buses do not need tyres','Parce que les bus n’ont pas besoin de pneus']],correct:0,why:['Vehicle engineering changes with purpose: passenger/cargo capacity, terrain, weight, visibility, braking and other needs.','L’ingénierie varie selon l’usage : capacité, terrain, poids, visibilité, freinage et autres besoins.']}
+ {
+  "id": "windscreen",
+  "scope": "body",
+  "q": [
+   "What is the main job of the windscreen?",
+   "Quel est le rôle principal du pare-brise ?"
+  ],
+  "a": [
+   [
+    "Let the driver see while protecting the cabin",
+    "Permettre de voir tout en protégeant l’habitacle"
+   ],
+   [
+    "Store fuel",
+    "Stocker le carburant"
+   ],
+   [
+    "Turn the wheels",
+    "Faire tourner les roues"
+   ],
+   [
+    "Cool the engine",
+    "Refroidir le moteur"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "The windscreen protects occupants from wind and debris while keeping the road visible.",
+   "Le pare-brise protège du vent et des débris tout en gardant la route visible."
+  ]
+ },
+ {
+  "id": "steering",
+  "scope": "body",
+  "q": [
+   "Which part lets the driver control the direction of the car?",
+   "Quelle pièce permet au conducteur de contrôler la direction ?"
+  ],
+  "a": [
+   [
+    "Steering wheel",
+    "Volant"
+   ],
+   [
+    "Rear light",
+    "Feu arrière"
+   ],
+   [
+    "Fuel tank",
+    "Réservoir"
+   ],
+   [
+    "Seat belt",
+    "Ceinture"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "The steering wheel controls the steering system that changes the direction of the road wheels.",
+   "Le volant commande le système de direction qui oriente les roues."
+  ]
+ },
+ {
+  "id": "tyre-tread",
+  "scope": "body",
+  "q": [
+   "Why do road tyres have tread patterns?",
+   "Pourquoi les pneus routiers ont-ils des sculptures ?"
+  ],
+  "a": [
+   [
+    "To help the tyre grip the road and move water away",
+    "Pour aider le pneu à adhérer à la route et évacuer l’eau"
+   ],
+   [
+    "To make the horn louder",
+    "Pour rendre le klaxon plus fort"
+   ],
+   [
+    "To store electricity",
+    "Pour stocker l’électricité"
+   ],
+   [
+    "To open the doors",
+    "Pour ouvrir les portes"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Tyre tread helps maintain grip and can channel water away from the contact area.",
+   "Les sculptures du pneu aident à garder l’adhérence et à évacuer l’eau de la zone de contact."
+  ]
+ },
+ {
+  "id": "side-mirror",
+  "scope": "body",
+  "q": [
+   "What do side mirrors help the driver do?",
+   "À quoi servent les rétroviseurs extérieurs ?"
+  ],
+  "a": [
+   [
+    "See areas beside and behind the vehicle",
+    "Voir les zones sur les côtés et derrière le véhicule"
+   ],
+   [
+    "Charge the battery",
+    "Recharger la batterie"
+   ],
+   [
+    "Cool the brakes",
+    "Refroidir les freins"
+   ],
+   [
+    "Move the seats",
+    "Déplacer les sièges"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Side mirrors improve the driver’s view of traffic and objects beside and behind the vehicle.",
+   "Les rétroviseurs extérieurs améliorent la vue du conducteur sur les véhicules et objets situés à côté et derrière."
+  ]
+ },
+ {
+  "id": "headlights",
+  "scope": "body",
+  "q": [
+   "What are headlights mainly designed to do?",
+   "À quoi servent principalement les phares ?"
+  ],
+  "a": [
+   [
+    "Light the road ahead and help the vehicle be seen",
+    "Éclairer la route et aider le véhicule à être vu"
+   ],
+   [
+    "Hold the wheels on",
+    "Maintenir les roues"
+   ],
+   [
+    "Store luggage",
+    "Stocker les bagages"
+   ],
+   [
+    "Control the gearbox",
+    "Commander la boîte de vitesses"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Headlights illuminate the road ahead and make the vehicle easier for others to see in low light.",
+   "Les phares éclairent la route et rendent le véhicule plus visible quand la lumière est faible."
+  ]
+ },
+ {
+  "id": "bumper",
+  "scope": "body",
+  "q": [
+   "What is a bumper designed to help with?",
+   "À quoi sert un pare-chocs ?"
+  ],
+  "a": [
+   [
+    "Managing some of the energy from low-speed impacts",
+    "À gérer une partie de l’énergie des chocs à faible vitesse"
+   ],
+   [
+    "Steering the front wheels",
+    "À diriger les roues avant"
+   ],
+   [
+    "Charging an electric car",
+    "À recharger une voiture électrique"
+   ],
+   [
+    "Holding the windscreen",
+    "À tenir le pare-brise"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Bumpers are part of the vehicle structure designed to help manage minor impact forces and protect nearby components.",
+   "Les pare-chocs font partie de la structure conçue pour aider à gérer de petits chocs et protéger les éléments voisins."
+  ]
+ },
+ {
+  "id": "seatbelt",
+  "scope": "safety",
+  "q": [
+   "Why is a seat belt important?",
+   "Pourquoi la ceinture de sécurité est-elle importante ?"
+  ],
+  "a": [
+   [
+    "It helps restrain an occupant during sudden stops or crashes",
+    "Elle retient l’occupant lors d’un freinage brusque ou d’un choc"
+   ],
+   [
+    "It charges the battery",
+    "Elle recharge la batterie"
+   ],
+   [
+    "It turns on the headlights",
+    "Elle allume les phares"
+   ],
+   [
+    "It makes the engine faster",
+    "Elle accélère le moteur"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "A seat belt helps reduce harmful movement of an occupant during a sudden stop or collision.",
+   "La ceinture aide à limiter le déplacement dangereux d’un occupant lors d’un arrêt brusque ou d’une collision."
+  ]
+ },
+ {
+  "id": "airbag",
+  "scope": "safety",
+  "q": [
+   "What is an airbag designed to do in a serious collision?",
+   "À quoi sert un airbag lors d’une collision importante ?"
+  ],
+  "a": [
+   [
+    "Cushion an occupant and reduce contact with hard surfaces",
+    "Amortir l’occupant et réduire le contact avec les surfaces dures"
+   ],
+   [
+    "Increase tyre pressure",
+    "Augmenter la pression des pneus"
+   ],
+   [
+    "Refill the fuel tank",
+    "Remplir le réservoir"
+   ],
+   [
+    "Make the car go faster",
+    "Faire aller la voiture plus vite"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Airbags work with seat belts to cushion occupants during certain collisions.",
+   "Les airbags fonctionnent avec les ceintures pour amortir les occupants lors de certaines collisions."
+  ]
+ },
+ {
+  "id": "collision-sensor",
+  "scope": "safety",
+  "q": [
+   "What can a collision sensor help a vehicle detect?",
+   "Que peut aider à détecter un capteur anticollision ?"
+  ],
+  "a": [
+   [
+    "Nearby obstacles or possible impacts",
+    "Des obstacles proches ou un risque de choc"
+   ],
+   [
+    "The colour of the paint",
+    "La couleur de la peinture"
+   ],
+   [
+    "How many seats are fitted",
+    "Le nombre de sièges"
+   ],
+   [
+    "The radio station",
+    "La station de radio"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Collision sensors can help safety systems detect objects or impact risks around the vehicle.",
+   "Les capteurs anticollision peuvent aider les systèmes de sécurité à détecter des objets ou des risques de choc."
+  ]
+ },
+ {
+  "id": "safety-camera",
+  "scope": "safety",
+  "q": [
+   "How can a safety camera help a driver?",
+   "Comment une caméra de sécurité peut-elle aider le conducteur ?"
+  ],
+  "a": [
+   [
+    "By showing areas that may be difficult to see directly",
+    "En montrant des zones difficiles à voir directement"
+   ],
+   [
+    "By making the engine quieter",
+    "En rendant le moteur plus silencieux"
+   ],
+   [
+    "By changing the paint colour",
+    "En changeant la couleur"
+   ],
+   [
+    "By filling the tyres with air",
+    "En gonflant les pneus"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Cameras can give the driver extra views around the vehicle, such as behind it when reversing.",
+   "Les caméras peuvent donner au conducteur des vues supplémentaires autour du véhicule, par exemple derrière en marche arrière."
+  ]
+ },
+ {
+  "id": "indicator",
+  "scope": "safety",
+  "q": [
+   "Why should a driver use indicators before turning or changing direction?",
+   "Pourquoi faut-il utiliser les clignotants avant de tourner ou changer de direction ?"
+  ],
+  "a": [
+   [
+    "To tell other road users what the vehicle intends to do",
+    "Pour indiquer aux autres usagers ce que le véhicule va faire"
+   ],
+   [
+    "To cool the tyres",
+    "Pour refroidir les pneus"
+   ],
+   [
+    "To charge the battery",
+    "Pour recharger la batterie"
+   ],
+   [
+    "To lock the boot",
+    "Pour verrouiller le coffre"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Indicators communicate the driver’s intended movement to other road users.",
+   "Les clignotants communiquent aux autres usagers le mouvement prévu par le conducteur."
+  ]
+ },
+ {
+  "id": "warning-light",
+  "scope": "safety",
+  "q": [
+   "What can a dashboard warning light tell the driver?",
+   "Que peut indiquer un voyant d’alerte sur le tableau de bord ?"
+  ],
+  "a": [
+   [
+    "That a system may need attention",
+    "Qu’un système peut nécessiter une vérification"
+   ],
+   [
+    "That the car has changed colour",
+    "Que la voiture a changé de couleur"
+   ],
+   [
+    "That the boot is bigger",
+    "Que le coffre est plus grand"
+   ],
+   [
+    "That the road is always safe",
+    "Que la route est toujours sûre"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Warning lights are designed to alert the driver that a vehicle system may need attention or checking.",
+   "Les voyants d’alerte servent à signaler qu’un système du véhicule peut nécessiter une vérification."
+  ]
+ },
+ {
+  "id": "vehicle-purpose",
+  "scope": "general",
+  "q": [
+   "Why are a sports car, 4×4, van, coach and tractor designed differently?",
+   "Pourquoi une voiture de sport, un 4×4, un van, un autocar et un tracteur sont-ils conçus différemment ?"
+  ],
+  "a": [
+   [
+    "They are engineered for different jobs, loads and environments",
+    "Ils sont conçus pour des usages, charges et environnements différents"
+   ],
+   [
+    "Only because they need different paint colours",
+    "Uniquement parce qu’ils ont des couleurs différentes"
+   ],
+   [
+    "Because only one of them needs brakes",
+    "Parce qu’un seul a besoin de freins"
+   ],
+   [
+    "Because buses do not need tyres",
+    "Parce que les bus n’ont pas besoin de pneus"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Vehicle engineering changes with purpose: passenger or cargo capacity, terrain, weight, visibility, braking and other needs.",
+   "L’ingénierie varie selon l’usage : capacité, terrain, poids, visibilité, freinage et autres besoins."
+  ]
+ },
+ {
+  "id": "fourbyfour-clearance",
+  "scope": "general",
+  "q": [
+   "Why does a 4×4 often have more ground clearance than a sports car?",
+   "Pourquoi un 4×4 a-t-il souvent plus de garde au sol qu’une voiture de sport ?"
+  ],
+  "a": [
+   [
+    "To travel over rougher ground without the body hitting obstacles as easily",
+    "Pour franchir des terrains plus accidentés sans que la carrosserie touche aussi facilement"
+   ],
+   [
+    "To make the radio louder",
+    "Pour rendre la radio plus forte"
+   ],
+   [
+    "To reduce the number of seats",
+    "Pour réduire le nombre de sièges"
+   ],
+   [
+    "To remove the need for brakes",
+    "Pour supprimer le besoin de freins"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Extra ground clearance helps a 4×4 travel over uneven surfaces, bumps and obstacles.",
+   "Une garde au sol plus élevée aide un 4×4 à franchir des surfaces irrégulières, bosses et obstacles."
+  ]
+ },
+ {
+  "id": "van-space",
+  "scope": "general",
+  "q": [
+   "Why are many vans taller and boxier than sports cars?",
+   "Pourquoi de nombreux vans sont-ils plus hauts et plus carrés que les voitures de sport ?"
+  ],
+  "a": [
+   [
+    "To create more usable space for passengers or cargo",
+    "Pour créer plus d’espace utile pour les passagers ou le chargement"
+   ],
+   [
+    "To make them fly",
+    "Pour les faire voler"
+   ],
+   [
+    "To avoid using tyres",
+    "Pour éviter d’utiliser des pneus"
+   ],
+   [
+    "To make the windscreen smaller",
+    "Pour réduire le pare-brise"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "A taller, boxier body can provide more interior volume for people, luggage or goods.",
+   "Une carrosserie plus haute et plus carrée peut offrir davantage de volume intérieur pour les personnes, bagages ou marchandises."
+  ]
+ },
+ {
+  "id": "coach-braking",
+  "scope": "general",
+  "q": [
+   "Why must an intercity coach have a braking system designed for its much greater mass?",
+   "Pourquoi un autocar doit-il avoir un système de freinage adapté à sa masse beaucoup plus élevée ?"
+  ],
+  "a": [
+   [
+    "A heavier vehicle needs its braking system to safely manage more moving energy",
+    "Un véhicule plus lourd a besoin d’un freinage capable de gérer davantage d’énergie en mouvement"
+   ],
+   [
+    "Because coaches have no steering",
+    "Parce que les autocars n’ont pas de direction"
+   ],
+   [
+    "Because passengers make the headlights dim",
+    "Parce que les passagers rendent les phares moins puissants"
+   ],
+   [
+    "Because buses cannot use mirrors",
+    "Parce que les bus ne peuvent pas utiliser de rétroviseurs"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "As vehicle mass increases, the braking system must safely manage more energy when slowing or stopping.",
+   "Quand la masse augmente, le système de freinage doit gérer davantage d’énergie lors du ralentissement ou de l’arrêt."
+  ]
+ },
+ {
+  "id": "tractor-tyres",
+  "scope": "general",
+  "q": [
+   "Why do farm tractors often use very large tyres with deep tread?",
+   "Pourquoi les tracteurs agricoles utilisent-ils souvent de très gros pneus à sculptures profondes ?"
+  ],
+  "a": [
+   [
+    "To gain traction on soft or uneven ground",
+    "Pour obtenir de l’adhérence sur les sols meubles ou irréguliers"
+   ],
+   [
+    "To make the tractor shorter",
+    "Pour rendre le tracteur plus court"
+   ],
+   [
+    "To store diesel inside the tyre",
+    "Pour stocker le diesel dans le pneu"
+   ],
+   [
+    "To replace the steering wheel",
+    "Pour remplacer le volant"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Large tyres with deep tread help tractors grip soil and spread their load over the ground.",
+   "De gros pneus à sculptures profondes aident les tracteurs à accrocher le sol et à répartir leur charge."
+  ]
+ },
+ {
+  "id": "sports-car-low",
+  "scope": "general",
+  "q": [
+   "Why are many sports cars built relatively low to the ground?",
+   "Pourquoi de nombreuses voitures de sport sont-elles construites assez près du sol ?"
+  ],
+  "a": [
+   [
+    "A lower design can help stability and reduce aerodynamic drag",
+    "Une conception plus basse peut aider la stabilité et réduire la traînée aérodynamique"
+   ],
+   [
+    "So they can carry more farm equipment",
+    "Pour transporter plus de matériel agricole"
+   ],
+   [
+    "So they do not need suspension",
+    "Pour ne pas avoir besoin de suspension"
+   ],
+   [
+    "So the driver cannot see the road",
+    "Pour que le conducteur ne voie pas la route"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "A low body can lower the centre of gravity and help airflow around a performance car.",
+   "Une carrosserie basse peut abaisser le centre de gravité et améliorer l’écoulement de l’air autour d’une voiture performante."
+  ]
+ },
+ {
+  "id": "petrol-fuel-tank",
+  "scope": "petrol",
+  "q": [
+   "What stores the petrol used by a petrol-powered car?",
+   "Qu’est-ce qui stocke l’essence d’une voiture à essence ?"
+  ],
+  "a": [
+   [
+    "Fuel tank",
+    "Réservoir de carburant"
+   ],
+   [
+    "Traction battery",
+    "Batterie de traction"
+   ],
+   [
+    "Airbag",
+    "Airbag"
+   ],
+   [
+    "Windscreen",
+    "Pare-brise"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "A petrol car stores its fuel in a fuel tank.",
+   "Une voiture à essence stocke son carburant dans un réservoir."
+  ]
+ },
+ {
+  "id": "petrol-radiator",
+  "scope": "petrol",
+  "q": [
+   "What is the radiator helping to control in a petrol engine?",
+   "Qu’aide à contrôler le radiateur d’un moteur à essence ?"
+  ],
+  "a": [
+   [
+    "Engine temperature",
+    "La température du moteur"
+   ],
+   [
+    "Paint colour",
+    "La couleur de la peinture"
+   ],
+   [
+    "Seat position",
+    "La position du siège"
+   ],
+   [
+    "Tyre tread depth",
+    "La profondeur des sculptures des pneus"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "The cooling system and radiator help remove excess heat from the engine.",
+   "Le système de refroidissement et le radiateur aident à évacuer l’excès de chaleur du moteur."
+  ]
+ },
+ {
+  "id": "diesel-dpf",
+  "scope": "diesel",
+  "q": [
+   "Which extra component helps reduce soot particles in many diesel exhaust systems?",
+   "Quel composant aide à réduire les particules de suie dans de nombreux échappements diesel ?"
+  ],
+  "a": [
+   [
+    "Diesel particulate filter",
+    "Filtre à particules diesel"
+   ],
+   [
+    "Side mirror",
+    "Rétroviseur"
+   ],
+   [
+    "Steering wheel",
+    "Volant"
+   ],
+   [
+    "Roof panel",
+    "Panneau de toit"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "A diesel particulate filter is designed to trap soot particles in the exhaust.",
+   "Un filtre à particules diesel est conçu pour retenir les particules de suie dans l’échappement."
+  ]
+ },
+ {
+  "id": "diesel-fuel",
+  "scope": "diesel",
+  "q": [
+   "Which fuel is a diesel engine designed to use?",
+   "Quel carburant un moteur diesel est-il conçu pour utiliser ?"
+  ],
+  "a": [
+   [
+    "Diesel fuel",
+    "Gazole"
+   ],
+   [
+    "Only electricity",
+    "Uniquement l’électricité"
+   ],
+   [
+    "Water",
+    "De l’eau"
+   ],
+   [
+    "Airbag gas",
+    "Le gaz d’un airbag"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "A diesel engine is designed around the properties and ignition behaviour of diesel fuel.",
+   "Un moteur diesel est conçu en fonction des propriétés et du mode d’allumage du gazole."
+  ]
+ },
+ {
+  "id": "electric-battery",
+  "scope": "electric",
+  "q": [
+   "Which component stores most of the driving energy in a battery-electric car?",
+   "Quel composant stocke l’essentiel de l’énergie de conduite d’une voiture électrique ?"
+  ],
+  "a": [
+   [
+    "Traction battery",
+    "Batterie de traction"
+   ],
+   [
+    "Fuel tank",
+    "Réservoir de carburant"
+   ],
+   [
+    "Exhaust pipe",
+    "Échappement"
+   ],
+   [
+    "Rear bumper",
+    "Pare-chocs arrière"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "The traction battery stores electrical energy for the electric motor.",
+   "La batterie de traction stocke l’énergie électrique destinée au moteur électrique."
+  ]
+ },
+ {
+  "id": "electric-inverter",
+  "scope": "electric",
+  "q": [
+   "What is the inverter used for in an electric power system?",
+   "À quoi sert l’onduleur dans un système électrique ?"
+  ],
+  "a": [
+   [
+    "Managing and converting electrical power for the motor",
+    "À gérer et convertir l’énergie électrique pour le moteur"
+   ],
+   [
+    "Holding the passenger seat",
+    "À maintenir le siège passager"
+   ],
+   [
+    "Cleaning the rear window",
+    "À nettoyer la lunette arrière"
+   ],
+   [
+    "Storing petrol",
+    "À stocker l’essence"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "The inverter controls and converts electrical power so the motor can use it effectively.",
+   "L’onduleur contrôle et convertit l’énergie électrique afin que le moteur puisse l’utiliser efficacement."
+  ]
+ },
+ {
+  "id": "hybrid-combination",
+  "scope": "hybrid",
+  "q": [
+   "What makes a hybrid power system different from a petrol-only car?",
+   "Qu’est-ce qui distingue un système hybride d’une voiture uniquement à essence ?"
+  ],
+  "a": [
+   [
+    "It combines a combustion engine with electric drive components",
+    "Il combine un moteur thermique avec des composants électriques"
+   ],
+   [
+    "It has no wheels",
+    "Il n’a pas de roues"
+   ],
+   [
+    "It cannot use brakes",
+    "Il ne peut pas freiner"
+   ],
+   [
+    "It only works in water",
+    "Il fonctionne seulement dans l’eau"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "A hybrid combines a combustion engine with an electric motor and battery system.",
+   "Un hybride combine un moteur thermique avec un moteur électrique et une batterie."
+  ]
+ },
+ {
+  "id": "hybrid-regen",
+  "scope": "hybrid",
+  "q": [
+   "What can regenerative braking do in many hybrid vehicles?",
+   "Que peut faire le freinage régénératif dans de nombreux véhicules hybrides ?"
+  ],
+  "a": [
+   [
+    "Recover some energy while the vehicle slows and send it back to the battery",
+    "Récupérer une partie de l’énergie au ralentissement et la renvoyer vers la batterie"
+   ],
+   [
+    "Fill the fuel tank automatically",
+    "Remplir automatiquement le réservoir"
+   ],
+   [
+    "Open all the doors",
+    "Ouvrir toutes les portes"
+   ],
+   [
+    "Turn the car into a boat",
+    "Transformer la voiture en bateau"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Regenerative braking can use the electric motor as a generator to recover some energy during slowing.",
+   "Le freinage régénératif peut utiliser le moteur électrique comme générateur pour récupérer une partie de l’énergie au ralentissement."
+  ]
+ },
+ {
+  "id": "propeller-thrust",
+  "scope": "propeller",
+  "q": [
+   "What provides thrust in the propeller-flight system you built?",
+   "Qu’est-ce qui fournit la poussée dans le système de vol par hélices ?"
+  ],
+  "a": [
+   [
+    "Spinning propellers",
+    "Des hélices en rotation"
+   ],
+   [
+    "Seat belts",
+    "Les ceintures"
+   ],
+   [
+    "Rear windows",
+    "Les lunettes arrière"
+   ],
+   [
+    "Fuel cap only",
+    "Le bouchon de carburant uniquement"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Rotating propellers push air to create thrust.",
+   "Les hélices en rotation déplacent l’air pour créer de la poussée."
+  ]
+ },
+ {
+  "id": "jet-thrust",
+  "scope": "jet",
+  "q": [
+   "What is the job of the jet units in the jet-flight design?",
+   "Quel est le rôle des réacteurs dans la version à réaction ?"
+  ],
+  "a": [
+   [
+    "Create high-speed thrust",
+    "Créer une poussée à grande vitesse"
+   ],
+   [
+    "Hold passengers in their seats",
+    "Maintenir les passagers sur leurs sièges"
+   ],
+   [
+    "Clean the windscreen",
+    "Nettoyer le pare-brise"
+   ],
+   [
+    "Store luggage",
+    "Stocker les bagages"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Jet units generate thrust that pushes the vehicle through the air.",
+   "Les réacteurs génèrent une poussée qui propulse le véhicule dans l’air."
+  ]
+ },
+ {
+  "id": "drone-lift",
+  "scope": "drone",
+  "q": [
+   "How does the Drone Lift design begin its flight?",
+   "Comment la version Drone Lift commence-t-elle son vol ?"
+  ],
+  "a": [
+   [
+    "With vertical lift from rotors",
+    "Par une portance verticale créée par les rotors"
+   ],
+   [
+    "By entering water",
+    "En entrant dans l’eau"
+   ],
+   [
+    "By removing the roof",
+    "En retirant le toit"
+   ],
+   [
+    "By turning off the battery",
+    "En coupant la batterie"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Drone-style rotors can create vertical lift before the vehicle moves forward.",
+   "Des rotors de type drone peuvent créer une portance verticale avant le vol vers l’avant."
+  ]
+ },
+ {
+  "id": "water-retract",
+  "scope": "water",
+  "q": [
+   "Why do the wheels retract in the amphibious design?",
+   "Pourquoi les roues se rétractent-elles dans la version amphibie ?"
+  ],
+  "a": [
+   [
+    "To reduce drag and let the hull move through water more cleanly",
+    "Pour réduire la traînée et permettre à la coque d’avancer plus facilement dans l’eau"
+   ],
+   [
+    "To make the headlights brighter",
+    "Pour rendre les phares plus puissants"
+   ],
+   [
+    "To open the doors",
+    "Pour ouvrir les portes"
+   ],
+   [
+    "To change the paint colour",
+    "Pour changer la couleur"
+   ]
+  ],
+  "correct": 0,
+  "why": [
+   "Retracting the road wheels helps the water-mode shape move more efficiently through the water.",
+   "Rétracter les roues routières aide la forme aquatique à avancer plus efficacement dans l’eau."
+  ]
+ }
 ];
 
 function modesForMission(m){if(m.dynamicModes==='robot')return robotModesFor(currentLibraryId||'robot-a');if(m.dynamicModes==='story')return storyModesFor(currentLibraryId||'story-forest');if(m.dynamicModes==='mars')return marsModesFor(currentLibraryId||'mars-red');return m.modes||[];}
@@ -1725,7 +2642,12 @@ function vehicleQuizPool(){
   return VEHICLE_QUIZ_BANK.filter(q=>scopes.has(q.scope));
 }
 function startVehicleKnowledgeQuiz(){
-  const pool=[...vehicleQuizPool()].sort(()=>Math.random()-.5),questions=pool.slice(0,Math.min(5,pool.length));vehicleQuizState={questions,index:0,score:0,answered:false};renderVehicleKnowledgeQuestion();
+  const shuffle=a=>{const out=[...a];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out};
+  const pool=vehicleQuizPool(),recent=new Set(vehicleQuizRecentIds),fresh=pool.filter(q=>!recent.has(q.id));
+  const source=fresh.length>=5?fresh:pool.filter(q=>!vehicleQuizRecentIds.slice(0,5).includes(q.id));
+  const questions=shuffle(source.length>=5?source:pool).slice(0,Math.min(5,pool.length));
+  vehicleQuizRecentIds=[...questions.map(q=>q.id),...vehicleQuizRecentIds.filter(id=>!questions.some(q=>q.id===id))].slice(0,15);
+  vehicleQuizState={questions,index:0,score:0,answered:false};renderVehicleKnowledgeQuestion();
 }
 function renderVehicleKnowledgeQuestion(){
   const st=vehicleQuizState;if(!st)return;const host=$('creatorTestResult');
