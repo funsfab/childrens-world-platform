@@ -1,0 +1,72 @@
+Children World — Future Vehicle Multi-Vehicle Build Fix 24
+Date: 2026-09-19
+
+Purpose
+-------
+Add the four remaining Future Vehicle build types without copying the Sport Car final animation.
+The Sport Car remains the only vehicle connected to the existing final transformation/test sequence.
+
+Added vehicle builds
+--------------------
+1. 4×4 / SUV
+2. Van
+3. Intercity Coach / Bus
+4. Farm Tractor
+
+What now works for every vehicle
+--------------------------------
+- Vehicle can be selected from the compact vehicle list.
+- Each vehicle has its own preview image and its own 3D-style blueprint proportions.
+- Left / Right / Front / Rear / Top / Interior / Free rotate views continue to work.
+- Body & Movement uses vehicle-specific puzzle locations and quantities.
+- Power System supports Petrol, Diesel, Electric and Hybrid choices.
+- Safety uses matching cabin/exterior slots and quantities for the selected vehicle.
+- Future Tech supports Flying Car and Water / Amphibious paths, including Propeller / Jet / Drone Lift.
+- Part buttons lock after every required copy has been fitted.
+- Completed build sections receive the normal completion state and auto-progress behaviour.
+- Test My Creation stays locked until Body & Movement, Power, Safety and Future Tech are all complete.
+
+Vehicle-specific differences
+----------------------------
+4×4 / SUV
+- Taller body and higher ground-clearance blueprint.
+- Four doors, four side windows, four road wheels and multi-seat interior.
+
+Van
+- Taller/longer body.
+- Front + sliding-door style puzzle locations.
+- More side windows and passenger seats.
+
+Intercity Coach / Bus
+- Long coach body.
+- Six road wheels / three axles.
+- Repeated coach passenger windows.
+- Passenger doors and a larger multi-row seating puzzle.
+- Rear-oriented power-system positioning where appropriate.
+
+Farm Tractor
+- Tractor body/cabin silhouette.
+- Smaller front wheels and much larger rear wheels.
+- Cabin doors/windows, engine bonnet and single-driver interior.
+- Tractor-appropriate body puzzle omits a normal passenger-car boot/trunk.
+
+Vehicle switching
+-----------------
+- Switching between vehicles no longer carries fitted pieces into another vehicle.
+- During the current browser session, each vehicle build is cached separately.
+- Save Project stores those per-vehicle prototype build states so they can be restored later on the same browser/device.
+
+Final animation rule
+--------------------
+- Sport Car: existing full transformation, paint, Test World, systems test and Mission Complete sequence is unchanged.
+- 4×4 / SUV, Van, Intercity Coach and Farm Tractor: once all four build areas are complete, Test My Creation unlocks and confirms that the build is complete, but DOES NOT reuse the Sport Car final animation.
+- Their individual final animations/test journeys are intentionally left for the next design decision.
+
+Files changed
+-------------
+- js/creator.js
+- css/style.css
+- assets/creator/vehicle-suv.webp
+- assets/creator/vehicle-van.webp
+- assets/creator/vehicle-coach.webp
+- assets/creator/vehicle-tractor.webp
