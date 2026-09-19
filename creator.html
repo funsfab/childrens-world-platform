@@ -71,13 +71,14 @@
               <button class="creator-tool" type="button" data-vehicle-view="rear">Rear</button>
               <button class="creator-tool" type="button" data-vehicle-view="top">Top</button>
               <button class="creator-tool" type="button" data-vehicle-view="interior">Interior</button>
+              <button class="creator-tool" id="vehicleToggleTemplate" type="button">👻 Blueprint on</button>
               <button class="creator-tool active" type="button" data-vehicle-view="orbit">Free rotate</button>
               <button class="creator-tool" id="vehicleResetOrbit" type="button">Reset angle</button>
             </div>
             <div class="creator-vehicle-orbit-status" id="vehicleOrbitStatus">Drag sideways / up / down to inspect the blueprint.</div>
           </div>
 
-          <div class="creator-toolbar" aria-label="Drawing tools">
+          <div class="creator-toolbar" id="creatorDrawingToolbar" aria-label="Drawing tools">
             <button class="creator-tool active" id="toolSelect" type="button">↖ Select</button>
             <button class="creator-tool" id="toolPen" type="button">✏️ Pencil</button>
             <button class="creator-tool" id="toolEraser" type="button">🧽 Eraser</button>
@@ -100,6 +101,7 @@
               <div class="creator-object-layer" id="creatorObjects"></div>
             </div>
             <div class="creator-simulation" id="creatorSimulation" aria-hidden="true"></div>
+            <div class="vehicle-stage-notice" id="vehicleStageNotice" hidden aria-live="polite"></div>
             <button class="creator-stop-test" id="stopCreationTest" type="button" hidden>■ Stop test</button>
           </div>
 

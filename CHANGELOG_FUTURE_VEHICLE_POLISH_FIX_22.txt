@@ -1,0 +1,84 @@
+CHILDREN WORLD — FUTURE VEHICLE POLISH FIX 22
+Date: 19 September 2026
+Baseline: Master copy after Future Vehicle Phase 5 / Fix 21
+
+This build preserves the completed Sport Car mission and applies the agreed Future Vehicle cleanup corrections.
+
+CORRECTION 1 — BLUEPRINT / DRAWING TOOL SEPARATION
+- Added the Blueprint On/Off control to Vehicle Blueprint Views.
+- When Blueprint is ON (default), the large drawing toolbar is hidden.
+- When Blueprint is OFF, creative drawing tools appear.
+- Returning Blueprint ON automatically returns to Select/build mode.
+
+CORRECTION 2 — AUTOMATIC BUILD-STAGE PROGRESSION
+- Completed build areas receive a clear Complete check.
+- After the final required piece of the current area is fitted, the next unfinished area opens automatically.
+- Children can still manually select any unfinished/completed area.
+- Progression skips areas already completed.
+
+CORRECTION 3 — TEST BUTTON LOCK
+- Test My Creation stays visible but disabled until Body & Movement, Power System, Safety and Future Tech are all complete.
+- Optional pieces such as Solar Assist do not block testing.
+- When all required areas are complete, Test My Creation unlocks and briefly highlights.
+
+CORRECTION 4 — COMPACT VEHICLE SELECTOR
+- Removed the large Executive Sedan card from Future Vehicle.
+- Future Vehicle now shows one large vehicle preview plus a compact vehicle list.
+- Sport Car is the current working vehicle.
+- 4x4/SUV, Van, Intercity Coach/Bus and Farm Tractor are reserved as coming vehicles without lengthening the page.
+
+CORRECTION 5 — OPTIONAL NOTES SIMPLIFIED
+- Removed “Who is it for?” and “What problem does it solve?” from Future Vehicle.
+- Kept one optional notes field only, inside the existing collapsed Notes and Decisions area.
+
+CORRECTION 6 — VEHICLE LEARNING / QUIZ
+- Added “Test What You Learned” after Mission Complete.
+- Opens a randomized five-question Vehicle Knowledge Challenge.
+- Questions cover car parts, safety, selected power system, selected Future Tech and why vehicle types are engineered differently.
+- Each answer gives a short learning explanation and score.
+
+CORRECTION 7 — CONTEXT-SENSITIVE BLUEPRINT INSTRUCTIONS
+- Blueprint guidance now redraws immediately whenever Body, Power, Safety or Future Tech is selected.
+- Added correct instructions before/after Power and Future Tech choices.
+- Safety instructions no longer remain visible after switching to Future Tech.
+
+CORRECTION 8 — CHILD-FACING STAGE FEEDBACK
+- Removed visible Phase 1/2/3/4/5 numbering from the child experience.
+- Added compact floating mission-status messages near the vehicle area.
+- Colour stage includes a quick action that scrolls to the colour controls on small screens.
+- Existing transition sounds remain part of the feedback.
+
+CORRECTION 9 — DEVELOPMENT LANGUAGE
+- Child-facing flow no longer uses phase/prototype wording.
+- Browser/server-saving reminder is now shown only in Owner/Admin Preview.
+- Internal code may still use phase names for engineering purposes.
+
+CORRECTION 10 — AMPHIBIOUS WATER TRANSITION
+- Reworked road-to-water transition into visible road -> shoreline -> launch ramp -> water -> open-water travel.
+- Added water surface, shoreline/ramp, buoys and clearer water-zone scenery.
+- Wheels retract progressively after entering the water.
+- Full Systems Test begins in open water and the return shoreline/ramp appears only as the car comes back.
+
+CORRECTION 11 — MISSION COMPLETE REDESIGN
+- Removed duplicated “Future Vehicle Engineer — Mission Complete” badge text.
+- Keeps one strong Mission Complete / Future Vehicle Engineer heading.
+- Completion badges were moved lower so they do not cover the car or illuminated platform.
+- Achievement wording is cleaner and the final vehicle remains the visual focus.
+
+CORRECTION 12 — TEST LAB LABEL
+- Removed the “Test Lab” label from the Future Test World.
+- The scenery can remain, but only meaningful route/location labels are shown.
+
+ADDITIONAL ADMIN REQUIREMENT — COMPLIMENTARY ACCESS
+- Added an Owner/Admin “Complimentary Access” manager.
+- Owner can create Family, Tester or Staff complimentary access records with optional expiry and admin notes.
+- Records can be suspended, reactivated or removed.
+- “Use on this device” applies Full World access without payment for prototype testing.
+- This is local prototype administration; production account invitations and cross-device access still require the final backend/account system.
+
+FILES MODIFIED
+- creator.html
+- js/creator.js
+- css/style.css
+- admin.html
+- js/access.js
