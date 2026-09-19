@@ -1,0 +1,32 @@
+Children World — Future Vehicle Fix 26
+New correction batch: Problems 1–4
+
+Problem 1 — Vehicle preview backgrounds
+- Sport Car, 4×4/SUV, Van, Intercity Coach and Farm Tractor preview assets now sit on a clean white background.
+- Vehicle picker preview uses pure white behind the image.
+
+Problem 2 — Ready-to-test state must stay visible
+- After Body & Movement, Power System, Safety and Future Tech are all complete, the normal fitting/access instructions no longer return.
+- The blueprint shows a persistent “Vehicle Build Complete — Ready to Test” state.
+- The floating completion notice stays visible until Test My Creation is used or the child switches to an unfinished configuration.
+
+Problem 3 — Preserve work when switching choices/stages
+- Power-system variants keep independent progress: Petrol, Diesel, Electric, Hybrid (including hybrid type).
+- Future-Tech variants keep independent progress: Propeller Flight, Jet Flight, Drone Lift and Water/Amphibious.
+- Partially completed work is preserved as well as fully completed work.
+- Returning to a completed configuration restores its fitted pieces and re-enables Test My Creation when all four build areas are complete.
+- State is preserved per vehicle build and included in Save Project.
+- Applies to Sport Car and the other vehicle types.
+- Clear This Project remains the deliberate reset.
+
+Problem 4 — 4×4/SUV unique final test and celebration
+- 4×4 now has its own finished-vehicle reveal instead of copying the Sport Car body.
+- Unique Adventure/Off-Road Test World: town exit, gravel/rough ground, hill/terrain behaviour and suspension movement.
+- Future Tech branches are carried into the 4×4 test:
+  * Jet Flight — jet deployment/flight/landing behaviour.
+  * Propeller Flight — propeller flight behaviour.
+  * Drone Lift — lift/flight behaviour.
+  * Water/Amphibious — water journey and return-to-shore behaviour.
+- 4×4 mission celebration uses its own Adventure Vehicle Engineer identity.
+- Sport Car final test remains unchanged.
+- Van, Coach and Tractor still wait for their own unique final animation designs; their build systems are not replaced with the SUV ending.
