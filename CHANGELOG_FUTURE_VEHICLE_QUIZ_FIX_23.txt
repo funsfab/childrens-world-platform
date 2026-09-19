@@ -1,0 +1,8 @@
+Children World — Future Vehicle Quiz Fix 23
+Date: 2026-09-19
+
+- Expanded the Future Vehicle knowledge bank to 30 questions.
+- Each quiz attempt still shows exactly 5 questions.
+- Questions are selected from Body & Movement, Safety, general vehicle engineering, the selected power system, and the selected Future Tech system.
+- Added recent-question avoidance so immediate repeat attempts use different questions wherever the active pool allows it.
+- No other Fix 22 Future Vehicle corrections were changed.
