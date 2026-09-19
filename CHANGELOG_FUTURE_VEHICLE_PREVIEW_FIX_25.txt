@@ -1,0 +1,8 @@
+Children World — Future Vehicle Preview Fix 25
+Date: 2026-09-19
+
+Fix:
+- Corrected the compact Future Vehicle selector so the large preview image now updates immediately when the child chooses a different vehicle.
+- The preview name, subtitle and selected dropdown option now stay synchronized.
+- Applies to Sport Car, 4×4 / SUV, Van, Intercity Coach / Bus and Farm Tractor.
+- No puzzle logic, saved builds, part-fitting rules, or Sport Car final animation were changed.
