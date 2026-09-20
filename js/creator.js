@@ -15,18 +15,31 @@ const lib=(id,name,img,subtitle,blueprintType='scene')=>({id,name,img,subtitle,b
 
 const AS='assets/creator/';
 const vehicleLibrary=[
- lib('vehicle-sport','Sport Car',AS+'vehicle-sport.webp','Low, fast performance coupe','vehicle'),
- lib('vehicle-suv','4×4 / SUV',AS+'vehicle-suv.webp','Off-road and all-terrain vehicle','vehicle'),
- lib('vehicle-van','Van',AS+'vehicle-van.webp','Passenger and cargo vehicle','vehicle'),
- lib('vehicle-coach','Intercity Coach / Bus',AS+'vehicle-coach.webp','Long-distance passenger transport','vehicle'),
- lib('vehicle-tractor','Farm Tractor',AS+'vehicle-tractor.webp','Agricultural work vehicle','vehicle')
+ lib('vehicle-sport','Sport Car',AS+'vehicle-sport-clean.svg','Low, fast performance coupe','vehicle'),
+ lib('vehicle-suv','4×4 / SUV',AS+'vehicle-suv-clean.svg','Off-road and all-terrain vehicle','vehicle'),
+ lib('vehicle-van','Van',AS+'vehicle-van-clean.svg','Passenger and cargo vehicle','vehicle'),
+ lib('vehicle-coach','Intercity Coach / Bus',AS+'vehicle-coach-clean.svg','Long-distance passenger transport','vehicle'),
+ lib('vehicle-tractor','Farm Tractor',AS+'vehicle-tractor-clean.svg','Multi-purpose precision agriculture machine','vehicle')
 ];
+
+/* Keep all five vehicle previews warm in browser memory. The old implementation only
+   created the <img> after a child selected a vehicle, which caused a visible blank pause
+   on a cold load. SVG previews are also much smaller than the previous raster sources. */
+const vehiclePreviewCache=[];
+function preloadVehiclePreviews(){
+  vehicleLibrary.forEach(v=>{
+    const img=new Image();img.decoding='async';img.loading='eager';img.src=v.img;
+    if(img.decode)img.decode().catch(()=>{});vehiclePreviewCache.push(img);
+  });
+}
+preloadVehiclePreviews();
+
 const VEHICLE_CATALOG=[
  {id:'vehicle-sport',name:['Sport Car','Voiture de sport'],subtitle:['Low, fast performance coupe','Coupé bas et sportif'],available:true},
  {id:'vehicle-suv',name:['4×4 / SUV','4×4 / SUV'],subtitle:['Off-road and all-terrain vehicle','Véhicule tout-terrain'],available:true},
  {id:'vehicle-van',name:['Van','Fourgon / Van'],subtitle:['Passenger and cargo vehicle','Véhicule passagers et chargement'],available:true},
  {id:'vehicle-coach',name:['Intercity Coach / Bus','Autocar interurbain'],subtitle:['Long-distance passenger transport','Transport longue distance'],available:true},
- {id:'vehicle-tractor',name:['Farm Tractor','Tracteur agricole'],subtitle:['Agricultural work vehicle','Véhicule de travail agricole'],available:true}
+ {id:'vehicle-tractor',name:['Farm Tractor','Tracteur agricole'],subtitle:['Multi-purpose precision agriculture machine','Machine agricole de précision multifonction'],available:true}
 ];
 const robotLibrary=[
  lib('robot-a','Classroom Helper',AS+'robot-a-classroom.webp','Friendly learning helper','robot'),
@@ -70,6 +83,10 @@ const vehicleModes=[
   part('luggage-bay-door','▱', 'Lower luggage-bay door','Porte de soute à bagages',['movement','cargo'],'',{aspect:2.7,defaultSize:112}),
   part('coach-toilet','🚻', 'Coach toilet cabin','Cabine toilettes',['passenger','interior'],'',{aspect:.82,defaultSize:78}),
   part('route-display','▰', 'Destination / route display','Afficheur destination / itinéraire',['passenger','information'],'',{aspect:3.2,defaultSize:92}),
+  part('front-attachment','▱','Front implement mount','Support d’outil avant',['movement','farm'],'',{aspect:2.1,defaultSize:82}),
+  part('rear-hitch','⌁','Rear three-point hitch','Attelage arrière trois points',['movement','farm'],'',{aspect:1.5,defaultSize:74}),
+  part('pto-shaft','⦿','PTO power shaft','Prise de force PTO',['power','farm'],'',{aspect:1,defaultSize:58}),
+  part('hydraulic-coupler','≋','Hydraulic couplers','Raccords hydrauliques',['power','farm'],'',{aspect:1.8,defaultSize:72}),
   part('steering','◉','Steering wheel','Volant',['passenger'],'',{aspect:1,defaultSize:54}),
   part('driver-seat','💺','Driver seat','Siège conducteur',['passenger'],'',{aspect:.72,defaultSize:68}),
   part('seat','💺','Passenger seat','Siège passager',['passenger'],'',{aspect:.72,defaultSize:68}),
@@ -106,7 +123,12 @@ const vehicleModes=[
   part('retract-wheel','🛞','Retractable wheel mechanism','Mécanisme de roue rétractable',['future','wheel'],'',{aspect:1,defaultSize:56}),
   part('drone-lift','🛸','Drone lift rotor','Rotor de portance drone',['future','flight'],'',{aspect:1,defaultSize:62}),
   part('stabiliser','◢','Stabiliser fin','Aileron stabilisateur',['future'],'',{aspect:1.65,defaultSize:64}),
-  part('future-sensor','🔵','Future sensor','Capteur futuriste',['future','safety'],'',{aspect:1,defaultSize:52})
+  part('future-sensor','🔵','Future sensor','Capteur futuriste',['future','safety'],'',{aspect:1,defaultSize:52}),
+  part('gps-receiver','◎','Precision GPS receiver','Récepteur GPS de précision',['future','farm'],'',{aspect:1,defaultSize:58}),
+  part('soil-sensor','⌖','Soil sensor array','Réseau de capteurs du sol',['future','farm'],'',{aspect:1.2,defaultSize:60}),
+  part('crop-camera','◉','Crop health camera','Caméra santé des cultures',['future','farm'],'',{aspect:1.4,defaultSize:64}),
+  part('guidance-computer','▣','Autonomous guidance computer','Ordinateur de guidage autonome',['future','farm'],'',{aspect:1.45,defaultSize:74}),
+  part('drone-dock','◇','Farm drone dock','Station d’accueil du drone agricole',['future','farm'],'',{aspect:1.6,defaultSize:78})
  ])
 ];
 
@@ -276,14 +298,15 @@ const VEHICLE_POWERTRAINS=[
 const VEHICLE_POWER_PART_IDS=new Set(['petrol-engine','diesel-engine','electric-motor','battery','inverter','charge-port','fuel-tank','exhaust','radiator','dpf','solar']);
 const VEHICLE_FUTURE_ABILITIES=[
   {id:'flight',icon:'✈️',label:['Flying car','Voiture volante']},
-  {id:'water',icon:'🌊',label:['Water / amphibious car','Voiture aquatique / amphibie']}
+  {id:'water',icon:'🌊',label:['Water / amphibious car','Voiture aquatique / amphibie']},
+  {id:'smart-farm',icon:'🛰️',label:['Precision smart farming','Agriculture intelligente de précision']}
 ];
 const VEHICLE_FLIGHT_SYSTEMS=[
   {id:'propeller',icon:'🌀',label:['Propeller flight','Vol par hélices']},
   {id:'jet',icon:'🔥',label:['Jet flight','Vol par réacteurs']},
   {id:'drone',icon:'🛸',label:['Drone lift','Portance par rotors']}
 ];
-const VEHICLE_FUTURE_PART_IDS=new Set(['wing','propeller','jet','amphibious','water-jet','retract-wheel','drone-lift','stabiliser','future-sensor']);
+const VEHICLE_FUTURE_PART_IDS=new Set(['wing','propeller','jet','amphibious','water-jet','retract-wheel','drone-lift','stabiliser','future-sensor','gps-receiver','soil-sensor','crop-camera','guidance-computer','drone-dock']);
 
 const VEHICLE_QUIZ_BANK=[
  {
@@ -1285,6 +1308,7 @@ function vehicleFutureAbilityLabel(id=vehicleFutureAbility){const x=vehicleFutur
 function vehicleFlightSystemChoice(id=vehicleFlightSystem){return VEHICLE_FLIGHT_SYSTEMS.find(x=>x.id===id)||null;}
 function vehicleFlightSystemLabel(id=vehicleFlightSystem){const x=vehicleFlightSystemChoice(id);return x?L(x.label):t('Not chosen yet','Pas encore choisi');}
 function vehicleFutureConfig(){
+  if(vehicleIs('tractor')&&vehicleFutureAbility==='smart-farm')return{required:['gps-receiver','soil-sensor','crop-camera','guidance-computer','drone-dock'],optional:[]};
   if(vehicleFutureAbility==='flight'){
     if(!vehicleFlightSystem)return{required:[],optional:[]};
     const propulsion=vehicleFlightSystem==='propeller'?'propeller':vehicleFlightSystem==='jet'?'jet':'drone-lift';
@@ -1296,7 +1320,7 @@ function vehicleFutureConfig(){
 function vehicleFuturePartIdsForSelection(){const c=vehicleFutureConfig();return[...c.required,...c.optional];}
 function vehicleFutureLocked(){return[...objectLayer.children].some(o=>o.dataset.kind==='part'&&o.dataset.installed==='1'&&(o.dataset.targetKey||'').startsWith('future-'));}
 function removeLooseVehicleFuturePieces(){[...objectLayer.children].filter(o=>o.dataset.kind==='part'&&VEHICLE_FUTURE_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1').forEach(o=>o.remove());if(selectedObject&&VEHICLE_FUTURE_PART_IDS.has(selectedObject.dataset.partId))selectObject(null);}
-function vehicleFutureVariantKey(ability=vehicleFutureAbility,flight=vehicleFlightSystem){if(!ability)return'';if(ability==='water')return'water';return flight?`flight:${flight}`:'';}
+function vehicleFutureVariantKey(ability=vehicleFutureAbility,flight=vehicleFlightSystem){if(!ability)return'';if(ability==='water')return'water';if(ability==='smart-farm')return'smart-farm';return flight?`flight:${flight}`:'';}
 function stashVehicleFutureVariant(){const key=vehicleFutureVariantKey();if(key)vehicleFutureVariants[key]=vehicleSystemObjectData('future');}
 function restoreVehicleFutureVariant(){const key=vehicleFutureVariantKey();removeVehicleSystemObjects('future');if(key&&vehicleFutureVariants[key]?.length)restoreObjects(vehicleFutureVariants[key],{append:true});}
 function clearVehicleFuturePiecesForSwitch(){removeVehicleSystemObjects('future');}
@@ -1362,6 +1386,15 @@ function vehiclePartShape(partId){
     'luggage-bay-door':[[-1,-.86],[1,-.86],[1,.86],[-1,.86]],
     'coach-toilet':[[-.88,-1],[.88,-1],[1,-.72],[1,.94],[-1,.94],[-1,-.72]],
     'route-display':[[-1,-.72],[1,-.72],[1,.72],[-1,.72]],
+    'front-attachment':[[-1,-.52],[-.72,-.86],[.72,-.86],[1,-.52],[.92,.52],[.62,.82],[-.62,.82],[-.92,.52]],
+    'rear-hitch':[[-1,-.22],[-.72,-.72],[0,-1],[.72,-.72],[1,-.22],[.55,.18],[.90,.82],[.42,1],[0,.50],[-.42,1],[-.90,.82],[-.55,.18]],
+    'pto-shaft':[[-.72,-1],[.72,-1],[1,-.72],[1,.72],[.72,1],[-.72,1],[-1,.72],[-1,-.72]],
+    'hydraulic-coupler':[[-1,-.70],[1,-.70],[1,.70],[-1,.70]],
+    'gps-receiver':[[-.72,-1],[.72,-1],[1,-.72],[1,.72],[.72,1],[-.72,1],[-1,.72],[-1,-.72]],
+    'soil-sensor':[[-1,-.58],[-.42,-1],[.42,-1],[1,-.58],[.72,.90],[-.72,.90]],
+    'crop-camera':[[-1,-.64],[.72,-.64],[1,-.18],[.72,.64],[-.72,.64],[-1,.18]],
+    'guidance-computer':[[-1,-.78],[1,-.78],[1,.78],[-1,.78]],
+    'drone-dock':[[-1,-.62],[-.70,-.96],[.70,-.96],[1,-.62],[.84,.62],[.52,.92],[-.52,.92],[-.84,.62]],
     mirror:[[-1,-.12],[-.66,-.72],[.16,-1],[1,-.34],[.82,.42],[-.18,.86],[-.82,.54]],
     headlight:[[-1,-.48],[-.66,-.90],[.34,-.78],[1,-.18],[.70,.62],[-.38,.84]],
     taillight:[[-1,-.34],[-.60,-.82],[.34,-.72],[1,-.14],[.68,.58],[-.34,.82]],
@@ -1478,6 +1511,13 @@ function vehicleSlotDefinitions(){
   if(p.id==='coach'){
     /* Front destination board above the windscreen: visible from the Front view. */
     slots.push(vehicleSlot('route-display','route-display',[-L*.503,0,2.72],[0,W*.29,0],[0,0,.115],[-1,0,.03],{aspect:3.2,minFacing:.28,shape:vehiclePartShape('route-display')}));
+  }
+  if(p.id==='tractor'){
+    /* A real farm tractor is valuable because it can power and carry many implements. */
+    slots.push(vehicleSlot('front-attachment','front-attachment',[-L*.505,0,.78],[0,W*.28,0],[0,0,.16],[-1,0,.06],{aspect:2.1,minFacing:.30,shape:vehiclePartShape('front-attachment')}));
+    slots.push(vehicleSlot('rear-hitch','rear-hitch',[L*.505,0,.62],[0,W*.22,0],[0,0,.19],[1,0,.05],{aspect:1.5,minFacing:.30,shape:vehiclePartShape('rear-hitch')}));
+    slots.push(vehicleSlot('pto-shaft','pto-shaft',[L*.515,0,.83],[0,.10,0],[0,0,.10],[1,0,.02],{aspect:1,minFacing:.30,shape:vehiclePartShape('pto-shaft')}));
+    slots.push(vehicleSlot('hydraulic-coupler','hydraulic-coupler',[L*.505,W*.18,.99],[0,.15,0],[0,0,.08],[1,0,.04],{aspect:1.8,minFacing:.28,shape:vehiclePartShape('hydraulic-coupler')}));
   }
 
   for(const sgn of sides){
@@ -1617,6 +1657,15 @@ function vehicleFutureSlots(){
   const p=vehicleProfile(),L=p.length,W=p.width,sport=p.id==='sport',down=[0,0,-1],top=[0,0,1],rear=[1,0,0],front=[-1,0,0],slots=[];
   const ids=new Set(vehicleFuturePartIdsForSelection());
   const add=(key,partId,center,u,v,normal=top,opts={})=>slots.push(vehicleSlot(`future-${key}`,partId,center,u,v,normal,{view:opts.view||'exterior',required:opts.required!==false,minFacing:opts.minFacing??.22,aspect:opts.aspect||1,shape:vehiclePartShape(partId),label:opts.label||partId}));
+
+  if(p.id==='tractor'&&vehicleFutureAbility==='smart-farm'){
+    add('gps','gps-receiver',[.48,0,p.roofZ+.06],[.12,0,0],[0,.12,0],top,{aspect:1,minFacing:.08});
+    add('soil','soil-sensor',[L*.33,-W*.42,.52],[.10,0,0],[0,.08,0],[0,-1,.05],{aspect:1.2,minFacing:.22});
+    add('crop-camera','crop-camera',[-L*.22,W*.49,1.73],[.10,0,0],[0,0,.07],[0,1,.04],{aspect:1.4,minFacing:.22});
+    add('guidance','guidance-computer',[.14,0,1.38],[.12,0,0],[0,.09,0],down,{view:'interior',aspect:1.45,minFacing:.30});
+    add('drone-dock','drone-dock',[L*.17,0,p.roofZ+.04],[.18,0,0],[0,.11,0],top,{aspect:1.6,minFacing:.08});
+    return slots;
+  }
 
   if(vehicleFutureAbility==='flight'){
     /* Two wings — easiest from Top view. */
@@ -1800,7 +1849,7 @@ function vehiclePath(points){
 }
 function drawSUVAt(cx,cy,scale,opts={}){
   const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,angle=opts.angle||0,faceRight=!!opts.faceRight;
-  const roadWheelSpin=-Math.abs(wheelSpin); // local front is left: negative local rotation gives correct forward rolling after either facing transform
+  const roadWheelSpin=-wheelSpin; // signed: positive=forward, negative=reverse; reflection handles the visible direction
   const bodyAlpha=opts.bodyAlpha??1,lineAlpha=opts.lineAlpha??0,glassAlpha=opts.glassAlpha??bodyAlpha,wheelAlpha=opts.wheelAlpha??bodyAlpha,lightAlpha=opts.lightAlpha??bodyAlpha;
   const flight=!!opts.flight,water=!!opts.water,retract=!!opts.retractWheels,suspension=opts.suspension||0;
   const dark=vehicleShade(paint,-72),light=vehicleShade(paint,70);
@@ -1848,7 +1897,7 @@ function drawSUVFinishedVehicleReveal(){
 
 function drawVanAt(cx,cy,scale,opts={}){
   const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,angle=opts.angle||0,faceRight=!!opts.faceRight;
-  const roadWheelSpin=-Math.abs(wheelSpin); // local front is left: negative local rotation gives correct forward rolling after either facing transform
+  const roadWheelSpin=-wheelSpin; // signed: positive=forward, negative=reverse; reflection handles the visible direction
   const bodyAlpha=opts.bodyAlpha??1,lineAlpha=opts.lineAlpha??0,glassAlpha=opts.glassAlpha??bodyAlpha,wheelAlpha=opts.wheelAlpha??bodyAlpha,lightAlpha=opts.lightAlpha??bodyAlpha;
   const flight=!!opts.flight,water=!!opts.water,retract=!!opts.retractWheels,sideDoorOpen=clamp(opts.sideDoorOpen||0,0,1),rearDoorsOpen=clamp(opts.rearDoorsOpen||0,0,1);
   const dark=vehicleShade(paint,-76),light=vehicleShade(paint,72),mid=vehicleShade(paint,-22);
@@ -1966,7 +2015,7 @@ function drawSUVCelebration(){
   const W=templateCanvas.width,H=templateCanvas.height,p=vehicleRevealStage==='phase5'?clamp(vehiclePhase5Progress,0,1):1;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.globalAlpha=1;tctx.clearRect(0,0,W,H);
   const sky=tctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#102e49');sky.addColorStop(.55,'#315f78');sky.addColorStop(1,'#263f3d');tctx.fillStyle=sky;tctx.fillRect(0,0,W,H);tctx.fillStyle='#274b58';tctx.beginPath();tctx.moveTo(0,310);tctx.lineTo(150,170);tctx.lineTo(300,303);tctx.lineTo(455,145);tctx.lineTo(615,305);tctx.lineTo(800,184);tctx.lineTo(800,370);tctx.lineTo(0,370);tctx.closePath();tctx.fill();
   tctx.fillStyle='rgba(74,116,86,.86)';tctx.fillRect(0,335,W,115);tctx.fillStyle='rgba(93,228,255,.13)';tctx.beginPath();tctx.ellipse(400,342,245,51,0,0,Math.PI*2);tctx.fill();tctx.strokeStyle='rgba(137,234,255,.42)';tctx.lineWidth=2;tctx.beginPath();tctx.ellipse(400,342,220,41,0,0,Math.PI*2);tctx.stroke();
-  const arrive=clamp(p/.42,0,1),settle=1-Math.pow(1-arrive,3);drawSUVAt(400+(1-settle)*210,291-(1-settle)*18,.66+.04*Math.sin(clamp((p-.18)/.42,0,1)*Math.PI),{paint:vehiclePaintColor,glow:.82,wheelSpin:p<.42?p*8:0,faceRight:true});if(vehicleRevealStage==='phase5')drawPhase5Confetti(p);
+  const arrive=clamp(p/.42,0,1),settle=1-Math.pow(1-arrive,3);drawSUVAt(400+(1-settle)*210,291-(1-settle)*18,.66+.04*Math.sin(clamp((p-.18)/.42,0,1)*Math.PI),{paint:vehiclePaintColor,glow:.82,wheelSpin:p<.42?-p*8:0,faceRight:true});if(vehicleRevealStage==='phase5')drawPhase5Confetti(p);
   const a=clamp((p-.28)/.28,0,1);tctx.globalAlpha=a;tctx.textAlign='center';tctx.shadowColor='rgba(82,228,255,.6)';tctx.shadowBlur=15;tctx.fillStyle='#f5fbff';tctx.font='900 26px system-ui';tctx.fillText(t('MISSION COMPLETE','MISSION TERMINÉE'),400,62);tctx.shadowBlur=0;tctx.fillStyle='rgba(178,234,255,.96)';tctx.font='800 13px system-ui';tctx.fillText(t('Adventure Vehicle Engineer','Ingénieur véhicule d’aventure'),400,86);tctx.globalAlpha=1;
   if(vehicleRevealStage!=='phase5-view'){const aa=clamp((p-.58)/.3,0,1);tctx.globalAlpha=aa;tctx.font='800 11px system-ui';tctx.fillStyle='#e5f6ff';const items=[t('Body & Movement ✓','Carrosserie ✓'),`${vehiclePowertrainLabel()} ✓`,t('Safety ✓','Sécurité ✓'),`${vehicleFinalTechLabel()} ✓`,t('Adventure Test ✓','Test aventure ✓')],xs=[120,265,400,535,680];items.forEach((lab,i)=>{drawRoundedPanel(xs[i]-60,397,120,28,13,'rgba(7,24,36,.62)','rgba(147,232,255,.18)');tctx.fillText(lab,xs[i],415)});tctx.globalAlpha=1;}
   if(vehicleRevealStage==='phase5-view'){drawRoundedPanel(250,365,300,46,18,'rgba(7,24,36,.74)','rgba(147,232,255,.22)');tctx.fillStyle='#e7f7ff';tctx.font='800 14px system-ui';tctx.fillText(vehicleCreationName||t('My 4×4 Adventure Vehicle','Mon véhicule aventure 4×4'),400,393);}tctx.restore();
@@ -1987,7 +2036,7 @@ function coachRouteProfile(){const code=String(lang()||'en').toLowerCase().split
 function coachRouteText(){const r=coachRouteProfile();return `${r.cities[0]}  →  ${r.cities[1]}  →  ${r.cities[2]}`;}
 function drawCoachAt(cx,cy,scale,opts={}){
   const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,angle=opts.angle||0,faceRight=!!opts.faceRight;
-  const roadWheelSpin=-Math.abs(wheelSpin); // local front is left: negative local rotation gives correct forward rolling after either facing transform
+  const roadWheelSpin=-wheelSpin; // signed: positive=forward, negative=reverse; reflection handles the visible direction
   const bodyAlpha=opts.bodyAlpha??1,lineAlpha=opts.lineAlpha??0,glassAlpha=opts.glassAlpha??bodyAlpha,wheelAlpha=opts.wheelAlpha??bodyAlpha,lightAlpha=opts.lightAlpha??bodyAlpha;
   const doorOpen=clamp(opts.passengerDoorOpen||0,0,1),bayOpen=clamp(opts.luggageBayOpen||0,0,1),flight=!!opts.flight,water=!!opts.water,retract=!!opts.retractWheels;
   const dark=vehicleShade(paint,-78),mid=vehicleShade(paint,-26),light=vehicleShade(paint,72),route=coachRouteProfile();
@@ -2123,12 +2172,105 @@ function drawCoachCelebration(){
   tctx.fillStyle='#20384b';tctx.fillRect(60,158,680,132);tctx.fillStyle='#5de4ff';tctx.fillRect(60,158,680,8);for(let i=0;i<7;i++){tctx.fillStyle='rgba(166,222,244,.22)';tctx.fillRect(92+i*88,186,54,58)}
   tctx.fillStyle='#eef9fd';tctx.font='900 16px system-ui';tctx.textAlign='center';tctx.fillText(route.terminal[2],400,186);tctx.fillStyle='#9cf3ff';tctx.font='900 13px system-ui';tctx.fillText(`${t('ARRIVED','ARRIVÉE')} · ${route.cities[2].toUpperCase()}`,400,211);
   tctx.fillStyle='rgba(75,217,255,.10)';tctx.beginPath();tctx.ellipse(400,365,285,48,0,0,Math.PI*2);tctx.fill();tctx.strokeStyle='rgba(98,225,255,.34)';tctx.lineWidth=2;tctx.beginPath();tctx.ellipse(400,365,260,39,0,0,Math.PI*2);tctx.stroke();
-  const arrive=clamp(p/.40,0,1),settle=1-Math.pow(1-arrive,3);drawCoachAt(400+(1-settle)*215,318-(1-settle)*18,.58,{paint:vehiclePaintColor,glow:.66,wheelSpin:p<.40?p*8:0,faceRight:true});
+  const arrive=clamp(p/.40,0,1),settle=1-Math.pow(1-arrive,3);drawCoachAt(400+(1-settle)*215,318-(1-settle)*18,.58,{paint:vehiclePaintColor,glow:.66,wheelSpin:p<.40?-p*8:0,faceRight:true});
   const a=clamp((p-.28)/.28,0,1);tctx.save();tctx.globalAlpha=a;tctx.textAlign='center';tctx.fillStyle='#f4fbff';tctx.font='900 24px system-ui';tctx.fillText(t('INTERCITY JOURNEY COMPLETE','TRAJET INTERURBAIN TERMINÉ'),400,55);tctx.fillStyle='rgba(169,231,255,.94)';tctx.font='800 13px system-ui';tctx.fillText(t('Intercity Transport Engineer','Ingénieur transport interurbain'),400,79);tctx.restore();
   const r=clamp((p-.52)/.28,0,1);tctx.save();tctx.globalAlpha=r;drawRoundedPanel(128,95,544,48,15,'rgba(8,25,36,.72)','rgba(147,232,255,.22)');tctx.fillStyle='#dff7ff';tctx.font='800 12px system-ui';tctx.textAlign='center';tctx.fillText(`${route.cities[0]}  →  ${route.cities[1]}  →  ${route.cities[2]}   ·   ${t('Passengers safe','Passagers en sécurité')}   ·   ${t('Luggage accounted for','Bagages remis')}`,400,124);tctx.restore();
   tctx.restore();
 }
+
+function drawTractorDriver(x,y,scale=1,shirt='#e7b94e'){
+  tctx.save();tctx.translate(x,y);tctx.scale(scale,scale);tctx.fillStyle='#8f6248';tctx.beginPath();tctx.arc(0,-25,8,0,Math.PI*2);tctx.fill();tctx.fillStyle=shirt;tctx.fillRect(-7,-17,14,25);tctx.strokeStyle='#273844';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-5,7);tctx.lineTo(-10,19);tctx.moveTo(5,7);tctx.lineTo(10,19);tctx.stroke();tctx.restore();
+}
+function drawFarmPerson(x,y,scale=1,opts={}){
+  const skin=opts.skin||'#a76f50',shirt=opts.shirt||'#3d7391',child=!!opts.child;
+  tctx.save();tctx.translate(x,y);tctx.scale(scale*(child ? .78 : 1),scale*(child ? .78 : 1));tctx.fillStyle=skin;tctx.beginPath();tctx.arc(0,-24,7,0,Math.PI*2);tctx.fill();tctx.fillStyle=shirt;tctx.fillRect(-7,-16,14,22);tctx.strokeStyle='#253746';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-5,6);tctx.lineTo(-8,20);tctx.moveTo(5,6);tctx.lineTo(8,20);tctx.moveTo(-6,-8);tctx.lineTo(-13,2);tctx.moveTo(6,-8);tctx.lineTo(13,2);tctx.stroke();tctx.restore();
+}
+function drawTractorImplement(kind,spin=0){
+  tctx.save();tctx.lineCap='round';tctx.lineJoin='round';
+  if(kind==='mower'){
+    tctx.strokeStyle='#6c7c88';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(184,20);tctx.lineTo(236,36);tctx.stroke();tctx.fillStyle='#d9b12f';tctx.fillRect(225,24,92,22);tctx.strokeStyle='#24333c';tctx.lineWidth=3;tctx.strokeRect(225,24,92,22);for(let i=0;i<3;i++){tctx.save();tctx.translate(243+i*28,47);tctx.rotate(spin*2.2);tctx.strokeStyle='#d7e2e7';tctx.lineWidth=2.5;tctx.beginPath();tctx.moveTo(-13,0);tctx.lineTo(13,0);tctx.stroke();tctx.restore();}
+  }else if(kind==='plough'){
+    tctx.strokeStyle='#667985';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(185,20);tctx.lineTo(234,30);tctx.lineTo(306,41);tctx.stroke();for(let i=0;i<4;i++){tctx.fillStyle='#b9c7ce';tctx.beginPath();tctx.moveTo(235+i*20,31);tctx.quadraticCurveTo(248+i*20,53,236+i*20,67);tctx.lineTo(252+i*20,61);tctx.quadraticCurveTo(260+i*20,43,250+i*20,34);tctx.closePath();tctx.fill();}
+  }else if(kind==='seeder'){
+    tctx.strokeStyle='#687983';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(185,20);tctx.lineTo(230,30);tctx.stroke();tctx.fillStyle='#dca43d';tctx.fillRect(228,10,86,42);tctx.fillStyle='#293b44';for(let i=0;i<5;i++)tctx.fillRect(235+i*16,50,5,18);
+  }else if(kind==='irrigator'){
+    tctx.strokeStyle='#6d7e87';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(185,20);tctx.lineTo(225,25);tctx.stroke();tctx.fillStyle='#4d93b1';tctx.beginPath();tctx.ellipse(260,17,45,28,0,0,Math.PI*2);tctx.fill();tctx.strokeStyle='#91e8ff';tctx.lineWidth=4;tctx.beginPath();tctx.moveTo(225,-10);tctx.lineTo(320,-18);tctx.stroke();for(let i=0;i<6;i++){const xx=236+i*16;tctx.strokeStyle='rgba(106,216,255,.72)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(xx,-15);tctx.lineTo(xx+4,20);tctx.stroke();}
+  }else if(kind==='loader'){
+    tctx.strokeStyle='#d4a13a';tctx.lineWidth=11;tctx.beginPath();tctx.moveTo(-72,-40);tctx.lineTo(-166,-14);tctx.lineTo(-205,25);tctx.stroke();tctx.fillStyle='#8d6532';tctx.beginPath();tctx.moveTo(-224,18);tctx.lineTo(-175,18);tctx.lineTo(-158,48);tctx.lineTo(-232,48);tctx.closePath();tctx.fill();tctx.strokeStyle='#e6ba5a';tctx.lineWidth=3;tctx.stroke();
+  }
+  tctx.restore();
+}
+function drawTractorAt(cx,cy,scale,opts={}){
+  const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,angle=opts.angle||0,faceRight=opts.faceRight!==false,bodyAlpha=opts.bodyAlpha??1,lineAlpha=opts.lineAlpha??0,glassAlpha=opts.glassAlpha??bodyAlpha,wheelAlpha=opts.wheelAlpha??bodyAlpha,lightAlpha=opts.lightAlpha??bodyAlpha;
+  const implement=opts.implement||'',driver=opts.driver!==false,smart=!!opts.smart,roadWheelSpin=-wheelSpin,dark=vehicleShade(paint,-74),light=vehicleShade(paint,62);
+  const path=pts=>{tctx.beginPath();pts.forEach((q,i)=>i?tctx.lineTo(q[0],q[1]):tctx.moveTo(q[0],q[1]));tctx.closePath();};
+  tctx.save();tctx.translate(cx,cy);tctx.rotate(angle);tctx.scale(faceRight?-scale:scale,scale);if(glow){tctx.shadowColor='rgba(90,230,255,.95)';tctx.shadowBlur=12+glow*18;}
+  if(lineAlpha>0){tctx.save();tctx.globalAlpha=lineAlpha;tctx.strokeStyle='rgba(89,235,255,.98)';tctx.lineWidth=3;tctx.shadowColor='rgba(61,225,255,.9)';tctx.shadowBlur=14;path([[-200,20],[-180,-18],[-120,-34],[-84,-82],[-56,-148],[62,-148],[98,-94],[110,-36],[170,-26],[206,12],[192,52],[-183,57]]);tctx.stroke();tctx.restore();}
+  if(bodyAlpha>0){
+    tctx.globalAlpha=bodyAlpha;path([[-200,20],[-180,-18],[-120,-34],[-84,-82],[-56,-148],[62,-148],[98,-94],[110,-36],[170,-26],[206,12],[192,52],[-183,57]]);const g=tctx.createLinearGradient(-190,-145,205,55);g.addColorStop(0,light);g.addColorStop(.38,paint);g.addColorStop(.76,dark);g.addColorStop(1,paint);tctx.fillStyle=g;tctx.fill();tctx.strokeStyle='rgba(232,247,251,.76)';tctx.lineWidth=2;tctx.stroke();
+    /* long engine bonnet */ tctx.fillStyle=vehicleShade(paint,-18);tctx.fillRect(-191,-18,96,54);tctx.strokeStyle='rgba(20,39,46,.48)';tctx.strokeRect(-191,-18,96,54);
+    /* transparent cab */ const glass=[[[-70,-80],[-48,-133],[-4,-133],[-4,-78]],[[8,-133],[51,-133],[82,-88],[82,-78],[8,-78]]];tctx.globalAlpha=glassAlpha;glass.forEach(sh=>{path(sh);const gg=tctx.createLinearGradient(sh[0][0],sh[0][1],sh[2][0],sh[2][1]);gg.addColorStop(0,'rgba(181,234,249,.66)');gg.addColorStop(.5,'rgba(58,111,133,.62)');gg.addColorStop(1,'rgba(15,49,67,.80)');tctx.fillStyle=gg;tctx.fill();tctx.strokeStyle='rgba(224,248,255,.72)';tctx.stroke();});tctx.globalAlpha=bodyAlpha;
+    if(driver){tctx.save();tctx.globalAlpha=Math.min(1,glassAlpha+.15);drawTractorDriver(23,-78,.86);tctx.restore();}
+    /* exhaust / intake */tctx.fillStyle='#26343b';tctx.fillRect(-105,-101,10,77);tctx.fillRect(-112,-108,24,9);
+    /* hitch + PTO + hydraulics */tctx.strokeStyle='#41515a';tctx.lineWidth=6;tctx.beginPath();tctx.moveTo(175,28);tctx.lineTo(213,44);tctx.moveTo(175,28);tctx.lineTo(210,8);tctx.stroke();tctx.fillStyle='#adbcc4';tctx.beginPath();tctx.arc(205,26,7,0,Math.PI*2);tctx.fill();
+    if(smart){tctx.fillStyle='#eafcff';tctx.beginPath();tctx.arc(22,-159,8,0,Math.PI*2);tctx.fill();tctx.strokeStyle='#7beeff';tctx.lineWidth=2;tctx.beginPath();tctx.arc(22,-159,15,0,Math.PI*2);tctx.stroke();tctx.fillStyle='#1d313d';tctx.fillRect(55,-149,30,12);}
+    if(implement)drawTractorImplement(implement,wheelSpin);
+  }
+  const wheels=[[-132,45,42],[93,39,72]];wheels.forEach(([x,y,r])=>{tctx.save();tctx.globalAlpha=wheelAlpha;tctx.translate(x,y);tctx.beginPath();tctx.arc(0,0,r,0,Math.PI*2);tctx.fillStyle='#11181c';tctx.fill();tctx.strokeStyle='#2f3b42';tctx.lineWidth=7;tctx.stroke();for(let k=0;k<12;k++){const a=roadWheelSpin+k*Math.PI/6;tctx.strokeStyle='rgba(129,145,153,.50)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(Math.cos(a)*(r*.72),Math.sin(a)*(r*.72));tctx.lineTo(Math.cos(a)*(r*.94),Math.sin(a)*(r*.94));tctx.stroke();}tctx.beginPath();tctx.arc(0,0,r*.43,0,Math.PI*2);tctx.fillStyle='#9aacb5';tctx.fill();tctx.beginPath();tctx.arc(0,0,r*.14,0,Math.PI*2);tctx.fillStyle='#26363f';tctx.fill();tctx.restore();});
+  if(lightAlpha>0){tctx.save();tctx.globalAlpha=lightAlpha;tctx.fillStyle='#f2fcff';tctx.shadowColor='#d8fbff';tctx.shadowBlur=15;tctx.fillRect(-194,-8,16,9);tctx.restore();}
+  tctx.restore();
+}
+function drawTractorFinishedVehicleReveal(){
+  if(!vehicleRevealActive)return;const W=templateCanvas.width,H=templateCanvas.height,sc=Math.min(W/800,H/450),ox=(W-800*sc)/2,oy=(H-450*sc)/2,phase1=vehicleRevealStage==='phase1',phase2=['phase2','phase2-ready','phase2-confirmed'].includes(vehicleRevealStage),p=phase1?vehicleRevealProgress:1;
+  const bodyT=phase1?vehicleRevealEase(.08,.58,p):1,lineT=phase1?1-vehicleRevealEase(.38,.88,p):0,glassT=phase1?vehicleRevealEase(.28,.70,p):1,wheelT=phase1?vehicleRevealEase(.34,.76,p):1,lightT=phase1?vehicleRevealEase(.62,.94,p):1,pulse=phase2?Math.sin(Math.min(1,vehiclePhase2Progress)*Math.PI):0,slide=phase2?(-16+32*Math.min(1,vehiclePhase2Progress)):0,paint=phase2?vehicleMixColour(vehiclePreviousPaintColor,vehiclePaintColor,vehiclePaintMix):(vehicleTransformationReplay?vehiclePaintColor:'#7aa33a');
+  tctx.save();tctx.translate(ox,oy);tctx.scale(sc,sc);drawTractorAt(400+slide,272+pulse*2,.78*(1+.035*pulse),{paint,glow:.45+pulse*.45,bodyAlpha:bodyT,lineAlpha:lineT,glassAlpha:glassT,wheelAlpha:wheelT,lightAlpha:lightT,wheelSpin:0,faceRight:true,smart:true,driver:true});if(phase2&&vehiclePaintMix<1){const xx=145+530*vehiclePaintMix;tctx.save();tctx.globalAlpha=.42;const g=tctx.createLinearGradient(xx-50,0,xx+35,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.6,'rgba(255,255,255,.88)');g.addColorStop(1,'rgba(255,255,255,0)');tctx.fillStyle=g;tctx.fillRect(xx-50,100,85,270);tctx.restore();}tctx.restore();
+}
+function drawFarmFieldBase(title,sub){
+  const W=templateCanvas.width,H=templateCanvas.height;const sky=tctx.createLinearGradient(0,0,0,245);sky.addColorStop(0,'#7cc8e8');sky.addColorStop(1,'#d8f0f4');tctx.fillStyle=sky;tctx.fillRect(0,0,W,245);tctx.fillStyle='#a8c969';tctx.fillRect(0,245,W,H-245);tctx.fillStyle='#667f46';tctx.beginPath();tctx.moveTo(0,245);tctx.quadraticCurveTo(150,182,310,236);tctx.quadraticCurveTo(510,175,800,242);tctx.lineTo(800,280);tctx.lineTo(0,280);tctx.closePath();tctx.fill();tctx.fillStyle='rgba(255,244,196,.86)';tctx.beginPath();tctx.arc(705,62,27,0,Math.PI*2);tctx.fill();drawRoundedPanel(18,16,300,72,15,'rgba(7,31,38,.78)','rgba(205,248,255,.28)');tctx.fillStyle='#f1fbff';tctx.textAlign='left';tctx.font='900 15px system-ui';tctx.fillText(title,32,40);tctx.fillStyle='rgba(220,244,250,.92)';tctx.font='700 11px system-ui';tctx.fillText(sub,32,61);
+}
+function drawFarmHud(task,progress,metric1,metric2){
+  drawRoundedPanel(560,16,222,104,15,'rgba(7,31,38,.82)','rgba(205,248,255,.26)');tctx.fillStyle='#eefbff';tctx.textAlign='left';tctx.font='900 12px system-ui';tctx.fillText(task,575,38);tctx.font='700 10px system-ui';tctx.fillStyle='#bfefff';tctx.fillText(metric1,575,59);tctx.fillText(metric2,575,77);tctx.fillStyle='rgba(255,255,255,.14)';tctx.fillRect(575,91,190,8);tctx.fillStyle='#69e0a7';tctx.fillRect(575,91,190*clamp(progress,0,1),8);
+}
+function drawTractorFarmWorld(){
+  const p=clamp(vehiclePhase3Progress,0,1);tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.globalAlpha=1;tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);
+  let seg=0,local=0,kind='',task='',m1='',m2='';
+  if(p<.12){seg=0;local=p/.12;kind='';task=t('Farm systems start-up','Démarrage des systèmes agricoles');m1=t('Hydraulics: READY','Hydraulique : PRÊT');m2=t('PTO: READY · Driver: READY','PTO : PRÊTE · Conducteur : PRÊT');}
+  else if(p<.29){seg=1;local=(p-.12)/.17;kind='mower';task=t('Job 1 · Mow & clear','Tâche 1 · Faucher et dégager');m1=t(`Field coverage: ${Math.round(local*100)}%`,`Couverture : ${Math.round(local*100)}%`);m2=t('PTO mower speed: stable','Vitesse de faucheuse PTO : stable');}
+  else if(p<.47){seg=2;local=(p-.29)/.18;kind='plough';task=t('Job 2 · Prepare soil','Tâche 2 · Préparer le sol');m1=t(`Furrows prepared: ${Math.round(local*12)}/12`,`Sillons préparés : ${Math.round(local*12)}/12`);m2=t('Hydraulic depth control: active','Contrôle hydraulique de profondeur : actif');}
+  else if(p<.64){seg=3;local=(p-.47)/.17;kind='seeder';task=t('Job 3 · Precision planting','Tâche 3 · Semis de précision');m1=t(`Seed rows: ${Math.round(local*12)}/12`,`Rangs semés : ${Math.round(local*12)}/12`);m2=t('Seed spacing: 18 cm · GPS locked','Espacement : 18 cm · GPS verrouillé');}
+  else if(p<.82){seg=4;local=(p-.64)/.18;kind='irrigator';task=t('Job 4 · Precision irrigation','Tâche 4 · Irrigation de précision');m1=t(`Soil moisture: ${31+Math.round(local*27)}%`,`Humidité du sol : ${31+Math.round(local*27)}%`);m2=t('Water use: optimised','Utilisation de l’eau : optimisée');}
+  else{seg=5;local=(p-.82)/.18;kind='loader';task=t('Job 5 · Move & level material','Tâche 5 · Déplacer et niveler');m1=t(`Level zone: ${Math.round(local*100)}%`,`Zone nivelée : ${Math.round(local*100)}%`);m2=t('Loader hydraulics: stable','Hydraulique du chargeur : stable');}
+  drawFarmFieldBase(t('MULTI-PURPOSE FARM MISSION','MISSION AGRICOLE MULTIFONCTION'),t('One tractor · many implements · one connected farm','Un tracteur · de nombreux outils · une ferme connectée'));
+  /* field transformation layers */
+  if(seg>=1){tctx.fillStyle='#6eaa52';tctx.fillRect(0,295,800,155);for(let x=20;x<800;x+=22){tctx.strokeStyle='rgba(238,245,200,.45)';tctx.beginPath();tctx.moveTo(x,295);tctx.lineTo(x,450);tctx.stroke();}}
+  if(seg>=2){tctx.fillStyle='#8b6138';tctx.fillRect(0,315,800,135);for(let y=327;y<450;y+=13){tctx.strokeStyle='rgba(61,40,26,.42)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}}
+  if(seg>=3){for(let y=330;y<445;y+=19){for(let x=24;x<790;x+=32){tctx.fillStyle='#d4bf64';tctx.beginPath();tctx.arc(x,y,2.2,0,Math.PI*2);tctx.fill();}}}
+  if(seg>=4){for(let y=330;y<445;y+=19){for(let x=24;x<790;x+=32){tctx.fillStyle='#4d9e4e';tctx.fillRect(x-2,y-8,4,10);}}}
+  if(seg===5){tctx.fillStyle='#73523a';tctx.beginPath();tctx.arc(650,345,45,Math.PI,Math.PI*2);tctx.fill();tctx.fillStyle='#9a7653';tctx.fillRect(545,390,200,22);}
+  /* family helpers: adult pair + boy + girl */drawFarmPerson(78,286,1,{shirt:'#365e80'});drawFarmPerson(112,287,1,{skin:'#d29a76',shirt:'#8a5d6a'});drawFarmPerson(145,294,.92,{child:true,shirt:'#d19943'});drawFarmPerson(171,294,.92,{skin:'#c5835e',child:true,shirt:'#6c5b99'});
+  const moving=seg>0,tx=moving?255+330*local:390,ty=323,spin=moving?local*12:0;drawTractorAt(tx,ty,.60,{paint:vehiclePaintColor,glow:.30,wheelSpin:spin,faceRight:true,implement:kind,smart:true,driver:true});
+  if(kind==='irrigator'){tctx.save();tctx.strokeStyle='rgba(107,216,255,.55)';tctx.lineWidth=2;for(let i=0;i<14;i++){const x=tx-95+i*14;tctx.beginPath();tctx.moveTo(x,280);tctx.lineTo(x+8,334);tctx.stroke();}tctx.restore();}
+  if(seg===5){/* bucket visibly moves soil */tctx.fillStyle='rgba(120,82,49,.65)';for(let i=0;i<9;i++){tctx.beginPath();tctx.arc(tx+120+i*5,335-(i%3)*5,5,0,Math.PI*2);tctx.fill();}}
+  drawFarmHud(task,local,m1,m2);tctx.restore();
+}
+function drawTractorPrecisionFinale(){
+  const p=clamp(vehiclePhase4Progress,0,1),W=templateCanvas.width,H=templateCanvas.height;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);const g=tctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#17394a');g.addColorStop(1,'#0d242e');tctx.fillStyle=g;tctx.fillRect(0,0,W,H);
+  /* top-down precision field */tctx.fillStyle='#426f3e';tctx.fillRect(55,95,690,330);for(let i=0;i<12;i++){const x=82+i*54;tctx.strokeStyle=i%2?'rgba(140,213,109,.48)':'rgba(184,229,126,.48)';tctx.lineWidth=8;tctx.beginPath();tctx.moveTo(x,112);tctx.lineTo(x,407);tctx.stroke();}
+  /* planned autonomous route */tctx.save();tctx.setLineDash([9,7]);tctx.strokeStyle='rgba(95,232,255,.85)';tctx.lineWidth=3;tctx.beginPath();for(let i=0;i<10;i++){const x=100+i*58,y1=i%2?390:130,y2=i%2?130:390;if(i===0)tctx.moveTo(x,y1);else tctx.lineTo(x,y1);tctx.lineTo(x,y2);}tctx.stroke();tctx.restore();
+  const row=Math.min(9,Math.floor(p*10)),rowP=(p*10)%1,x=100+row*58,y=row%2?(390-260*rowP):(130+260*rowP),faceRight=row%2===0;drawTractorAt(x,y,.28,{paint:vehiclePaintColor,glow:.58,wheelSpin:p*34,faceRight,smart:true,driver:true});
+  /* farm drone scanning */const dx=170+430*p,dy=72+18*Math.sin(p*Math.PI*4);tctx.save();tctx.translate(dx,dy);tctx.strokeStyle='#ddfbff';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-18,0);tctx.lineTo(18,0);tctx.moveTo(0,-18);tctx.lineTo(0,18);tctx.stroke();tctx.strokeStyle='rgba(91,232,255,.30)';tctx.beginPath();tctx.moveTo(0,12);tctx.lineTo(-40,86);tctx.lineTo(40,86);tctx.closePath();tctx.stroke();tctx.restore();
+  drawRoundedPanel(18,16,322,62,15,'rgba(4,20,29,.84)','rgba(147,232,255,.24)');tctx.fillStyle='#f0fbff';tctx.font='900 15px system-ui';tctx.textAlign='left';tctx.fillText(t('AUTONOMOUS PRECISION MODE','MODE DE PRÉCISION AUTONOME'),32,40);tctx.fillStyle='#aeeeff';tctx.font='700 11px system-ui';tctx.fillText(t('GPS route + crop scan + soil map + drone coordination','Itinéraire GPS + scan cultures + carte du sol + coordination drone'),32,61);
+  drawRoundedPanel(552,16,230,108,15,'rgba(4,20,29,.84)','rgba(147,232,255,.24)');tctx.fillStyle='#eaf9ff';tctx.font='800 11px system-ui';const metrics=[t('Route accuracy: 98%','Précision itinéraire : 98 %'),t(`Rows scanned: ${Math.min(12,Math.floor(p*13))}/12`,`Rangs scannés : ${Math.min(12,Math.floor(p*13))}/12`),t(`Soil zones: ${Math.min(6,Math.floor(p*7))}/6`,`Zones de sol : ${Math.min(6,Math.floor(p*7))}/6`),t('Water use: OPTIMISED','Utilisation de l’eau : OPTIMISÉE')];metrics.forEach((m,i)=>tctx.fillText(m,567,40+i*19));tctx.restore();
+}
+function drawTractorCelebration(){
+  const W=templateCanvas.width,H=templateCanvas.height,p=vehicleRevealStage==='phase5'?clamp(vehiclePhase5Progress,0,1):1;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);const sky=tctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#e18b55');sky.addColorStop(.42,'#8d6570');sky.addColorStop(1,'#1d3440');tctx.fillStyle=sky;tctx.fillRect(0,0,W,H);tctx.fillStyle='rgba(255,222,150,.9)';tctx.beginPath();tctx.arc(650,102,38,0,Math.PI*2);tctx.fill();tctx.fillStyle='#527348';tctx.fillRect(0,260,W,H-260);for(let y=302;y<440;y+=20){tctx.strokeStyle='rgba(36,62,32,.52)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(W,y);tctx.stroke();}
+  const arrive=clamp(p/.42,0,1),settle=1-Math.pow(1-arrive,3);drawTractorAt(410+(1-settle)*230,330-(1-settle)*20,.70,{paint:vehiclePaintColor,glow:.56,wheelSpin:p<.42?-p*8:0,faceRight:true,smart:true,driver:true});drawFarmPerson(110,327,1,{shirt:'#315e7d'});drawFarmPerson(145,327,1,{skin:'#d39a76',shirt:'#8a5d6a'});drawFarmPerson(177,333,.9,{child:true,shirt:'#d19943'});drawFarmPerson(202,333,.9,{skin:'#c5835e',child:true,shirt:'#6c5b99'});
+  const a=clamp((p-.28)/.28,0,1);tctx.globalAlpha=a;tctx.textAlign='center';tctx.fillStyle='#fff7ec';tctx.font='900 24px system-ui';tctx.fillText(t('PRECISION FARM MISSION COMPLETE','MISSION AGRICOLE DE PRÉCISION TERMINÉE'),400,52);tctx.fillStyle='rgba(222,248,255,.95)';tctx.font='800 13px system-ui';tctx.fillText(t('Precision Agriculture Engineer','Ingénieur en agriculture de précision'),400,77);tctx.globalAlpha=1;
+  const r=clamp((p-.52)/.28,0,1);tctx.globalAlpha=r;drawRoundedPanel(96,94,608,56,15,'rgba(8,28,34,.72)','rgba(205,246,255,.20)');tctx.fillStyle='#e7fbff';tctx.font='800 11px system-ui';tctx.fillText(t('Mowed ✓  Soil prepared ✓  Seeds planted ✓  Irrigated ✓  Land levelled ✓  Smart systems passed ✓','Fauchage ✓  Sol préparé ✓  Semis ✓  Irrigation ✓  Nivellement ✓  Systèmes intelligents ✓'),400,127);tctx.globalAlpha=1;tctx.restore();
+}
+
 function drawCanonicalFinishedVehicle(){
+  if(vehicleIs('tractor')){drawTractorFinishedVehicleReveal();return;}
   if(vehicleIs('suv')){drawSUVFinishedVehicleReveal();return;}
   if(vehicleIs('van')){drawVanFinishedVehicleReveal();return;}
   if(vehicleIs('coach')){drawCoachFinishedVehicleReveal();return;}
@@ -2350,7 +2492,7 @@ function renderLibrary(m){
     const current=vehicleLibrary.find(v=>v.id===currentLibraryId)||vehicleLibrary[0];currentLibraryId=current.id;
     const opts=VEHICLE_CATALOG.map(v=>`<option value="${v.id}" ${v.id===currentLibraryId?'selected':''} ${v.available?'':'disabled'}>${L(v.name)}${v.available?'':` — ${t('coming soon','bientôt')}`}</option>`).join('');
     host.className='creator-library-grid creator-vehicle-picker';
-    host.innerHTML=`<div class="creator-vehicle-preview"><img src="${current.img}" alt="${current.name}"><div class="creator-vehicle-preview-copy"><span><b>${current.name}</b><small>${current.subtitle}</small></span><strong>${t('Selected','Sélectionné')} ✓</strong></div></div><div class="creator-vehicle-picker-control"><label for="vehiclePickerSelect">${t('Vehicle list','Liste des véhicules')}</label><select id="vehiclePickerSelect">${opts}</select><small>${t('Each vehicle has its own blueprint proportions and puzzle fitting points. Switching vehicle starts or restores that vehicle build.','Chaque véhicule possède ses propres proportions de plan et ses propres emplacements de puzzle. Changer de véhicule démarre ou restaure sa construction.')}</small></div>`;
+    host.innerHTML=`<div class="creator-vehicle-preview"><img src="${current.img}" alt="${current.name}" width="960" height="540" loading="eager" decoding="async" fetchpriority="high"><div class="creator-vehicle-preview-copy"><span><b>${current.name}</b><small>${current.subtitle}</small></span><strong>${t('Selected','Sélectionné')} ✓</strong></div></div><div class="creator-vehicle-picker-control"><label for="vehiclePickerSelect">${t('Vehicle list','Liste des véhicules')}</label><select id="vehiclePickerSelect">${opts}</select><small>${t('Each vehicle has its own blueprint proportions and puzzle fitting points. Switching vehicle starts or restores that vehicle build.','Chaque véhicule possède ses propres proportions de plan et ses propres emplacements de puzzle. Changer de véhicule démarre ou restaure sa construction.')}</small></div>`;
     const select=$('vehiclePickerSelect');if(select)select.onchange=()=>{const item=vehicleLibrary.find(v=>v.id===select.value);if(item)chooseLibrary(item)};
     return;
   }
@@ -2384,10 +2526,14 @@ function renderModes(m,preferred){
   modes.forEach(md=>{
     const complete=active==='vehicle'&&vehicleModeComplete(md.id);
     const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'')+(complete?' is-complete':'');b.dataset.modeId=md.id;
-    b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${L(md.help)}</small>${complete?`<small class="creator-mode-status">✓ ${t('Complete','Terminé')}</small>`:''}`;
+    const modeCardHelp=(active==='vehicle'&&vehicleIs('tractor')&&md.id==='body')?t('Build the farm machine, cab and the real front/rear implement connection system.','Construis la machine agricole, la cabine et les vrais systèmes de connexion des outils avant/arrière.'):(active==='vehicle'&&vehicleIs('tractor')&&md.id==='future')?t('Fit precision GPS, soil sensing, crop cameras, autonomous guidance and the farm-drone dock.','Installe le GPS de précision, les capteurs du sol, les caméras de cultures, le guidage autonome et la station du drone agricole.'):L(md.help);
+    b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${modeCardHelp}</small>${complete?`<small class="creator-mode-status">✓ ${t('Complete','Terminé')}</small>`:''}`;
     b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}commitHistory()};host.appendChild(b)
   });
-  const selected=modes.find(x=>x.id===activeMode);$('creatorModeHelp').textContent=L(selected.help);renderComponents(selected);
+  const selected=modes.find(x=>x.id===activeMode);
+  $('creatorModeHelp').textContent=(active==='vehicle'&&vehicleIs('tractor')&&selected.id==='future')
+    ?t('Build GPS guidance, soil sensing, crop cameras, autonomous control and a farm-drone dock — technology that makes real field work smarter and more precise.','Construis le guidage GPS, les capteurs du sol, les caméras de cultures, le contrôle autonome et la station du drone agricole — des technologies qui rendent le travail des champs plus intelligent et précis.')
+    :L(selected.help);renderComponents(selected);
   if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}
 }
 function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots(),...vehicleFutureSlots()];}
@@ -2438,8 +2584,16 @@ function renderComponents(md){
     const change=document.createElement('button');change.type='button';change.className='creator-component';change.innerHTML=`<span>↺</span><small>${t('Change power system','Changer le système d’énergie')}</small>`;change.onclick=resetVehiclePowerSystem;host.appendChild(change);refreshVehicleComponentButtons();return;
   }
   if(active==='vehicle'&&md.id==='future'){
+    if(vehicleIs('tractor')){
+      if(vehicleFutureAbility!=='smart-farm'){stashVehicleFutureVariant();removeVehicleSystemObjects('future');vehicleFutureAbility='smart-farm';vehicleFlightSystem='';restoreVehicleFutureVariant();}
+      host.innerHTML=`<div class="creator-palette-title"><b>${t('Precision Agriculture Technology','Technologie d’agriculture de précision')}</b><small>${t('A farm tractor does not need to fly or swim. Build the sensing, GPS and autonomous-guidance systems that make one tractor work more accurately across a real farm.','Un tracteur agricole n’a pas besoin de voler ni de naviguer. Construis les systèmes de capteurs, GPS et guidage autonome qui lui permettent de travailler avec précision sur une vraie ferme.')}</small></div>`;
+      const config=vehicleFutureConfig(),ids=new Set(vehicleFuturePartIdsForSelection());
+      const title=document.createElement('div');title.className='creator-palette-title';title.innerHTML=`<b>${t('Required smart-farm systems','Systèmes agricoles intelligents requis')}</b><small>${t('Fit all five systems. They will be used later for route guidance, crop scanning, soil sensing and farm-drone coordination.','Installe les cinq systèmes. Ils serviront ensuite au guidage, au suivi des cultures, aux capteurs du sol et à la coordination avec le drone agricole.')}</small>`;host.appendChild(title);
+      (md.parts||[]).filter(p=>ids.has(p.id)&&config.required.includes(p.id)).forEach(p=>appendVehiclePartButton(host,p));
+      refreshVehicleComponentButtons();return;
+    }
     host.innerHTML=`<div class="creator-palette-title"><b>${t('Choose the final Future Tech ability','Choisis la capacité finale de technologie future')}</b><small>${t('Choose one path for this same completed car: make it fly or make it travel on water.','Choisis une seule voie pour cette même voiture terminée : fais-la voler ou naviguer sur l’eau.')}</small></div>`;
-    VEHICLE_FUTURE_ABILITIES.forEach(choice=>{const b=document.createElement('button');b.type='button';b.className='creator-component';if(vehicleFutureAbility===choice.id){b.style.borderColor='rgba(93,228,255,.85)';b.style.background='rgba(93,228,255,.14)';}b.innerHTML=`<span>${choice.icon}</span><small>${L(choice.label)}</small>`;b.onclick=()=>selectVehicleFutureAbility(choice.id);host.appendChild(b)});
+    VEHICLE_FUTURE_ABILITIES.filter(choice=>choice.id!=='smart-farm').forEach(choice=>{const b=document.createElement('button');b.type='button';b.className='creator-component';if(vehicleFutureAbility===choice.id){b.style.borderColor='rgba(93,228,255,.85)';b.style.background='rgba(93,228,255,.14)';}b.innerHTML=`<span>${choice.icon}</span><small>${L(choice.label)}</small>`;b.onclick=()=>selectVehicleFutureAbility(choice.id);host.appendChild(b)});
     if(!vehicleFutureAbility){const note=document.createElement('div');note.className='creator-palette-title';note.innerHTML=`<small>${t('Choose Flying Car or Water / Amphibious Car. Only the technology required for that ability will appear.','Choisis Voiture volante ou Voiture aquatique / amphibie. Seule la technologie nécessaire à cette capacité apparaîtra.')}</small>`;host.appendChild(note);return;}
     const summary=document.createElement('div');summary.className='creator-palette-title';summary.innerHTML=`<b>${t('Selected','Sélectionné')}: ${vehicleFutureAbilityLabel()}</b><small>${vehicleFutureAbility==='flight'?t('The same completed vehicle will gain flight hardware.','Le même véhicule terminé recevra des équipements de vol.'):t('The same completed vehicle will gain a sealed hull and water propulsion.','Le même véhicule terminé recevra une coque étanche et une propulsion aquatique.')}</small>`;host.appendChild(summary);
     if(vehicleFutureAbility==='flight'){
@@ -2636,7 +2790,7 @@ function vehicleSafetyProgress(){
 }
 function vehicleFutureProgress(){
   const used=installedVehicleKeys(),req=vehicleFutureSlots().filter(x=>x.required);
-  const ready=vehicleFutureAbility!=='flight'||!!vehicleFlightSystem;
+  const ready=vehicleIs('tractor')?vehicleFutureAbility==='smart-farm':(vehicleFutureAbility!=='flight'||!!vehicleFlightSystem);
   return{chosen:!!vehicleFutureAbility,ready,done:req.filter(x=>used.has(x.key)).length,total:req.length,missing:req.filter(x=>!used.has(x.key))};
 }
 function vehiclePuzzleProgress(){
@@ -2891,11 +3045,12 @@ function drawFutureRoundabout(x,baseY){
   tctx.restore();
 }
 function drawPhase3VehicleAt(cx,cy,scale,opts={}){
+  if(vehicleIs('tractor')){drawTractorAt(cx,cy,scale,opts);return;}
   if(vehicleIs('suv')){drawSUVAt(cx,cy,scale,opts);return;}
   if(vehicleIs('van')){drawVanAt(cx,cy,scale,opts);return;}
   if(vehicleIs('coach')){drawCoachAt(cx,cy,scale,opts);return;}
   const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,angle=opts.angle||0,flight=!!opts.flight,water=!!opts.water,faceRight=!!opts.faceRight;
-  const roadWheelSpin=-Math.abs(wheelSpin); // correct physical tyre roll for both right- and left-facing travel
+  const roadWheelSpin=-wheelSpin; // signed: positive=forward, negative=reverse
   /* Never let an old reveal alpha make the body disappear while wheels/lights remain. */
   tctx.globalAlpha=1;
   tctx.globalCompositeOperation='source-over';
@@ -2989,12 +3144,13 @@ function drawVanCelebration(){
   const W=templateCanvas.width,H=templateCanvas.height,p=vehicleRevealStage==='phase5'?clamp(vehiclePhase5Progress,0,1):1;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.globalAlpha=1;tctx.clearRect(0,0,W,H);
   const bg=tctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#12334e');bg.addColorStop(.55,'#37647b');bg.addColorStop(1,'#263f3c');tctx.fillStyle=bg;tctx.fillRect(0,0,W,H);tctx.fillStyle='#6b8e6e';tctx.fillRect(0,330,W,120);drawFutureBuilding(72,318,118,92,'#4c6a83',4);drawFutureBuilding(612,318,118,92,'#735e4c',3);
   tctx.fillStyle='rgba(93,228,255,.13)';tctx.beginPath();tctx.ellipse(400,344,245,51,0,0,Math.PI*2);tctx.fill();tctx.strokeStyle='rgba(137,234,255,.42)';tctx.lineWidth=2;tctx.beginPath();tctx.ellipse(400,344,220,41,0,0,Math.PI*2);tctx.stroke();
-  const arrive=clamp(p/.42,0,1),settle=1-Math.pow(1-arrive,3);drawVanAt(400+(1-settle)*210,294-(1-settle)*18,.55+.035*Math.sin(clamp((p-.18)/.42,0,1)*Math.PI),{paint:vehiclePaintColor,glow:.82,wheelSpin:p<.42?p*8:0,faceRight:true});if(vehicleRevealStage==='phase5')drawPhase5Confetti(p);
+  const arrive=clamp(p/.42,0,1),settle=1-Math.pow(1-arrive,3);drawVanAt(400+(1-settle)*210,294-(1-settle)*18,.55+.035*Math.sin(clamp((p-.18)/.42,0,1)*Math.PI),{paint:vehiclePaintColor,glow:.82,wheelSpin:p<.42?-p*8:0,faceRight:true});if(vehicleRevealStage==='phase5')drawPhase5Confetti(p);
   const a=clamp((p-.28)/.28,0,1);tctx.globalAlpha=a;tctx.textAlign='center';tctx.shadowColor='rgba(82,228,255,.6)';tctx.shadowBlur=15;tctx.fillStyle='#f5fbff';tctx.font='900 26px system-ui';tctx.fillText(t('MISSION COMPLETE','MISSION TERMINÉE'),400,62);tctx.shadowBlur=0;tctx.fillStyle='rgba(178,234,255,.96)';tctx.font='800 13px system-ui';tctx.fillText(t('Transport & Delivery Engineer','Ingénieur transport et livraison'),400,86);tctx.globalAlpha=1;
   if(vehicleRevealStage!=='phase5-view'){const aa=clamp((p-.58)/.3,0,1);tctx.globalAlpha=aa;tctx.font='800 11px system-ui';tctx.fillStyle='#e5f6ff';const items=[t('Passengers ✓','Passagers ✓'),t('Cargo ✓','Chargement ✓'),t('Safety ✓','Sécurité ✓'),`${vehicleFinalTechLabel()} ✓`,t('Delivery Test ✓','Test livraison ✓')],xs=[120,265,400,535,680];items.forEach((lab,i)=>{drawRoundedPanel(xs[i]-60,397,120,28,13,'rgba(7,24,36,.62)','rgba(147,232,255,.18)');tctx.fillText(lab,xs[i],415)});tctx.globalAlpha=1;}
   if(vehicleRevealStage==='phase5-view'){drawRoundedPanel(250,365,300,46,18,'rgba(7,24,36,.74)','rgba(147,232,255,.22)');tctx.fillStyle='#e7f7ff';tctx.font='800 14px system-ui';tctx.fillText(vehicleCreationName||t('My Transport Van','Mon van de transport'),400,393);}tctx.restore();
 }
 function drawVehicleFutureTestWorld(){
+  if(vehicleIs('tractor')){drawTractorFarmWorld();return;}
   if(vehicleIs('suv')){drawSUVAdventureTestWorld();return;}
   if(vehicleIs('van')){drawVanUtilityTestWorld();return;}
   if(vehicleIs('coach')){drawCoachIntercityWorld();return;}
@@ -3070,32 +3226,38 @@ function startVehiclePhaseThreeWorld(){
   /* The Test World must remain visible even if the child had switched the construction blueprint off. */
   stage.classList.remove('blueprints-off');
   vehicleRevealStage='phase3';vehiclePhase3Progress=0;vehiclePhase3Start=Date.now();
-  const isVan=vehicleIs('van'),isCoach=vehicleIs('coach');
-  $('creatorTestResult').innerHTML=isCoach
+  const isVan=vehicleIs('van'),isCoach=vehicleIs('coach'),isTractor=vehicleIs('tractor');
+  $('creatorTestResult').innerHTML=isTractor
+    ?`<div class="creator-report"><div><b>${t('Multi-Purpose Farm Mission','Mission agricole multifonction')}</b><p>${t('The tractor will mow, prepare soil, plant seed, irrigate crops and move material before entering autonomous precision mode.','Le tracteur va faucher, préparer le sol, semer, irriguer les cultures et déplacer des matériaux avant de passer en mode de précision autonome.')}</p></div></div>`
+    :isCoach
     ?`<div class="creator-report"><div><b>${t('Intercity Journey Test','Test du trajet interurbain')}</b><p>${t('Passengers will board at the departure terminal, luggage will be secured in the lower bays, the coach will complete a scheduled stopover and continue toward its final city.','Les passagers embarqueront au terminal de départ, les bagages seront rangés dans les soutes, l’autocar effectuera un arrêt intermédiaire puis continuera vers sa ville finale.')}</p></div></div>`
     :isVan
       ?`<div class="creator-report"><div><b>${t('Van Passenger & Cargo Test','Test passagers et chargement du van')}</b><p>${t('The finished van will pick up passengers, drop them off safely, load goods through the rear cargo doors and complete a delivery.','Le van fini va prendre des passagers, les déposer en sécurité, charger des marchandises par les portes arrière et effectuer une livraison.')}</p></div></div>`
       :`<div class="creator-report"><div><b>${t('Future Test World','Monde de test du futur')}</b><p>${t('Your finished car is entering a living world with roads, useful places and a special zone for its future ability.','Ta voiture finie entre dans un monde vivant avec routes, lieux utiles et une zone spéciale pour sa capacité future.')}</p></div></div>`;
-  showVehicleStageNotice(isCoach?t('Intercity journey','Trajet interurbain'):isVan?t('Passenger & cargo test','Test passagers et chargement'):t('Entering Test World','Entrée dans le Monde de test'),isCoach?t('Boarding, luggage, highway travel and a scheduled stopover.','Embarquement, bagages, trajet routier et arrêt intermédiaire.'):isVan?t('Passengers first, then cargo loading and delivery.','D’abord les passagers, puis le chargement et la livraison.'):t('Road test first, then your special vehicle ability.','D’abord le test routier, puis la capacité spéciale du véhicule.'),{duration:3500});
-  $('creatorCoach').textContent=isCoach?t('Follow the route display, boarding process, luggage loading, stopover and final-city journey.','Suis l’affichage d’itinéraire, l’embarquement, les bagages, l’arrêt intermédiaire et le trajet vers la ville finale.'):isVan?t('Watch how the van transports people, uses its rear cargo doors and completes a delivery route.','Observe comment le van transporte des personnes, utilise ses portes arrière et effectue une livraison.'):t('Watch the finished car drive through the town, pass the service area and use its future ability in the last zone.','Regarde la voiture finie traverser la ville, passer par la zone de service et utiliser sa capacité future dans la dernière zone.');
-  const duration=isCoach?18000:isVan?15600:12800;
+  showVehicleStageNotice(isTractor?t('Precision farm mission','Mission agricole de précision'):isCoach?t('Intercity journey','Trajet interurbain'):isVan?t('Passenger & cargo test','Test passagers et chargement'):t('Entering Test World','Entrée dans le Monde de test'),isTractor?t('Five real farm jobs, visible driver and connected smart systems.','Cinq vrais travaux agricoles, conducteur visible et systèmes intelligents connectés.'):isCoach?t('Boarding, luggage, highway travel and a scheduled stopover.','Embarquement, bagages, trajet routier et arrêt intermédiaire.'):isVan?t('Passengers first, then cargo loading and delivery.','D’abord les passagers, puis le chargement et la livraison.'):t('Road test first, then your special vehicle ability.','D’abord le test routier, puis la capacité spéciale du véhicule.'),{duration:3500});
+  $('creatorCoach').textContent=isTractor?t('Watch the driver and farm team work through mowing, soil preparation, planting, irrigation and levelling. Each implement has a real job.','Observe le conducteur et l’équipe agricole réaliser la fauche, la préparation du sol, le semis, l’irrigation et le nivellement. Chaque outil a un vrai rôle.'):isCoach?t('Follow the route display, boarding process, luggage loading, stopover and final-city journey.','Suis l’affichage d’itinéraire, l’embarquement, les bagages, l’arrêt intermédiaire et le trajet vers la ville finale.'):isVan?t('Watch how the van transports people, uses its rear cargo doors and completes a delivery route.','Observe comment le van transporte des personnes, utilise ses portes arrière et effectue une livraison.'):t('Watch the finished car drive through the town, pass the service area and use its future ability in the last zone.','Regarde la voiture finie traverser la ville, passer par la zone de service et utiliser sa capacité future dans la dernière zone.');
+  const duration=isTractor?27000:isCoach?18000:isVan?15600:12800;
   const tick=()=>{
     if(!testRunning||!vehicleRevealActive){if(vehiclePhase3Timer)clearInterval(vehiclePhase3Timer);vehiclePhase3Timer=0;return}
     vehiclePhase3Progress=clamp((Date.now()-vehiclePhase3Start)/duration,0,1);
     safeVehicleRender();
     if(vehiclePhase3Progress>=1){
       clearInterval(vehiclePhase3Timer);vehiclePhase3Timer=0;vehicleRevealStage='phase3-complete';vehiclePhase3Progress=1;safeVehicleRender();
-      const phase3Special=vehicleIs('coach')
+      const phase3Special=vehicleIs('tractor')
+        ?t('Five farm jobs are complete. The tractor now enters Autonomous Precision Mode with GPS guidance, crop scanning, soil sensing and farm-drone coordination.','Cinq travaux agricoles sont terminés. Le tracteur passe maintenant en Mode de précision autonome avec guidage GPS, scan des cultures, capteurs du sol et coordination du drone agricole.')
+        :vehicleIs('coach')
         ?t('The scheduled stopover is complete. The coach now continues toward the final city and its selected Future Tech route challenge.','L’arrêt intermédiaire est terminé. L’autocar poursuit maintenant vers la ville finale et son défi d’itinéraire avec la technologie future choisie.')
         :vehicleIs('van')
           ?t('Passenger transport and cargo delivery are complete. The same van now continues into its selected Future Tech delivery finale.','Le transport des passagers et la livraison de marchandises sont terminés. Le même van poursuit maintenant vers sa finale de livraison avec la technologie future choisie.')
           :vehicleFutureAbility==='flight'
           ?t('The car is already airborne. The full systems journey continues from this exact flight state — it does not restart take-off.','La voiture est déjà en vol. Le test complet continue exactement depuis cet état — sans redémarrer le décollage.')
           :t('The car is now genuinely in open water. The full systems journey continues from this exact amphibious state.','La voiture est maintenant réellement en eau libre. Le test complet continue depuis cet état amphibie.');
-      $('creatorTestResult').innerHTML=vehicleIs('coach')
+      $('creatorTestResult').innerHTML=vehicleIs('tractor')
+        ?`<div class="creator-report"><div><b>${t('Five farm jobs complete','Cinq travaux agricoles terminés')}</b><p>${phase3Special}</p><p>${t('Continuing automatically into precision agriculture…','Passage automatique à l’agriculture de précision…')}</p></div></div>`
+        :vehicleIs('coach')
         ?`<div class="creator-report"><div><b>${t('Scheduled stopover complete','Arrêt intermédiaire terminé')}</b><p>${phase3Special}</p><p>${t('Continuing automatically toward the final city…','Poursuite automatique vers la ville finale…')}</p></div></div>`
         :`<div class="creator-report"><div><b>${t('Future Test World complete','Monde de test terminé')}</b><p>${phase3Special}</p><p>${t('Continuing automatically to the full systems journey…','Passage automatique au parcours complet des systèmes…')}</p></div></div>`;
-      $('creatorCoach').textContent=vehicleIs('coach')?t('Keep watching — the coach is continuing from the stopover toward its route challenge and final terminal.','Continue de regarder — l’autocar poursuit depuis l’arrêt intermédiaire vers son défi d’itinéraire et le terminal final.'):t('Keep watching — the full systems test continues from the vehicle’s current position.','Continue de regarder — le test complet reprend depuis la position actuelle du véhicule.');
+      $('creatorCoach').textContent=vehicleIs('tractor')?t('Keep watching — the field mission is moving into autonomous precision agriculture.','Continue de regarder — la mission passe à l’agriculture de précision autonome.'):vehicleIs('coach')?t('Keep watching — the coach is continuing from the stopover toward its route challenge and final terminal.','Continue de regarder — l’autocar poursuit depuis l’arrêt intermédiaire vers son défi d’itinéraire et le terminal final.'):t('Keep watching — the full systems test continues from the vehicle’s current position.','Continue de regarder — le test complet reprend depuis la position actuelle du véhicule.');
       showVehicleStageNotice(vehicleIs('coach')?t('Stopover complete','Arrêt terminé'):t('Special zone reached','Zone spéciale atteinte'),vehicleIs('coach')?t('Final-city journey continuing…','Trajet vers la ville finale…'):t('Full systems test continuing…','Suite du test complet des systèmes…'),{duration:2500});
       window.playTone?.(true);
       setTimeout(()=>{if(testRunning&&vehicleRevealActive&&vehicleRevealStage==='phase3-complete')startVehiclePhaseFourJourney()},900);
@@ -3158,6 +3320,7 @@ function drawPhase4WaterWorld(p){
   tctx.restore();
 }
 function drawVehiclePhaseFourJourney(){
+  if(vehicleIs('tractor')){drawTractorPrecisionFinale();return;}
   if(vehicleIs('suv')){drawSUVPhaseFourJourney();return;}
   if(vehicleIs('van')){drawVanFutureTechFinale();return;}
   if(vehicleIs('coach')){drawCoachPhaseFourJourney();return;}
@@ -3184,7 +3347,9 @@ function startVehiclePhaseFourJourney(){
   vehiclePhase4RAF=0;vehiclePhase4Timer=0;
   stage.classList.remove('blueprints-off');
   vehicleRevealStage='phase4';vehiclePhase4Progress=0;vehiclePhase4Start=Date.now();
-  const continuity=vehicleIs('coach')
+  const continuity=vehicleIs('tractor')
+    ?t('The tractor is now using GPS guidance, crop cameras, soil sensing and a farm drone to work the field autonomously with precise row spacing and optimised resource use.','Le tracteur utilise maintenant le guidage GPS, les caméras de cultures, les capteurs du sol et un drone agricole pour travailler le champ de façon autonome avec des rangs précis et une utilisation optimisée des ressources.')
+    :vehicleIs('coach')
     ?(vehicleFutureAbility==='flight'
       ?t('A route disruption has triggered the coach’s aerial bypass. Passenger safety, power and Future Tech are checked before the coach rejoins the motorway and reaches the final terminal.','Une coupure d’itinéraire déclenche la déviation aérienne de l’autocar. La sécurité passagers, l’énergie et la technologie future sont vérifiées avant le retour sur la route et l’arrivée au terminal final.')
       :t('The coach is taking an amphibious route crossing. Passenger safety, power and Future Tech are checked before it rejoins the road and reaches the final terminal.','L’autocar effectue une traversée amphibie. La sécurité passagers, l’énergie et la technologie future sont vérifiées avant le retour sur route et l’arrivée au terminal final.'))
@@ -3195,22 +3360,24 @@ function startVehiclePhaseFourJourney(){
       :vehicleFutureAbility==='flight'
         ?t('The car is already airborne. The test continues the flight, checks Movement, Power and Safety, then returns and lands.','La voiture est déjà en vol. Le test poursuit le vol, vérifie Mouvement, Énergie et Sécurité, puis revient et atterrit.')
         :t('The car is already in open water. The test continues across the water, checks Movement, Power and Safety, then returns to shore and deploys the wheels.','La voiture est déjà en eau libre. Le test poursuit le trajet aquatique, vérifie Mouvement, Énergie et Sécurité, puis revient sur la rive et redéploie les roues.');
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Full Systems Test','Test complet des systèmes')}</b><p>${continuity}</p></div></div>`;showVehicleStageNotice(t('Full Systems Test','Test complet des systèmes'),vehicleFutureAbility==='flight'?t('Flight, power and safety checks are running.','Les contrôles de vol, énergie et sécurité sont en cours.'):t('Water, power and safety checks are running.','Les contrôles aquatiques, énergie et sécurité sont en cours.'),{duration:3400});
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${vehicleIs('tractor')?t('Precision Agriculture Test','Test d’agriculture de précision'):t('Full Systems Test','Test complet des systèmes')}</b><p>${continuity}</p></div></div>`;showVehicleStageNotice(vehicleIs('tractor')?t('Autonomous Precision Mode','Mode de précision autonome'):t('Full Systems Test','Test complet des systèmes'),vehicleIs('tractor')?t('GPS, crop, soil and drone systems are working together.','Les systèmes GPS, cultures, sol et drone travaillent ensemble.'):vehicleFutureAbility==='flight'?t('Flight, power and safety checks are running.','Les contrôles de vol, énergie et sécurité sont en cours.'):t('Water, power and safety checks are running.','Les contrôles aquatiques, énergie et sécurité sont en cours.'),{duration:3400});
   $('creatorCoach').textContent=continuity;
-  const duration=vehicleIs('coach')?14500:vehicleIs('van')?12400:15800;
+  const duration=vehicleIs('tractor')?16000:vehicleIs('coach')?14500:vehicleIs('van')?12400:15800;
   const tick=()=>{
     if(!testRunning||!vehicleRevealActive){if(vehiclePhase4Timer)clearInterval(vehiclePhase4Timer);vehiclePhase4Timer=0;return}
     vehiclePhase4Progress=clamp((Date.now()-vehiclePhase4Start)/duration,0,1);
     safeVehicleRender();
     if(vehiclePhase4Progress>=1){
       clearInterval(vehiclePhase4Timer);vehiclePhase4Timer=0;vehicleRevealStage='phase4-complete';vehiclePhase4Progress=1;safeVehicleRender();
-      const special=vehicleFutureAbility==='flight'?t(`${vehicleFlightSystemLabel()} flight and landing complete`,`${vehicleFlightSystemLabel()} : vol et atterrissage terminés`):t('Amphibious water journey and shore return complete','Trajet amphibie et retour sur la rive terminés');
-      $('creatorTestResult').innerHTML=vehicleIs('coach')
+      const special=vehicleIs('tractor')?t('Precision GPS, soil sensing, crop scanning and drone coordination complete','GPS de précision, capteurs du sol, scan des cultures et coordination du drone terminés'):vehicleFutureAbility==='flight'?t(`${vehicleFlightSystemLabel()} flight and landing complete`,`${vehicleFlightSystemLabel()} : vol et atterrissage terminés`):t('Amphibious water journey and shore return complete','Trajet amphibie et retour sur la rive terminés');
+      $('creatorTestResult').innerHTML=vehicleIs('tractor')
+        ?`<div class="creator-report"><div><b>${t('Precision farm mission passed','Mission agricole de précision réussie')}</b><p>${t('The tractor completed five different farm jobs, then used autonomous guidance and smart sensing to finish the field accurately.','Le tracteur a réalisé cinq travaux agricoles différents, puis a utilisé le guidage autonome et les capteurs intelligents pour terminer le champ avec précision.')}</p><ul><li class="pass">✓ ${t('Mowing and field clearing complete','Fauche et dégagement terminés')}</li><li class="pass">✓ ${t('Soil preparation and planting complete','Préparation du sol et semis terminés')}</li><li class="pass">✓ ${t('Precision irrigation complete','Irrigation de précision terminée')}</li><li class="pass">✓ ${t('Material moving and levelling complete','Déplacement et nivellement terminés')}</li><li class="pass">✓ ${special}</li></ul><p>${t('The farm team is safe and the field work is complete. The Precision Agriculture Engineer result is starting now.','L’équipe agricole est en sécurité et le travail du champ est terminé. Le résultat Ingénieur en agriculture de précision commence maintenant.')}</p></div></div>`
+        :vehicleIs('coach')
         ?`<div class="creator-report"><div><b>${t('Intercity journey passed','Trajet interurbain réussi')}</b><p>${t('Passengers boarded safely, luggage was secured, the scheduled stopover was completed and the coach reached its final city after the Future Tech route challenge.','Les passagers ont embarqué en sécurité, les bagages ont été rangés, l’arrêt intermédiaire a été effectué et l’autocar a atteint sa ville finale après le défi de technologie future.')}</p><ul><li class="pass">✓ ${t('Passenger boarding verified','Embarquement des passagers vérifié')}</li><li class="pass">✓ ${t('Lower luggage bays verified','Soutes à bagages vérifiées')}</li><li class="pass">✓ ${t('Scheduled stopover completed','Arrêt intermédiaire terminé')}</li><li class="pass">✓ ${t('Final destination reached','Destination finale atteinte')}</li><li class="pass">✓ ${special}</li></ul><p>${t('The coach is safely at the terminal. The Intercity Transport Engineer result is starting now.','L’autocar est arrivé en sécurité au terminal. Le résultat Ingénieur transport interurbain commence maintenant.')}</p></div></div>`
         :vehicleIs('van')
           ?`<div class="creator-report"><div><b>${t('Van transport mission passed','Mission de transport du van réussie')}</b><p>${t('The same finished van transported passengers, handled cargo and completed its Future Tech delivery test.','Le même van fini a transporté des passagers, pris en charge du chargement et réussi son test de livraison avec technologie future.')}</p><ul><li class="pass">✓ ${t('Passengers transported safely','Passagers transportés en sécurité')}</li><li class="pass">✓ ${t('Rear-door cargo loading verified','Chargement par portes arrière vérifié')}</li><li class="pass">✓ ${t('Cargo delivery complete','Livraison de marchandises terminée')}</li><li class="pass">✓ ${special}</li></ul><p>${t('The van has returned safely. The final transport-and-delivery celebration is starting now.','Le van est revenu en sécurité. La célébration finale transport et livraison commence maintenant.')}</p></div></div>`
         :`<div class="creator-report"><div><b>${t('Full Systems Test passed','Test complet réussi')}</b><p>${t('The same finished car completed the full test without restarting the journey.','La même voiture finie a terminé le test complet sans redémarrer le parcours.')}</p><ul><li class="pass">✓ ${t('Movement verified','Mouvement vérifié')}</li><li class="pass">✓ ${vehiclePowertrainLabel()} ${t('power verified','énergie vérifiée')}</li><li class="pass">✓ ${t('Safety systems verified','Systèmes de sécurité vérifiés')}</li><li class="pass">✓ ${special}</li></ul><p>${t('The vehicle has returned safely. The final celebration and results are starting now.','Le véhicule est revenu en sécurité. La célébration et les résultats finaux commencent maintenant.')}</p></div></div>`;
-      $('creatorCoach').textContent=t('The car is safely returned. Keep watching — the final celebration starts automatically.','La voiture est revenue en sécurité. Continue de regarder — la célébration finale démarre automatiquement.');showVehicleStageNotice(t('All systems passed','Tous les systèmes ont réussi'),t('Mission celebration starting…','La célébration de mission commence…'),{duration:2400});
+      $('creatorCoach').textContent=vehicleIs('tractor')?t('The field work is complete and the smart-farm systems passed. Keep watching — the final result begins automatically.','Le travail du champ est terminé et les systèmes agricoles intelligents ont réussi. Continue de regarder — le résultat final démarre automatiquement.'):t('The car is safely returned. Keep watching — the final celebration starts automatically.','La voiture est revenue en sécurité. Continue de regarder — la célébration finale démarre automatiquement.');showVehicleStageNotice(vehicleIs('tractor')?t('Precision mission passed','Mission de précision réussie'):t('All systems passed','Tous les systèmes ont réussi'),t('Mission celebration starting…','La célébration de mission commence…'),{duration:2400});
       window.playTone?.(true);
       setTimeout(()=>{if(testRunning&&vehicleRevealActive&&vehicleRevealStage==='phase4-complete')startVehiclePhaseFiveCelebration()},900);
     }
@@ -3222,9 +3389,10 @@ function vehicleModelLabel(){
   return vehicleLibrary.find(v=>v.id===currentLibraryId)?.name||'Sport Car';
 }
 function vehicleFinalTechLabel(){
+  if(vehicleIs('tractor'))return t('Precision Smart Farming','Agriculture intelligente de précision');
   return vehicleFutureAbility==='flight'?vehicleFlightSystemLabel():vehicleFutureAbilityLabel();
 }
-function vehicleAchievementLabel(){return vehicleIs('suv')?t('Adventure Vehicle Engineer','Ingénieur véhicule d’aventure'):vehicleIs('van')?t('Transport & Delivery Engineer','Ingénieur transport et livraison'):vehicleIs('coach')?t('Intercity Transport Engineer','Ingénieur transport interurbain'):t('Future Vehicle Engineer','Ingénieur du véhicule du futur');}
+function vehicleAchievementLabel(){return vehicleIs('tractor')?t('Precision Agriculture Engineer','Ingénieur en agriculture de précision'):vehicleIs('suv')?t('Adventure Vehicle Engineer','Ingénieur véhicule d’aventure'):vehicleIs('van')?t('Transport & Delivery Engineer','Ingénieur transport et livraison'):vehicleIs('coach')?t('Intercity Transport Engineer','Ingénieur transport interurbain'):t('Future Vehicle Engineer','Ingénieur du véhicule du futur');}
 function drawPhase5Confetti(p){
   const pieces=[
     [84,56,'#5de4ff',.3],[140,102,'#ffd84d',.5],[208,64,'#ff6d8c',.72],[272,118,'#6ee7a7',.18],
@@ -3240,6 +3408,7 @@ function drawPhase5Confetti(p){
   });
 }
 function drawVehiclePhaseFiveCelebration(){
+  if(vehicleIs('tractor')){drawTractorCelebration();return;}
   if(vehicleIs('suv')){drawSUVCelebration();return;}
   if(vehicleIs('van')){drawVanCelebration();return;}
   if(vehicleIs('coach')){drawCoachCelebration();return;}
@@ -3253,7 +3422,7 @@ function drawVehiclePhaseFiveCelebration(){
   tctx.strokeStyle='rgba(129,232,255,.35)';tctx.lineWidth=2;tctx.beginPath();tctx.ellipse(400,344,226,42,0,0,Math.PI*2);tctx.stroke();
   const arrive=clamp(p/.42,0,1),settle=1-Math.pow(1-arrive,3),heroScale=.67+.05*Math.sin(clamp((p-.18)/.42,0,1)*Math.PI);
   const carX=400+(1-settle)*210,carY=300-(1-settle)*22;
-  drawPhase3VehicleAt(carX,carY,heroScale,{paint:vehiclePaintColor,glow:.82,wheelSpin:vehicleRevealStage==='phase5'&&p<.42?p*8:0,angle:(1-settle)*.06,flight:false,water:false,retractWheels:false,faceRight:true});
+  drawPhase3VehicleAt(carX,carY,heroScale,{paint:vehiclePaintColor,glow:.82,wheelSpin:vehicleRevealStage==='phase5'&&p<.42?-p*8:0,angle:(1-settle)*.06,flight:false,water:false,retractWheels:false,faceRight:true});
   if(vehicleRevealStage==='phase5')drawPhase5Confetti(p);
   const titleA=clamp((p-.30)/.28,0,1);
   tctx.save();tctx.globalAlpha=titleA;tctx.textAlign='center';tctx.shadowColor='rgba(82,228,255,.65)';tctx.shadowBlur=16;tctx.fillStyle='#f4fbff';tctx.font='900 26px system-ui';tctx.fillText(t('MISSION COMPLETE','MISSION TERMINÉE'),400,64);tctx.shadowBlur=0;tctx.fillStyle='rgba(169,231,255,.94)';tctx.font='800 13px system-ui';tctx.fillText(t('Future Vehicle Engineer','Ingénieur du véhicule du futur'),400,88);tctx.restore();
@@ -3275,7 +3444,7 @@ function vehiclePhaseFiveFinalHTML(){
   const name=vehicleCreationName||t('My Future Vehicle','Mon véhicule du futur');
   const adminNote=document.documentElement.dataset.admin==='true'?`<small class="admin-only-note" style="display:block;margin-top:10px;opacity:.78">${t('Admin note: Save project currently keeps this build on this browser. My Garage will use account/server saving in production.','Note admin : Enregistrer le projet conserve actuellement cette création dans ce navigateur. Mon Garage utilisera la sauvegarde serveur du compte en production.')}</small>`:'';
   const coachRoute=vehicleIs('coach')?`<li class="pass">✓ ${coachRouteText()}</li><li class="pass">✓ ${t('Passenger boarding, luggage bays and scheduled stopover completed','Embarquement, soutes à bagages et arrêt intermédiaire terminés')}</li>`:'';
-  const summary=vehicleIs('coach')?t('You engineered and completed a real intercity transport mission.','Tu as conçu et terminé une véritable mission de transport interurbain.'):t('You designed, built and tested a complete Future Vehicle.','Tu as conçu, construit et testé un véhicule du futur complet.');
+  const summary=vehicleIs('tractor')?t('You engineered a multi-purpose farm tractor, completed five real field jobs and finished an autonomous precision-agriculture mission.','Tu as conçu un tracteur agricole multifonction, réalisé cinq vrais travaux des champs et terminé une mission d’agriculture de précision autonome.'):vehicleIs('coach')?t('You engineered and completed a real intercity transport mission.','Tu as conçu et terminé une véritable mission de transport interurbain.'):t('You designed, built and tested a complete Future Vehicle.','Tu as conçu, construit et testé un véhicule du futur complet.');
   return `<div class="creator-report"><div style="width:100%"><b>${t('Mission complete','Mission terminée')} — ${name}</b><p>${summary}</p><ul><li class="pass">✓ ${vehicleModelLabel()}</li>${coachRoute}<li class="pass">✓ ${vehiclePowertrainLabel()}</li><li class="pass">✓ ${t('Safety system complete','Système de sécurité terminé')}</li><li class="pass">✓ ${vehicleFinalTechLabel()}</li><li class="pass">✓ ${t('Full Systems Test passed','Test complet des systèmes réussi')}</li></ul><p><b>🏅 ${t('Achievement unlocked','Récompense débloquée')}: ${vehicleAchievementLabel()}</b></p><div id="vehiclePhase5Actions" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button type="button" id="vehicleKnowledgeQuiz" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🧠 ${t('Test What You Learned','Teste ce que tu as appris')}</button><button type="button" id="vehicleReplayFullTest" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">▶ ${t('Replay Full Test','Rejouer le test complet')}</button><button type="button" id="vehicleReplayTransform" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">✨ ${t('Watch Transformation Again','Revoir la transformation')}</button><button type="button" id="vehicleViewFinalCar" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🚘 ${t('View My Vehicle','Voir mon véhicule')}</button><button type="button" id="vehicleReturnCreator" style="padding:10px 14px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🛠 ${t('Return to Creator Studio','Retour au Creator Studio')}</button></div>${adminNote}</div></div>`;
 }
 function vehicleQuizPool(){
@@ -3308,12 +3477,12 @@ function bindVehiclePhaseFiveActions(){
 }
 function showVehiclePhaseFiveNameUI(){
   vehicleRevealStage='phase5-ready';vehiclePhase5Progress=1;safeVehicleRender();
-  const suggested=vehicleCreationName||(vehicleIs('coach')?'Intercity X1':'Nova X1');
+  const suggested=vehicleCreationName||(vehicleIs('tractor')?'AgriTech X1':vehicleIs('coach')?'Intercity X1':'Nova X1');
   $('creatorTestResult').innerHTML=`<div class="creator-report"><div style="width:100%"><b>${t('Name your creation','Nomme ta création')}</b><p>${t('All systems passed. Give your finished vehicle a name to complete the mission.','Tous les systèmes ont réussi. Donne un nom à ton véhicule pour terminer la mission.')}</p><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px"><input id="vehicleCreationNameInput" type="text" maxlength="28" value="${String(suggested).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\"/g,'&quot;')}" aria-label="${t('Vehicle name','Nom du véhicule')}" style="min-width:180px;flex:1;padding:11px 14px;border-radius:12px;border:1px solid rgba(147,232,255,.35);background:rgba(8,25,36,.72);color:#fff;font-weight:800"><button type="button" id="vehicleConfirmName" style="padding:11px 16px;border:0;border-radius:999px;font-weight:800;cursor:pointer">🏁 ${t('Complete Mission','Terminer la mission')}</button></div></div></div>`;
   $('creatorCoach').textContent=t('Choose a name for the vehicle. You can use the suggestion or type your own name.','Choisis un nom pour le véhicule. Tu peux utiliser la suggestion ou saisir ton propre nom.');
   const input=$('vehicleCreationNameInput'),confirm=$('vehicleConfirmName');
   if(confirm)confirm.onclick=()=>{
-    vehicleCreationName=(input?.value||'').trim().replace(/[<>]/g,'').slice(0,28)||(vehicleIs('coach')?'Intercity X1':'Nova X1');vehiclePhase5Named=true;vehicleRevealStage='phase5-complete';safeVehicleRender();
+    vehicleCreationName=(input?.value||'').trim().replace(/[<>]/g,'').slice(0,28)||(vehicleIs('tractor')?'AgriTech X1':vehicleIs('coach')?'Intercity X1':'Nova X1');vehiclePhase5Named=true;vehicleRevealStage='phase5-complete';safeVehicleRender();
     $('creatorTestResult').innerHTML=vehiclePhaseFiveFinalHTML();bindVehiclePhaseFiveActions();
     $('creatorCoach').textContent=t('Future Vehicle mission complete. Replay the tests, admire the finished car or return to Creator Studio.','Mission Véhicule du futur terminée. Rejoue les tests, admire la voiture finie ou retourne au Creator Studio.');
     window.playTone?.(true);showVehicleStageNotice(t('Mission complete','Mission terminée'),`${vehicleCreationName} · ${vehicleAchievementLabel()}`,{duration:4200});
@@ -3323,7 +3492,9 @@ function showVehiclePhaseFiveNameUI(){
 function startVehiclePhaseFiveCelebration(){
   if(vehiclePhase5Timer)clearInterval(vehiclePhase5Timer);if(vehiclePhase5RAF)cancelAnimationFrame(vehiclePhase5RAF);
   vehiclePhase5RAF=0;vehiclePhase5Timer=0;vehicleRevealStage='phase5';vehiclePhase5Progress=0;vehiclePhase5Start=Date.now();
-  const celebrationCopy=vehicleIs('suv')
+  const celebrationCopy=vehicleIs('tractor')
+    ?t('The tractor completed mowing, soil preparation, planting, irrigation, levelling and autonomous precision farming. The Precision Agriculture Engineer result is starting now.','Le tracteur a terminé la fauche, la préparation du sol, le semis, l’irrigation, le nivellement et l’agriculture autonome de précision. Le résultat Ingénieur en agriculture de précision commence maintenant.')
+    :vehicleIs('suv')
     ?t('The 4×4 has returned safely from its adventure test. Final results and the Adventure Vehicle Engineer celebration are starting now.','Le 4×4 est revenu en sécurité de son test aventure. Les résultats finaux et la célébration Ingénieur véhicule d’aventure commencent maintenant.')
     :vehicleIs('van')
       ?t('The van completed its passenger, cargo and Future Tech delivery tests. The Transport & Delivery Engineer celebration is starting now.','Le van a terminé ses tests passagers, chargement et livraison avec technologie future. La célébration Ingénieur transport et livraison commence maintenant.')
@@ -3332,7 +3503,7 @@ function startVehiclePhaseFiveCelebration(){
         :t('The vehicle has returned safely. Final results and the Future Vehicle Engineer celebration are starting now.','Le véhicule est revenu en sécurité. Les résultats finaux et la célébration Ingénieur du véhicule du futur commencent maintenant.');
   $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Mission Complete','Mission terminée')}</b><p>${celebrationCopy}</p></div></div>`;
   $('creatorCoach').textContent=t('The final celebration is running. Your vehicle, chosen paint, power system and Future Tech are all being carried into the result.','La célébration finale est en cours. Ton véhicule, sa couleur, son énergie et sa technologie future sont conservés dans le résultat.');
-  showVehicleStageNotice(t('Mission complete','Mission terminée'),vehicleIs('suv')?t('Your Adventure Vehicle Engineer celebration is starting.','Ta célébration Ingénieur véhicule d’aventure commence.'):vehicleIs('van')?t('Your Transport & Delivery Engineer celebration is starting.','Ta célébration Ingénieur transport et livraison commence.'):vehicleIs('coach')?t('Your Intercity Transport Engineer result is starting.','Ton résultat Ingénieur transport interurbain commence.'):t('Your Future Vehicle Engineer celebration is starting.','Ta célébration Ingénieur du véhicule du futur commence.'),{duration:3000});
+  showVehicleStageNotice(t('Mission complete','Mission terminée'),vehicleIs('tractor')?t('Precision Agriculture Engineer result ready.','Résultat Ingénieur en agriculture de précision prêt.'):vehicleIs('suv')?t('Your Adventure Vehicle Engineer celebration is starting.','Ta célébration Ingénieur véhicule d’aventure commence.'):vehicleIs('van')?t('Your Transport & Delivery Engineer celebration is starting.','Ta célébration Ingénieur transport et livraison commence.'):vehicleIs('coach')?t('Your Intercity Transport Engineer result is starting.','Ton résultat Ingénieur transport interurbain commence.'):t('Your Future Vehicle Engineer celebration is starting.','Ta célébration Ingénieur du véhicule du futur commence.'),{duration:3000});
   const duration=5200;
   const tick=()=>{
     if(!testRunning||!vehicleRevealActive){if(vehiclePhase5Timer)clearInterval(vehiclePhase5Timer);vehiclePhase5Timer=0;return}
@@ -3413,10 +3584,10 @@ function startTest(){if(!active)return;
     }
     if(future.done<future.total){
       $('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Finish the Future Tech stage','Termine l’étape Technologie future')}</b><p>${t(`${future.done} of ${future.total} required Future Tech pieces are fitted.`,`${future.done} pièces de technologie future requises sur ${future.total} sont fixées.`)}</p></div>`;
-      $('creatorCoach').textContent=vehicleFutureAbility==='flight'?t('Use Top, Rear and Interior views to finish the flying-car hardware.','Utilise les vues Dessus, Arrière et Intérieur pour terminer les équipements de la voiture volante.'):t('Use Interior and Rear views to finish the amphibious system.','Utilise les vues Intérieur et Arrière pour terminer le système amphibie.');return;
+      $('creatorCoach').textContent=vehicleIs('tractor')?t('Use Top, Side and Interior views to finish the GPS, crop, soil, guidance-computer and drone-dock systems.','Utilise les vues Dessus, Côté et Intérieur pour terminer les systèmes GPS, cultures, sol, ordinateur de guidage et station du drone.'):vehicleFutureAbility==='flight'?t('Use Top, Rear and Interior views to finish the flying-car hardware.','Utilise les vues Dessus, Arrière et Intérieur pour terminer les équipements de la voiture volante.'):t('Use Interior and Rear views to finish the amphibious system.','Utilise les vues Intérieur et Arrière pour terminer le système amphibie.');return;
     }
     vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';renderTemplate('vehicle');updateVehicleViewUI();
-    if(['vehicle-sport','vehicle-suv','vehicle-van','vehicle-coach'].includes(currentLibraryId)){startVehiclePhaseOneReveal();return;}
+    if(['vehicle-sport','vehicle-suv','vehicle-van','vehicle-coach','vehicle-tractor'].includes(currentLibraryId)){startVehiclePhaseOneReveal();return;}
     const model=vehicleModelLabel();
     $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Vehicle build complete','Construction du véhicule terminée')} — ${model}</b><p>${t('All four build areas are complete. This vehicle is ready for its own unique final animation and test journey, which will be designed separately.','Les quatre zones de construction sont terminées. Ce véhicule est prêt pour sa propre animation finale et son parcours de test unique, qui seront conçus séparément.')}</p></div></div>`;
     $('creatorCoach').textContent=t('Build complete. Save this vehicle; its unique final test will be connected when we design this vehicle’s ending.','Construction terminée. Enregistre ce véhicule ; son test final unique sera connecté lorsque nous concevrons sa fin.');
