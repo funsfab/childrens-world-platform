@@ -1,0 +1,20 @@
+Children World — Future Vehicle Fix 32
+
+CURRENT BATCH
+Problem 1 — Reverse-in animation now uses reverse tyre rotation. Signed wheel rotation is supported across finished vehicle renderers.
+Problem 2 — Replaced all five vehicle selector previews with complete original SVG artwork on pure white backgrounds. No cut-off rear/front edges, no old infographic text/scenery.
+Problem 3 — Vehicle previews are preloaded/decoded at startup and the selected preview is eager/high-priority to remove the cold-load blank pause.
+
+FARM TRACTOR — FINAL VEHICLE BUILD
+- Future Tech is now Precision Smart Farming only: no flying tractor, no amphibious tractor.
+- Added required tractor-specific body parts: front implement mount, rear three-point hitch, PTO shaft and hydraulic couplers.
+- Added required smart-farm parts: precision GPS receiver, soil sensor array, crop-health camera, autonomous guidance computer and farm-drone dock.
+- Added a dedicated finished tractor with transparent cab and visible driver.
+- Added a long multi-purpose farm mission: start-up, mowing/clearing, soil preparation/ploughing, precision seeding, irrigation and front-loader levelling.
+- Added adult farm team plus young boy and girl helpers in the field scene.
+- Added autonomous precision-agriculture finale with GPS route, crop/soil scanning, drone coordination and technical HUD metrics.
+- Added mature sunset result screen: Precision Agriculture Engineer.
+- Tractor is now wired into the same reveal → paint → test → final result flow as the other four vehicles.
+
+STATE NOTE
+Existing Sport Car, 4×4/SUV, Van and Coach builds remain on the current saved-state version. The new Tractor slots are added without forcing a global vehicle-state reset.
