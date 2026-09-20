@@ -1,0 +1,33 @@
+Children World — Future Vehicle Fix 29
+Current batch: Problems 1–2
+Date: 2026-09-20
+
+Problem 1 — Vehicle travelling backwards in test animations
+- Corrected moving vehicle orientation so the front/headlights point in the direction of travel.
+- Applied to Sport Car Future Test World and Full Systems Test movements.
+- Applied to 4×4/SUV adventure and Future Tech movements.
+- Applied to the new Van passenger/cargo and Future Tech movements.
+- When a route genuinely changes direction, the vehicle now turns with it instead of visually reversing.
+- Jet flame/wake direction follows the vehicle travel direction.
+
+Problem 2 — Van rear cargo doors + unique final animation
+- Added a new required Rear Cargo Door puzzle component for the Van.
+- Van now has two rear cargo-door blueprint slots, fitted from the Rear view.
+- Removed the car-style boot/trunk-lid requirement from the Van.
+- Added a dedicated finished Van body instead of reusing the Sport Car final body.
+- Added Van-specific blueprint-to-finished-vehicle reveal and paint stage.
+- Added Van Passenger & Cargo Test sequence:
+  1. passenger pickup,
+  2. safe passenger drop-off,
+  3. rear doors open,
+  4. cargo loading,
+  5. delivery journey,
+  6. cargo unloading.
+- Added Van Future Tech delivery finale:
+  - Flying variants perform an express air-delivery test.
+  - Water/amphibious variant performs a harbour delivery crossing.
+- Added Van Mission Complete celebration: Transport & Delivery Engineer.
+- Van Test My Creation now launches its complete unique animation pipeline.
+
+Compatibility note
+- Existing saved Van builds from the previous version do not contain the two new rear cargo-door pieces. After updating, open Body & Movement and fit the two Rear Cargo Door pieces before testing the Van again.
