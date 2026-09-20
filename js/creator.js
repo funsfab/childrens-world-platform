@@ -1258,7 +1258,7 @@ function removeVehicleSystemObjects(kind){
 }
 function vehiclePowerVariantKey(id=vehiclePowertrain,hybrid=vehicleHybridType){return !id?'':(id==='hybrid'?`hybrid:${hybrid||'self'}`:id);}
 function stashVehiclePowerVariant(){const key=vehiclePowerVariantKey();if(key)vehiclePowerVariants[key]=vehicleSystemObjectData('power');}
-function restoreVehiclePowerVariant(){const key=vehiclePowerVariantKey();removeVehicleSystemObjects('power');if(key&&vehiclePowerVariants[key]?.length)restoreObjects(vehiclePowerVariants[key]);}
+function restoreVehiclePowerVariant(){const key=vehiclePowerVariantKey();removeVehicleSystemObjects('power');if(key&&vehiclePowerVariants[key]?.length)restoreObjects(vehiclePowerVariants[key],{append:true});}
 function removeLooseVehiclePowerPieces(){[...objectLayer.children].filter(o=>o.dataset.kind==='part'&&VEHICLE_POWER_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1').forEach(o=>o.remove());if(selectedObject&&VEHICLE_POWER_PART_IDS.has(selectedObject.dataset.partId))selectObject(null);}
 function selectVehiclePowertrain(id){
   if(!VEHICLE_POWERTRAINS.some(x=>x.id===id))return;
@@ -1294,7 +1294,7 @@ function vehicleFutureLocked(){return[...objectLayer.children].some(o=>o.dataset
 function removeLooseVehicleFuturePieces(){[...objectLayer.children].filter(o=>o.dataset.kind==='part'&&VEHICLE_FUTURE_PART_IDS.has(o.dataset.partId)&&o.dataset.installed!=='1').forEach(o=>o.remove());if(selectedObject&&VEHICLE_FUTURE_PART_IDS.has(selectedObject.dataset.partId))selectObject(null);}
 function vehicleFutureVariantKey(ability=vehicleFutureAbility,flight=vehicleFlightSystem){if(!ability)return'';if(ability==='water')return'water';return flight?`flight:${flight}`:'';}
 function stashVehicleFutureVariant(){const key=vehicleFutureVariantKey();if(key)vehicleFutureVariants[key]=vehicleSystemObjectData('future');}
-function restoreVehicleFutureVariant(){const key=vehicleFutureVariantKey();removeVehicleSystemObjects('future');if(key&&vehicleFutureVariants[key]?.length)restoreObjects(vehicleFutureVariants[key]);}
+function restoreVehicleFutureVariant(){const key=vehicleFutureVariantKey();removeVehicleSystemObjects('future');if(key&&vehicleFutureVariants[key]?.length)restoreObjects(vehicleFutureVariants[key],{append:true});}
 function clearVehicleFuturePiecesForSwitch(){removeVehicleSystemObjects('future');}
 function selectVehicleFutureAbility(id){
   if(!VEHICLE_FUTURE_ABILITIES.some(x=>x.id===id))return;
@@ -2460,8 +2460,12 @@ function objectData(){
     vectorStroke:+o.dataset.vectorStroke,vectorPath:o.dataset.vectorPath||''
   }));
 }
-function restoreObjects(items=[]){
-  objectLayer.innerHTML='';selectedObject=null;
+function restoreObjects(items=[],opts={}){
+  /* Full project/vehicle restores replace the object layer. Power/Future-Tech variant
+     restores must APPEND only their own saved pieces; clearing the whole layer here
+     would erase Body & Movement, Safety and the other completed systems. */
+  const append=opts.append===true;
+  if(!append){objectLayer.innerHTML='';selectedObject=null;}
   items.forEach(d=>{
     if(d.kind==='blueprint'){
       const item=[...(missions[active].library||[])].find(x=>x.id===d.blueprintId)||{id:d.blueprintId,name:d.label,img:d.image,blueprintType:active==='robot'?'robot':'scene'};
