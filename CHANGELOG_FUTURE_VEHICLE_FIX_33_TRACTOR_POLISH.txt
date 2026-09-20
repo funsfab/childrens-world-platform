@@ -1,0 +1,44 @@
+Children World — Future Vehicle Fix 33 — Tractor Final Polish
+Current batch: Problems 1–5
+
+Problem 1 — Farm people spacing
+- Woman + boy positioned in one farm zone.
+- Man and girl positioned separately across the field.
+- Final sunset shot also keeps the farm team spread naturally.
+
+Problem 2 — Tractor visibly performs the work
+- Mower visibly changes tall grass into short cut grass and throws clippings.
+- Plough visibly turns soil and throws soil particles.
+- Seeder visibly creates planted rows/seeds behind the machine.
+- Irrigator visibly sprays water and leaves a wet treated area.
+- Loader visibly moves material and creates a levelled surface.
+- Tyre tracks and GPS row guides add physical continuity.
+
+Problem 3 — Proper seated tractor driver
+- Added visible seat, steering wheel and steering column.
+- Driver sits with bent legs and hands on the steering wheel.
+- Driver remains visible through the transparent cab.
+
+Problem 4 — Orientation follows direction of travel
+- Tractor alternates real working passes across the field.
+- Whole tractor + driver turn together when direction changes.
+- Wheel rotation changes sign when the tractor changes direction.
+
+Problem 5 — Educational drone / precision agriculture sequence
+- Drone launches from the farm system.
+- Drone scans field with a visible scan cone/grid.
+- Dry zone is detected, highlighted and labelled.
+- Coordinates are sent to the tractor.
+- Tractor moves smoothly to the marked target via GPS guidance.
+- Tractor visibly irrigates only the dry zone and moisture reading rises.
+- Drone performs a second scan and detects crop stress.
+- Tractor turns, travels to the second target and applies targeted crop support.
+- On-screen labels explain every step and why it is happening.
+
+Timing / polish
+- Main tractor field mission extended to 34 seconds.
+- Smart-farm drone sequence extended to 24 seconds so labels/actions can be understood.
+- No new preview image files are included in this patch; it reuses the Fix 32 preview assets already uploaded.
+
+Validation
+- creator.js passed Node JavaScript syntax validation.
