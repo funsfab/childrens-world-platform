@@ -1,0 +1,37 @@
+Children World — Future Vehicle Fix 31
+Current batch: Problems 1–4
+Date: 2026-09-20
+
+Problem 1 — Intercity Coach stationary boarding
+- Departure-terminal boarding is now a true parked state.
+- Coach position stays fixed while passengers and luggage board.
+- Road wheels remain completely still during boarding.
+- The same rule is applied at the scheduled stopover and final passenger unloading: passengers do not enter/leave a moving coach.
+
+Problem 2 — Coach moves, not the city
+- Removed the fake early city/background scrolling from the Intercity Coach journey.
+- Terminal/city scenery stays fixed.
+- The coach itself now changes position during the road-travel segments.
+- Stopover scene is a parked state before the coach departs again.
+
+Problem 3 — Correct physical wheel rotation
+- Corrected road-wheel spin direction in Sport Car, 4×4/SUV, Van and Intercity Coach renderers.
+- Rightward travel now shows forward/clockwise road-wheel rotation on screen.
+- Leftward travel shows the matching opposite rotation.
+- Propellers/drone rotors keep their own independent rotation.
+- Wheels stop when the vehicle is parked in reveal/boarding/arrival scenes.
+
+Problem 4 — Correct vehicle facing/orientation from the reveal onward
+- Sport Car final reveal/paint presentation is mirrored so the headlights/front are on the RIGHT and rear lights are on the LEFT.
+- 4×4/SUV, Van and Intercity Coach final reveal/paint presentations now also face right.
+- Sport Car, 4×4/SUV and Van completion arrivals face right and stop wheel rotation after parking.
+- Intercity Coach completion arrival keeps the same forward-facing rule.
+
+Preserved
+- Existing build progress / per-vehicle saved-state logic.
+- Power, Safety and Future Tech selections.
+- Intercity Coach language-aware route/destination system.
+- Coach passenger, luggage, stopover and Future Tech mission.
+
+Files changed
+- js/creator.js
