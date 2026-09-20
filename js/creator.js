@@ -1654,12 +1654,18 @@ function vehicleSlotProjection(slot){
 }
 function vehicleMainEdges(){
   const p=vehicleProfile(),L=p.length,W=p.width,H=p.height,y=W*.49,z0=p.bodyZ;
+  /* Strongly different silhouettes are intentional. The child must be able to tell the
+     selected vehicle from the blueprint alone, before any puzzle piece is fitted. */
   const outlines={
-    sport:[[-.50,.00],[-.47,.16],[-.38,.30],[-.18,.37],[-.15,.78],[-.01,.98],[.20,1.00],[.40,.72],[.43,.29],[.50,.13],[.48,.00],[-.46,.00]],
-    suv:[[-.50,.00],[-.48,.18],[-.40,.34],[-.25,.43],[-.19,.79],[-.08,.97],[.26,.99],[.38,.82],[.45,.39],[.50,.18],[.48,.00],[-.47,.00]],
-    van:[[-.50,.00],[-.49,.20],[-.42,.34],[-.35,.55],[-.29,.90],[-.19,.99],[.37,.99],[.46,.87],[.49,.35],[.50,.13],[.48,.00],[-.48,.00]],
-    coach:[[-.50,.00],[-.495,.19],[-.47,.47],[-.42,.78],[-.35,.96],[-.24,1.00],[.40,1.00],[.47,.91],[.49,.42],[.50,.16],[.49,.00],[-.49,.00]],
-    tractor:[[-.50,.05],[-.48,.24],[-.39,.42],[-.21,.48],[-.12,.53],[-.08,.76],[.02,.97],[.24,.99],[.34,.82],[.37,.56],[.48,.45],[.50,.18],[.47,.05],[-.44,.05]]
+    sport:[[-.50,.00],[-.47,.15],[-.37,.28],[-.19,.36],[-.15,.73],[-.02,.96],[.20,.98],[.39,.70],[.44,.28],[.50,.12],[.48,.00],[-.46,.00]],
+    /* High-riding, boxier 4×4 with a long flat roof and upright rear quarter. */
+    suv:[[-.50,.03],[-.48,.22],[-.39,.38],[-.24,.45],[-.18,.74],[-.08,.96],[.30,.96],[.40,.84],[.44,.50],[.48,.39],[.50,.18],[.48,.03],[-.47,.03]],
+    /* Van: short bonnet, tall passenger/cargo box and nearly vertical rear. */
+    van:[[-.50,.04],[-.49,.19],[-.42,.31],[-.34,.60],[-.28,.91],[-.18,.99],[.39,.99],[.46,.94],[.48,.76],[.49,.30],[.50,.10],[.48,.04],[-.48,.04]],
+    /* Coach: very long, almost rectangular passenger body with a high window band. */
+    coach:[[-.50,.04],[-.495,.24],[-.48,.64],[-.44,.88],[-.37,.98],[.42,.98],[.47,.92],[.49,.70],[.495,.28],[.50,.10],[.49,.04],[-.49,.04]],
+    /* Tractor: long low engine bonnet, tall rear cab and agricultural rear section. */
+    tractor:[[-.50,.08],[-.49,.23],[-.42,.37],[-.18,.43],[-.10,.49],[-.07,.62],[-.02,.92],[.08,.99],[.28,.99],[.34,.84],[.36,.56],[.47,.46],[.50,.24],[.48,.08],[-.45,.08]]
   };
   const norm=outlines[p.id]||outlines.sport;
   const side=norm.map(([xf,zf])=>[xf*L,-y,z0+zf*(H-z0)]),side2=side.map(v=>[v[0],-v[1],v[2]]),edges=[side,side2];
@@ -1668,15 +1674,28 @@ function vehicleMainEdges(){
   edges.push([[-L*.45,-y*.97,z0+.18],[L*.45,-y*.97,z0+.18]]);
   edges.push([[-L*.45,y*.97,z0+.18],[L*.45,y*.97,z0+.18]]);
   if(p.id==='coach'){
-    [-.33,-.18,-.03,.12,.27,.40].forEach(xf=>edges.push([[xf*L,-y*.98,z0+(H-z0)*.47],[xf*L,-y*.98,z0+(H-z0)*.88]]));
-    [-.33,-.18,-.03,.12,.27,.40].forEach(xf=>edges.push([[xf*L,y*.98,z0+(H-z0)*.47],[xf*L,y*.98,z0+(H-z0)*.88]]));
-  }else if(p.id==='van'||p.id==='suv'){
-    [-.20,.04,.27].forEach(xf=>{edges.push([[xf*L,-y*.98,z0+(H-z0)*.40],[xf*L,-y*.98,z0+(H-z0)*.82]]);edges.push([[xf*L,y*.98,z0+(H-z0)*.40],[xf*L,y*.98,z0+(H-z0)*.82]])});
+    /* Long passenger window band + luggage line makes the coach unmistakable. */
+    [-.36,-.22,-.08,.06,.20,.34,.43].forEach(xf=>edges.push([[xf*L,-y*.98,z0+(H-z0)*.46],[xf*L,-y*.98,z0+(H-z0)*.90]]));
+    [-.36,-.22,-.08,.06,.20,.34,.43].forEach(xf=>edges.push([[xf*L,y*.98,z0+(H-z0)*.46],[xf*L,y*.98,z0+(H-z0)*.90]]));
+    edges.push([[-L*.42,-y*.98,z0+(H-z0)*.43],[L*.45,-y*.98,z0+(H-z0)*.43]]);
+    edges.push([[-L*.42,y*.98,z0+(H-z0)*.43],[L*.45,y*.98,z0+(H-z0)*.43]]);
+  }else if(p.id==='van'){
+    /* Tall cargo/passenger box and sliding-door split. */
+    [-.23,.08,.31].forEach(xf=>{edges.push([[xf*L,-y*.98,z0+(H-z0)*.36],[xf*L,-y*.98,z0+(H-z0)*.88]]);edges.push([[xf*L,y*.98,z0+(H-z0)*.36],[xf*L,y*.98,z0+(H-z0)*.88]])});
+    edges.push([[-L*.28,-y*.98,z0+(H-z0)*.92],[L*.39,-y*.98,z0+(H-z0)*.92]]);
+    edges.push([[-L*.28,y*.98,z0+(H-z0)*.92],[L*.39,y*.98,z0+(H-z0)*.92]]);
+  }else if(p.id==='suv'){
+    /* Two-door-row cabin, roof rails and raised belt line. */
+    [-.20,.03,.27].forEach(xf=>{edges.push([[xf*L,-y*.98,z0+(H-z0)*.38],[xf*L,-y*.98,z0+(H-z0)*.84]]);edges.push([[xf*L,y*.98,z0+(H-z0)*.38],[xf*L,y*.98,z0+(H-z0)*.84]])});
+    edges.push([[-L*.10,-y*.78,H*1.015],[L*.30,-y*.78,H*1.015]]);edges.push([[-L*.10,y*.78,H*1.015],[L*.30,y*.78,H*1.015]]);
   }else if(p.id==='tractor'){
-    edges.push([[-L*.07,-y*.96,z0+(H-z0)*.52],[-L*.07,-y*.96,z0+(H-z0)*.92]]);
-    edges.push([[L*.28,-y*.96,z0+(H-z0)*.54],[L*.28,-y*.96,z0+(H-z0)*.92]]);
-    edges.push([[-L*.07,y*.96,z0+(H-z0)*.52],[-L*.07,y*.96,z0+(H-z0)*.92]]);
-    edges.push([[L*.28,y*.96,z0+(H-z0)*.54],[L*.28,y*.96,z0+(H-z0)*.92]]);
+    /* Separate engine bonnet and high cab. */
+    edges.push([[-L*.44,-y*.96,z0+(H-z0)*.35],[-L*.08,-y*.96,z0+(H-z0)*.35]]);
+    edges.push([[-L*.44,y*.96,z0+(H-z0)*.35],[-L*.08,y*.96,z0+(H-z0)*.35]]);
+    edges.push([[-L*.07,-y*.96,z0+(H-z0)*.50],[-L*.07,-y*.96,z0+(H-z0)*.93]]);
+    edges.push([[L*.29,-y*.96,z0+(H-z0)*.54],[L*.29,-y*.96,z0+(H-z0)*.93]]);
+    edges.push([[-L*.07,y*.96,z0+(H-z0)*.50],[-L*.07,y*.96,z0+(H-z0)*.93]]);
+    edges.push([[L*.29,y*.96,z0+(H-z0)*.54],[L*.29,y*.96,z0+(H-z0)*.93]]);
   }else{
     edges.push([[-L*.18,-y*.96,z0+(H-z0)*.42],[-L*.06,-y*.94,H*.90]]);
     edges.push([[-L*.18,y*.96,z0+(H-z0)*.42],[-L*.06,y*.94,H*.90]]);
@@ -1756,10 +1775,11 @@ function drawSUVAt(cx,cy,scale,opts={}){
   const bodyAlpha=opts.bodyAlpha??1,lineAlpha=opts.lineAlpha??0,glassAlpha=opts.glassAlpha??bodyAlpha,wheelAlpha=opts.wheelAlpha??bodyAlpha,lightAlpha=opts.lightAlpha??bodyAlpha;
   const flight=!!opts.flight,water=!!opts.water,retract=!!opts.retractWheels,suspension=opts.suspension||0;
   const dark=vehicleShade(paint,-72),light=vehicleShade(paint,70);
-  const body=[[-270,18],[-240,-22],[-174,-46],[-108,-54],[-64,-118],[92,-118],[150,-62],[226,-44],[274,-10],[258,46],[-238,50]];
-  const roof=[[-108,-54],[-64,-118],[92,-118],[150,-62],[125,-54],[-86,-53]];
-  const glass=[[-84,-59],[-56,-106],[-5,-106],[-5,-59],[6,-59],[6,-106],[82,-106],[132,-60],[92,-58]];
-  const skid=[[-228,47],[252,43],[226,66],[-204,69]];
+  /* Deliberately upright 4×4 proportions: tall cabin, squared shoulders and high ground clearance. */
+  const body=[[-274,18],[-250,-20],[-190,-46],[-118,-56],[-78,-130],[100,-130],[158,-78],[232,-55],[278,-15],[264,52],[-238,58]];
+  const roof=[[-118,-56],[-78,-130],[100,-130],[158,-78],[130,-58],[-95,-56]];
+  const glass=[[-93,-63],[-68,-116],[-10,-116],[-10,-63],[4,-63],[4,-116],[88,-116],[140,-66],[98,-63]];
+  const skid=[[-230,56],[254,51],[226,77],[-202,80]];
   const path=pts=>{tctx.beginPath();pts.forEach((q,i)=>i?tctx.lineTo(q[0],q[1]):tctx.moveTo(q[0],q[1]));tctx.closePath();};
   tctx.save();tctx.translate(cx,cy);tctx.scale(scale,scale);tctx.rotate(angle);tctx.globalCompositeOperation='source-over';
   if(glow){tctx.shadowColor='rgba(91,230,255,.95)';tctx.shadowBlur=14+glow*18;}
@@ -1770,7 +1790,7 @@ function drawSUVAt(cx,cy,scale,opts={}){
     tctx.globalAlpha=glassAlpha;const win1=[[-82,-62],[-53,-104],[-8,-104],[-8,-61]],win2=[[4,-104],[78,-104],[127,-61],[5,-61]];[win1,win2].forEach(sh=>{path(sh);const gg=tctx.createLinearGradient(sh[0][0],sh[0][1],sh[2][0],sh[2][1]);gg.addColorStop(0,'rgba(140,220,242,.78)');gg.addColorStop(.5,'rgba(31,78,104,.95)');gg.addColorStop(1,'rgba(8,29,46,.98)');tctx.fillStyle=gg;tctx.fill();tctx.strokeStyle='rgba(226,249,255,.72)';tctx.lineWidth=1.5;tctx.stroke();});
     tctx.globalAlpha=bodyAlpha;tctx.strokeStyle='rgba(12,32,44,.45)';tctx.lineWidth=1.6;tctx.beginPath();tctx.moveTo(-3,-55);tctx.lineTo(-3,40);tctx.moveTo(92,-55);tctx.lineTo(92,40);tctx.stroke();
     /* rugged wheel arches, roof rail and side step */
-    tctx.strokeStyle='rgba(15,29,38,.72)';tctx.lineWidth=7;tctx.beginPath();tctx.arc(-155,42,53,Math.PI,Math.PI*2);tctx.arc(176,37,53,Math.PI,Math.PI*2);tctx.stroke();
+    tctx.strokeStyle='rgba(15,29,38,.72)';tctx.lineWidth=7;tctx.beginPath();tctx.arc(-158,47,60,Math.PI,Math.PI*2);tctx.arc(180,42,60,Math.PI,Math.PI*2);tctx.stroke();
     tctx.strokeStyle='rgba(25,38,46,.90)';tctx.lineWidth=5;tctx.beginPath();tctx.moveTo(-75,-127);tctx.lineTo(92,-127);tctx.stroke();tctx.fillStyle=dark;tctx.fillRect(-52,53,144,7);
     if(flight){
       if(vehicleFlightSystem==='propeller'){[[-214,-3],[218,-1]].forEach(([px,py])=>{tctx.save();tctx.translate(px,py);tctx.rotate(wheelSpin*1.8);tctx.strokeStyle='rgba(236,249,255,.94)';tctx.lineWidth=3;for(let k=0;k<3;k++){tctx.beginPath();tctx.moveTo(0,0);tctx.lineTo(0,28);tctx.stroke();tctx.rotate(Math.PI*2/3)}tctx.restore();});}
@@ -1781,7 +1801,7 @@ function drawSUVAt(cx,cy,scale,opts={}){
     if(water){tctx.strokeStyle='rgba(78,226,241,.78)';tctx.lineWidth=5;tctx.beginPath();tctx.moveTo(-210,58);tctx.quadraticCurveTo(20,82,230,57);tctx.stroke();}
     tctx.restore();
   }
-  [[-155,52+suspension*8],[176,47-suspension*5]].forEach(([wx,wy])=>{const r=44;tctx.save();tctx.globalAlpha=wheelAlpha;tctx.translate(wx,wy);if(!(retract&&(flight||water))){tctx.beginPath();tctx.arc(0,0,r,0,Math.PI*2);tctx.fillStyle='#0b1014';tctx.fill();tctx.strokeStyle='#2f3940';tctx.lineWidth=6;tctx.stroke();tctx.beginPath();tctx.arc(0,0,r*.58,0,Math.PI*2);const rg=tctx.createRadialGradient(-6,-8,2,0,0,r*.6);rg.addColorStop(0,'#f9fcfd');rg.addColorStop(.45,'#aebbc4');rg.addColorStop(1,'#374852');tctx.fillStyle=rg;tctx.fill();tctx.strokeStyle='rgba(247,251,253,.85)';tctx.lineWidth=1.6;for(let k=0;k<6;k++){const a=wheelSpin+k*Math.PI/3;tctx.beginPath();tctx.moveTo(0,0);tctx.lineTo(Math.cos(a)*r*.47,Math.sin(a)*r*.47);tctx.stroke()}tctx.beginPath();tctx.arc(0,0,r*.12,0,Math.PI*2);tctx.fillStyle='#17232b';tctx.fill();}else{tctx.strokeStyle='rgba(222,245,252,.58)';tctx.lineWidth=3;tctx.strokeRect(-10,-10,20,20);}tctx.restore();});
+  [[-158,58+suspension*8],[180,53-suspension*5]].forEach(([wx,wy])=>{const r=50;tctx.save();tctx.globalAlpha=wheelAlpha;tctx.translate(wx,wy);if(!(retract&&(flight||water))){tctx.beginPath();tctx.arc(0,0,r,0,Math.PI*2);tctx.fillStyle='#0b1014';tctx.fill();tctx.strokeStyle='#2f3940';tctx.lineWidth=6;tctx.stroke();tctx.beginPath();tctx.arc(0,0,r*.58,0,Math.PI*2);const rg=tctx.createRadialGradient(-6,-8,2,0,0,r*.6);rg.addColorStop(0,'#f9fcfd');rg.addColorStop(.45,'#aebbc4');rg.addColorStop(1,'#374852');tctx.fillStyle=rg;tctx.fill();tctx.strokeStyle='rgba(247,251,253,.85)';tctx.lineWidth=1.6;for(let k=0;k<6;k++){const a=wheelSpin+k*Math.PI/3;tctx.beginPath();tctx.moveTo(0,0);tctx.lineTo(Math.cos(a)*r*.47,Math.sin(a)*r*.47);tctx.stroke()}tctx.beginPath();tctx.arc(0,0,r*.12,0,Math.PI*2);tctx.fillStyle='#17232b';tctx.fill();}else{tctx.strokeStyle='rgba(222,245,252,.58)';tctx.lineWidth=3;tctx.strokeRect(-10,-10,20,20);}tctx.restore();});
   if(lightAlpha>0){[[-245,-6,'rgba(229,251,255,.99)'],[252,-2,'rgba(255,76,90,.98)']].forEach(([x,y,c])=>{tctx.save();tctx.globalAlpha=lightAlpha;tctx.shadowColor=c;tctx.shadowBlur=20;tctx.fillStyle=c;tctx.beginPath();tctx.ellipse(x,y,17,7,0,0,Math.PI*2);tctx.fill();tctx.restore();});}
   tctx.restore();
 }
@@ -2049,6 +2069,18 @@ function stashCurrentVehicleBuild(){
   stashVehiclePowerVariant();stashVehicleFutureVariant();
   vehicleBuildStates[currentLibraryId]={objects:objectData(),activeMode,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain,vehicleHybridType,vehicleFutureAbility,vehicleFlightSystem,vehicleCreationName,vehiclePaintColor,vehiclePowerVariants:JSON.parse(JSON.stringify(vehiclePowerVariants||{})),vehicleFutureVariants:JSON.parse(JSON.stringify(vehicleFutureVariants||{}))};
 }
+function resetVehiclePresentationForSwitch(){
+  /* Test/reveal state belongs to the vehicle that launched it. Never carry a celebration,
+     colour phase or test-world frame into another vehicle. The fitted build itself is
+     preserved separately in vehicleBuildStates. */
+  hideVehicleStageNotice();
+  resetVehiclePhaseOneReveal();
+  testRunning=false;
+  stage.classList.remove('testing','test-active');
+  $('stopCreationTest').hidden=true;
+  simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();
+  $('creatorTestResult').innerHTML='';
+}
 function restoreVehicleBuildFor(id){
   const st=vehicleBuildStates[id]||null;objectLayer.innerHTML='';selectObject(null);
   activeMode=st?.activeMode||'body';vehicleYaw=Number.isFinite(st?.vehicleYaw)?st.vehicleYaw:0;vehiclePitch=Number.isFinite(st?.vehiclePitch)?st.vehiclePitch:.10;vehicleViewMode=st?.vehicleViewMode||'left';
@@ -2075,14 +2107,21 @@ function renderLibrary(m){
 function refreshLibraryCards(){document.querySelectorAll('.creator-library-card').forEach(card=>{const exists=active==='vehicle'?card.dataset.libraryId===currentLibraryId:[...objectLayer.children].some(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===card.dataset.libraryId);card.classList.toggle('active',exists)});}
 function chooseLibrary(item){if(active==='vehicle'){
   const changed=!!currentLibraryId&&currentLibraryId!==item.id;
-  if(changed)stashCurrentVehicleBuild();
+  if(changed){stashCurrentVehicleBuild();resetVehiclePresentationForSwitch();}
   currentLibraryId=item.id;
   if(changed)restoreVehicleBuildFor(item.id);
   else if(!vehicleBuildStates[item.id]){vehicleYaw=0;vehiclePitch=.10;vehicleViewMode='left';}
-  /* Re-render the compact vehicle picker immediately so its large preview image,
-     vehicle name/subtitle and selected option always match the newly chosen vehicle. */
+  /* Re-render everything from the selected vehicle's own state. A completed SUV must not
+     leave its Mission Complete canvas on the Sport Car, Van, Coach or Tractor. */
   renderLibrary(missions[active]);
-  renderTemplate('vehicle');updateVehicleViewUI();renderModes(missions[active],activeMode);updateVehicleProgressUI();commitHistory();return
+  renderTemplate('vehicle');updateVehicleViewUI();renderModes(missions[active],activeMode);updateVehicleProgressUI();
+  if(vehicleReadyForTest()){
+    showVehicleStageNotice(t('Vehicle build complete — ready to test','Construction terminée — prêt à tester'),`${vehicleModelLabel()} · ${t('Press Test My Creation when you are ready.','Appuie sur Tester ma création quand tu es prêt.')}`,{duration:0});
+  }else{
+    hideVehicleStageNotice();
+    $('creatorTestResult').innerHTML='';
+  }
+  commitHistory();return
 }currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
 
 function renderModes(m,preferred){
@@ -2365,6 +2404,10 @@ function updateVehicleProgressUI(){
   if(active!=='vehicle')return;
   document.querySelectorAll('#creatorModes .creator-mode[data-mode-id]').forEach(b=>{const complete=vehicleModeComplete(b.dataset.modeId);b.classList.toggle('is-complete',complete);let st=b.querySelector('.creator-mode-status');if(complete&&!st){st=document.createElement('small');st.className='creator-mode-status';st.textContent='✓ '+t('Complete','Terminé');b.appendChild(st)}else if(!complete&&st)st.remove();});
   const ready=vehicleReadyForTest(),btn=$('testCreation');if(btn){btn.disabled=!ready;btn.classList.toggle('vehicle-ready',ready);btn.title=ready?t('Your vehicle is ready to test.','Ton véhicule est prêt à être testé.'):t('Complete Body & Movement, Power System, Safety and Future Tech first.','Termine Carrosserie et mouvement, Système d’énergie, Sécurité et Technologies futures.');}
+  /* A completed build is a stable state, not a short toast. If a child switches away
+     from a completed power/future configuration and later returns to it, restore the
+     permanent ready-to-test notice as well as the fitted pieces. */
+  if(ready&&!testRunning)showVehicleStageNotice(t('Vehicle build complete — ready to test','Construction terminée — prêt à tester'),t('All four build areas are complete. Press Test My Creation when you are ready.','Les quatre zones sont terminées. Appuie sur Tester ma création quand tu es prêt.'),{duration:0});
 }
 function showVehicleStageNotice(title,detail,opts={}){
   const box=$('vehicleStageNotice');if(!box||active!=='vehicle')return;
