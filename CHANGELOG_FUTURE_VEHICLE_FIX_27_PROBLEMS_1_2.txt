@@ -1,0 +1,22 @@
+Children World — Future Vehicle Fix 27
+Current batch: Problems 1–2
+Date: 2026-09-20
+
+Problem 1 — Vehicle blueprint/body identity
+- Strengthened the blueprint silhouette for every vehicle family so the vehicle is recognisable from the blueprint itself.
+- Sport Car remains low and aerodynamic.
+- 4×4 / SUV now has a taller, boxier body, flatter roof, raised stance and larger wheels in its finished render.
+- Van now has a short bonnet, tall passenger/cargo box, sliding-door/body divisions and tall roof structure.
+- Intercity Coach now has a long high passenger body, repeated window bays, luggage/belt line and coach proportions.
+- Farm Tractor now has a separate low engine bonnet, tall driver cab and agricultural proportions.
+- Switching to Van / Coach / Tractor now forces a fresh render of that vehicle's own blueprint instead of leaving a previous vehicle's final-test canvas visible.
+
+Problem 2 — Test / Mission Complete state leaking between vehicles
+- Test, reveal, celebration and Mission Complete presentation are now reset whenever the user changes vehicle.
+- The fitted puzzle work is NOT erased; it remains stored separately in vehicleBuildStates for each vehicle.
+- A completed SUV can no longer leave its Mission Complete screen on the Sport Car, Van, Coach or Tractor.
+- When returning to a vehicle, its own fitted parts, mode, powertrain, Future Tech, paint, name and progress are restored.
+- Test My Creation is recalculated from the selected vehicle's own build only.
+- If that selected vehicle is complete, it receives its own persistent Ready to Test notice; if incomplete, stale result text is cleared.
+
+No other Creator Studio mission was changed.
