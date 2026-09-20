@@ -1,0 +1,27 @@
+Future Vehicle — Fix 28
+Current batch: Problem 1
+
+Problem fixed
+-------------
+Completing Future Tech could make the builder think Body & Movement / Power / Safety
+were incomplete again. The interface would jump back to Body & Movement and keep
+Test My Creation disabled even though the child had already fitted those sections.
+
+Cause
+-----
+When a saved Power-System or Future-Tech alternative was restored, the shared
+restoreObjects() function cleared the entire vehicle object layer before restoring
+that one variant. That removed fitted pieces belonging to the other completed
+vehicle systems.
+
+Correction
+----------
+- Saved Power-System variants now restore by appending only their own pieces.
+- Saved Future-Tech variants now restore by appending only their own pieces.
+- Full vehicle/project restores still replace the entire object layer normally.
+- Body & Movement, Power, Safety and Future Tech can therefore coexist correctly.
+- When all four areas are complete, Test My Creation remains enabled instead of
+  automatically returning to Body & Movement.
+- This applies to Sport Car, 4x4/SUV, Van, Coach and Tractor.
+
+No unrelated visual/animation changes were made in this fix.
