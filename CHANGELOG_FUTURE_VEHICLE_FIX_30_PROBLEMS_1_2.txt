@@ -1,0 +1,37 @@
+Children World — Future Vehicle Fix 30
+Current batch: Problems 1–2
+Date: 2026-09-20
+
+Problem 1 — Intercity Coach missing real coach-specific build parts
+- Added one lower luggage-bay door on the LEFT side and one on the RIGHT side.
+- Added onboard coach toilet cabin as a required Interior/underbody puzzle component.
+- Added front destination / route display as a required Front-view puzzle component.
+- Existing coach passenger entrance, passenger seats, long coach windows, three axles and coach-specific body proportions remain intact.
+- Saved coach builds are preserved; because these are new required parts, an older saved coach may show Body & Movement incomplete until the new coach parts are fitted.
+
+Problem 2 — Intercity Coach unique final mission / mature 10–13 experience
+- Intercity Coach now has its own finished coach render instead of using the Sport Car final body.
+- Destination display is live in the finished coach.
+- Added language-aware route profiles. Current defaults include:
+  English: London → Birmingham → Manchester
+  French: Paris → Lille → Lyon
+  Spanish: Madrid → Zaragoza → Barcelona
+  Polish: Warsaw → Łódź → Kraków
+  Turkish: Istanbul → Ankara → Konya
+  Hindi: Delhi → Agra → Jaipur
+  Dutch: Amsterdam → Utrecht → Rotterdam
+  German: Berlin → Leipzig → Munich
+- Added modern travel HUD: route, next stop, passenger count, luggage-bay status and remaining distance.
+- Added departure-terminal boarding sequence with four adults, one child, a woman using a front baby carrier and luggage.
+- Added lower luggage-bay loading animation.
+- Added scheduled stopover where passengers leave before the coach continues.
+- Added selected Future Tech route challenge:
+  Flight builds use an aerial bypass for a route disruption.
+  Amphibious builds use a water crossing.
+- Added final destination terminal arrival, passenger exit and luggage collection.
+- Added mature terminal-at-dusk completion reveal (no childlike confetti) and Intercity Transport Engineer achievement.
+- Added route details to the final mission result.
+- Intercity Coach now supports the complete Test My Creation sequence.
+
+Files modified:
+- js/creator.js
