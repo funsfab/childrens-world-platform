@@ -1,0 +1,33 @@
+Children World — Dream Room Studio Rebuild
+Built from the protected Future Vehicle Fix 35 baseline.
+
+Protection rule
+- Future Vehicle is treated as locked/protected.
+- Core Future Vehicle blueprint, slot, progress, test/reveal and Tractor animation functions were verified byte-for-byte identical to the protected baseline before packaging.
+- Existing admin pages were not modified.
+
+Dream Room Studio
+- Restores five real-life room style preview assets.
+- Uses one large preview plus a compact dropdown/list, so future styles do not make the page excessively long.
+- Blueprint ON uses guided build mode and hides drawing/colour tools while keeping a dedicated Dream Room Blueprint toggle visible.
+- Blueprint OFF restores free drawing/decorating tools without deleting placed room objects.
+- Six build areas: Room shell & zones, Living zone, Dining zone, Studio kitchen, Lighting & decor, Smart home & lifestyle.
+- Required item counts are tracked per area. Required buttons lock when the count is complete.
+- Completed area cards show ✓ Complete and automatically advance to the next unfinished area.
+- Test My Creation remains disabled until every required area is complete.
+- Save/restore uses the existing Creator Studio project storage.
+- Live-use test uses the selected real-life room style and runs a continuous scene: arrival/lighting, remote-to-sofa/TV, working kitchen, dining/family use, smart-home response, and final design result.
+- Budget, collision checking and live room score are included.
+
+Responsive
+- Room selector/control additions are scoped and include mobile portrait, mobile landscape, tablet portrait, tablet landscape and desktop behavior.
+
+Files
+- creator.html
+- css/style.css
+- js/creator.js
+- assets/creator/room-scandi.webp
+- assets/creator/room-luxury.webp
+- assets/creator/room-afro.webp
+- assets/creator/room-industrial.webp
+- assets/creator/room-smart.webp
