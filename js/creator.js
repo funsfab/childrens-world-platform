@@ -34,33 +34,6 @@ function preloadVehiclePreviews(){
 }
 preloadVehiclePreviews();
 
-
-
-const roomLibrary=[
- lib('room-scandi','Scandinavian Light',AS+'room-scandi.webp','Bright wood, calm colours and natural light','room-style'),
- lib('room-luxury','Warm Modern Luxury',AS+'room-luxury.webp','Layered lighting, marble and elegant finishes','room-style'),
- lib('room-afro','Afro-Modern Warmth',AS+'room-afro.webp','Warm timber, woven texture and modern African influence','room-style'),
- lib('room-industrial','Urban Industrial Loft',AS+'room-industrial.webp','Dark metal, concrete and dramatic city lighting','room-style'),
- lib('room-smart','Smart Future Home',AS+'room-smart.webp','Integrated lighting, media and smart-home technology','room-style')
-];
-const ROOM_STYLE_MAP={
- 'room-scandi':{wall:'#eee9df',floor:'#c7a77c',accent:'#8fa38b'},
- 'room-luxury':{wall:'#d7c5ae',floor:'#8d684d',accent:'#c79753'},
- 'room-afro':{wall:'#d7c1a4',floor:'#85583d',accent:'#b76835'},
- 'room-industrial':{wall:'#5c5b58',floor:'#4a3a31',accent:'#d19b5e'},
- 'room-smart':{wall:'#b9b4aa',floor:'#706c66',accent:'#5de4ff'}
-};
-const roomImageCache={};
-roomLibrary.forEach(v=>{const img=new Image();img.decoding='async';img.src=v.img;img.onload=()=>{if(active==='room')renderTemplate('room')};roomImageCache[v.id]=img;});
-const ROOM_COSTS={
- 'room-wall':90,'room-door':180,'room-window':240,'divider':220,'rug':160,
- 'sofa':650,'armchair':320,'coffee-table':220,'television':560,'tv-stand':280,'shelf':260,'plant':70,
- 'dining-table':450,'dining-chair':140,'pendant':180,
- 'kitchen-counter':420,'kitchen-sink':300,'hob':260,'oven':430,'fridge':680,'kitchen-cabinet':260,'kettle':55,
- 'floor-lamp':145,'wall-art':95,'curtains':180,'mirror':140,'books':45,'cushion':35,
- 'smart-speaker':120,'thermostat':160,'robot-vacuum':390,'smart-light':95,'laptop':520
-};
-
 const VEHICLE_CATALOG=[
  {id:'vehicle-sport',name:['Sport Car','Voiture de sport'],subtitle:['Low, fast performance coupe','Coupé bas et sportif'],available:true},
  {id:'vehicle-suv',name:['4×4 / SUV','4×4 / SUV'],subtitle:['Off-road and all-terrain vehicle','Véhicule tout-terrain'],available:true},
@@ -160,51 +133,17 @@ const vehicleModes=[
 ];
 
 const roomModes=[
- mode('shell','🏠','Room shell & zones','Structure & zones','Set the room flow first: doors, windows, dividers and the main rug zone.','Commence par la circulation : portes, fenêtres, cloisons et zone du tapis.',[
-  part('room-wall','▬','Wall / zone edge','Mur / limite de zone',['structure','collision-large'],'room-wall',{aspect:3.2,defaultSize:130}),
-  part('room-door','🚪','Door','Porte',['structure','door'],'room-door',{aspect:.62,defaultSize:82}),
-  part('room-window','🪟','Window','Fenêtre',['structure','light'],'room-window',{aspect:1.65,defaultSize:105}),
-  part('divider','▰','Room divider','Cloison',['structure','collision-large'],'room-divider',{aspect:2.4,defaultSize:115}),
-  part('rug','','Main rug','Tapis principal',['decor','zone'],'room-rug',{aspect:1.6,defaultSize:150})
+ mode('structure','📐','Structure','Structure','Plan walls, doors and windows first.','Planifie d’abord murs, portes et fenêtres.',[
+  part('room-wall','▬','Wall section','Mur',['structure','collision-large']),part('room-door','🚪','Door','Porte',['structure','door']),part('room-window','🪟','Window','Fenêtre',['structure']),part('divider','▰','Room divider','Cloison',['structure','collision-large']),part('rug','▭','Rug','Tapis',['structure'])
  ]),
- mode('lounge','🛋️','Living zone','Salon','Build a comfortable entertainment zone with real seating, media and storage.','Crée une vraie zone détente avec assises, média et rangement.',[
-  part('sofa','','Modern sofa','Canapé moderne',['furniture','comfort','collision-large'],'room-sofa',{aspect:2.4,defaultSize:145}),
-  part('armchair','','Armchair','Fauteuil',['furniture','comfort','collision-large'],'room-armchair',{aspect:1.05,defaultSize:86}),
-  part('coffee-table','','Coffee table','Table basse',['furniture','surface','collision-large'],'room-coffee',{aspect:1.55,defaultSize:105}),
-  part('television','','Smart TV','Télévision connectée',['furniture','media','smart'],'room-tv',{aspect:1.75,defaultSize:125}),
-  part('tv-stand','','Media unit','Meuble TV',['furniture','storage','collision-large'],'room-media',{aspect:2.4,defaultSize:125}),
-  part('shelf','','Book / display shelf','Étagère livres / déco',['furniture','storage','collision-large'],'room-shelf',{aspect:.68,defaultSize:118}),
-  part('plant','','Large plant','Grande plante',['decor','nature'],'room-plant',{aspect:.75,defaultSize:82})
+ mode('furniture','🛋️','Furniture','Mobilier','Choose real furniture and combine smaller objects with it.','Choisis du vrai mobilier et combine les petits objets avec lui.',[
+  part('bed','🛏️','Bed','Lit',['furniture','collision-large']),part('desk','🖥️','Desk','Bureau',['furniture','collision-large']),part('chair','🪑','Chair','Chaise',['furniture','collision-large']),part('sofa','', 'Sofa with cushions','Canapé avec coussins',['furniture','collision-large'],'sofa'),part('dining-table','🍽️','Dining table','Table à manger',['furniture','collision-large']),part('side-table','◫','Side table','Table d’appoint',['furniture','collision-large']),part('television','📺','Television','Télévision',['furniture','support-child']),part('tv-stand','', 'TV stand / media unit','Meuble TV',['furniture','collision-large'],'tvstand'),part('pillow','🛋','Cushion / pillow','Coussin',['support-child'])
  ]),
- mode('dining','🍽️','Dining zone','Coin repas','Create a real place to eat together without blocking the walking route.','Crée un vrai coin repas sans bloquer la circulation.',[
-  part('dining-table','','Dining table','Table à manger',['furniture','dining','collision-large'],'room-dining',{aspect:1.65,defaultSize:125}),
-  part('dining-chair','','Dining chair','Chaise de table',['furniture','dining'],'room-chair',{aspect:.70,defaultSize:67}),
-  part('pendant','','Pendant light','Suspension',['light','dining'],'room-pendant',{aspect:.55,defaultSize:62}),
-  part('sideboard','','Dining sideboard','Buffet',['furniture','storage','collision-large'],'room-sideboard',{aspect:2.2,defaultSize:115})
+ mode('lighting','💡','Lighting','Éclairage','Add useful natural and artificial light. Lights switch on during the test.','Ajoute une lumière naturelle et artificielle utile. Les lumières s’allument pendant le test.',[
+  part('bulb','💡','Bulb / lamp','Ampoule / lampe',['light','support-child']),part('floor-lamp','🛋️','Floor lamp','Lampadaire',['light']),part('fluorescent','', 'Fluorescent light','Tube fluorescent',['light'],'fluorescent'),part('window-light','🌤️','Natural light','Lumière naturelle',['light'])
  ]),
- mode('kitchen','🍳','Studio kitchen','Cuisine studio','Add the working kitchen: preparation, washing, cooking, cooling and storage.','Ajoute la cuisine fonctionnelle : préparation, lavage, cuisson, froid et rangement.',[
-  part('kitchen-counter','','Kitchen worktop','Plan de travail',['furniture','kitchen','collision-large'],'room-counter',{aspect:2.6,defaultSize:145}),
-  part('kitchen-sink','','Sink / basin','Évier',['kitchen','water'],'room-sink',{aspect:1.4,defaultSize:82}),
-  part('hob','','Gas / induction hob','Plaque de cuisson',['kitchen','cook'],'room-hob',{aspect:1.5,defaultSize:80}),
-  part('oven','','Oven','Four',['kitchen','cook'],'room-oven',{aspect:.85,defaultSize:82}),
-  part('fridge','','Fridge / freezer','Réfrigérateur',['kitchen','storage','collision-large'],'room-fridge',{aspect:.62,defaultSize:118}),
-  part('kitchen-cabinet','','Kitchen cabinet','Meuble de cuisine',['kitchen','storage','collision-large'],'room-cabinet',{aspect:1.25,defaultSize:100}),
-  part('kettle','','Kettle','Bouilloire',['kitchen','appliance'],'room-kettle',{aspect:.8,defaultSize:52})
- ]),
- mode('style','💡','Lighting & decor','Lumière & déco','Shape the atmosphere with lighting, curtains, art, plants and smaller details.','Crée l’ambiance avec éclairage, rideaux, art, plantes et détails.',[
-  part('floor-lamp','','Floor lamp','Lampadaire',['light','decor'],'room-floorlamp',{aspect:.45,defaultSize:96}),
-  part('wall-art','','Wall art','Art mural',['decor'],'room-art',{aspect:1.2,defaultSize:82}),
-  part('curtains','','Curtains','Rideaux',['decor','light'],'room-curtains',{aspect:1.2,defaultSize:125}),
-  part('mirror','','Mirror','Miroir',['decor'],'room-mirror',{aspect:.65,defaultSize:92}),
-  part('books','','Books','Livres',['decor','storage'],'room-books',{aspect:1.4,defaultSize:58}),
-  part('cushion','','Cushion','Coussin',['decor','comfort'],'room-cushion',{aspect:1,defaultSize:48})
- ]),
- mode('smart','🤖','Smart home & lifestyle','Maison intelligente','Add useful technology that makes the room feel alive and responsive.','Ajoute des technologies utiles qui rendent la pièce vivante et réactive.',[
-  part('smart-speaker','','Smart speaker','Enceinte intelligente',['smart','media'],'room-speaker',{aspect:.75,defaultSize:55}),
-  part('thermostat','','Smart thermostat','Thermostat intelligent',['smart'],'room-thermostat',{aspect:1,defaultSize:48}),
-  part('robot-vacuum','','Robot vacuum','Aspirateur robot',['smart','movement'],'room-vacuum',{aspect:1,defaultSize:58}),
-  part('smart-light','','Smart light','Éclairage intelligent',['smart','light'],'room-smartlight',{aspect:.58,defaultSize:58}),
-  part('laptop','','Laptop / study device','Ordinateur portable',['smart','study'],'room-laptop',{aspect:1.55,defaultSize:72})
+ mode('storage','🧰','Storage & organisation','Rangement et organisation','Build storage, then place real items inside or on it.','Construis le rangement, puis place de vrais objets dedans ou dessus.',[
+  part('shelf','', 'Shelving unit','Étagère',['storage','collision-large'],'shelf'),part('book','📚','Books','Livres',['storage','support-child']),part('wardrobe','🚪','Wardrobe','Armoire',['storage','collision-large']),part('box','📦','Storage box','Boîte de rangement',['storage']),part('settop','', 'TV provider box','Décodeur TV',['storage','support-child'],'settop'),part('basket','🧺','Storage basket','Panier de rangement',['storage'])
  ])
 ];
 
@@ -336,7 +275,7 @@ function marsModesFor(profile){const d=marsParts[profile]||marsParts['mars-red']
 
 const missions={
  vehicle:{title:['Future Vehicle','Véhicule du futur'],prompt:['Choose a vehicle, rotate its real blueprint around the car, then build it from matching parts.','Choisis un véhicule, fais tourner son vrai plan autour de la voiture, puis construis-le avec les pièces correspondantes.'],prompts:[],coach:['Rotate the blueprint to inspect every side. Build carefully so each part fits the selected vehicle.','Fais tourner le plan pour inspecter chaque côté. Construis avec précision pour que chaque pièce corresponde au véhicule choisi.'],checks:[['movement','Movement'],['power','Power'],['safety','Safety'],['passenger','Passenger design']],library:vehicleLibrary,modes:vehicleModes},
- room:{title:['Dream Room Studio','Studio Chambre de rêve'],prompt:['Design a realistic open-plan living room, dining area and studio kitchen, then bring it to life with people, lighting, media and smart-home activity.','Conçois un salon réaliste avec coin repas et cuisine studio, puis donne-lui vie avec personnes, éclairage, média et maison intelligente.'],prompts:[['Who is this room for?','À qui est destinée cette pièce ?'],['What must happen here every day?','Que doit-on pouvoir y faire chaque jour ?']],coach:['Design for real life: comfort, clear walking routes, useful storage, working kitchen zones, lighting and a room people can actually use.','Conçois pour la vraie vie : confort, circulation claire, rangement utile, cuisine fonctionnelle, éclairage et pièce réellement utilisable.'],checks:[['furniture','Comfort'],['dining','Dining'],['kitchen','Kitchen'],['light','Lighting'],['smart','Smart home']],library:roomLibrary,modes:roomModes},
+ room:{title:['Dream Room','Chambre de rêve'],prompt:['Plan a realistic room, combine furniture with smaller objects and test lighting and layout.','Planifie une pièce réaliste, combine meubles et petits objets puis teste l’éclairage et l’agencement.'],prompts:[['Main purpose','Fonction principale'],['Who uses it?','Qui l’utilise ?']],coach:['Can someone move comfortably, use the storage, and reach everything without furniture overlapping unrealistically?','Peut-on circuler confortablement, utiliser les rangements et atteindre les objets sans chevauchement irréaliste ?'],checks:[['structure','Layout'],['furniture','Furniture'],['light','Lighting'],['storage','Storage']],modes:roomModes},
  park:{title:['Design a Park','Concevoir un parc'],prompt:['Build a large modern park from many separate pieces. Match people, facilities, nature, sports and activities to create a living place.','Construis un grand parc moderne avec de nombreux éléments séparés. Associe personnes, équipements, nature, sports et activités.'],prompts:[['Who will use it?','Qui l’utilisera ?'],['What activities should happen here?','Quelles activités doivent s’y dérouler ?']],coach:['Does the park feel alive, accessible and varied, with the right people matched to the right facilities and activities?','Le parc paraît-il vivant, accessible et varié, avec les bonnes personnes associées aux bons équipements ?'],checks:[['play','Play'],['nature','Nature'],['access','Accessibility'],['seating','Seating']],modes:parkModes},
  robot:{title:['Invent a Robot','Inventer un robot'],prompt:['Choose one or more robot designs. Their blueprints can share the board while you assemble each robot from small matching parts.','Choisis un ou plusieurs robots. Leurs plans peuvent partager la zone pendant que tu les assembles pièce par pièce.'],prompts:[['What job should it do?','Quelle mission doit-il accomplir ?'],['What makes it safe?','Qu’est-ce qui le rend sûr ?']],coach:['Which robot are you building, and have you chosen parts that make sense for its job?','Quel robot construis-tu, et les pièces choisies correspondent-elles à sa mission ?'],checks:[['movement','Movement'],['sensor','Sensors'],['tool','Useful tools'],['power','Power']],library:robotLibrary,dynamicModes:'robot'},
  story:{title:['Story Builder','Créateur d’histoires'],prompt:['Choose a visual-story blueprint, then rebuild the scene from many small characters, locations, props and clues.','Choisis un plan d’histoire visuelle, puis reconstruis la scène avec de nombreux petits personnages, lieux, accessoires et indices.'],prompts:[['What is the main challenge?','Quel est le défi principal ?'],['How should the story end?','Comment l’histoire doit-elle finir ?']],coach:['Can someone understand what is happening from the characters, scene and props you placed?','Peut-on comprendre ce qui se passe grâce aux personnages, au décor et aux accessoires placés ?'],checks:[['character','Characters'],['place','Scene'],['prop','Props']],library:storyLibrary,dynamicModes:'story'},
@@ -347,8 +286,6 @@ const canvas=$('creatorCanvas'),ctx=canvas.getContext('2d'),templateCanvas=$('cr
 const stage=$('creatorDesignStage'),buildLayer=$('creatorBuildLayer'),objectLayer=$('creatorObjects'),simulation=$('creatorSimulation');
 const colours=['#f8fbff','#5de4ff','#5d6cff','#9b6dff','#ffd45b','#5ee3a4','#ff9d5d','#ff77b7','#ff647c','#1d3147'];
 let active=null,activeMode=null,currentLibraryId=null,tool='select',colour=colours[1],drawing=false,startPoint=null,lastPoint=null,tempVector=null,freePoints=[],selectedObject=null,drawStrokes=0,templateOn=true,gridOn=false,history=[],historyIndex=-1,restoring=false,testRunning=false,vehicleYaw=0,vehiclePitch=.10,vehicleViewMode='orbit',vehicleOrbiting=false,vehiclePowertrain='',vehicleHybridType='self',vehicleFutureAbility='',vehicleFlightSystem='',vehicleRevealActive=false,vehicleRevealProgress=0,vehicleRevealRAF=0,vehicleRevealTimer=0,vehicleRevealStart=0,vehicleRevealStage='idle',vehiclePhase2Progress=0,vehiclePhase2Start=0,vehiclePhase2RAF=0,vehiclePhase2Timer=0,vehiclePhase3Progress=0,vehiclePhase3Start=0,vehiclePhase3RAF=0,vehiclePhase3Timer=0,vehiclePhase4Progress=0,vehiclePhase4Start=0,vehiclePhase4RAF=0,vehiclePhase4Timer=0,vehiclePhase5Progress=0,vehiclePhase5Start=0,vehiclePhase5RAF=0,vehiclePhase5Timer=0,vehicleCreationName='',vehiclePhase5Named=false,vehicleTransformationReplay=false,vehiclePaintColor='#5de4ff',vehiclePreviousPaintColor='#5de4ff',vehiclePaintMix=1,vehiclePaintRAF=0,vehiclePaintTimer=0,vehicleNoticeTimer=0,vehicleQuizState=null,vehicleQuizRecentIds=[],vehicleBuildStates={},vehiclePowerVariants={},vehicleFutureVariants={};
-let roomLiveActive=false,roomLiveRAF=0,roomLiveStart=0,roomLiveProgress=0,roomLiveDuration=36000;
-
 const STORAGE='cw_creator_projects_v18';
 /* Keep version 9 so saved prototype cars restore through the staged final-reveal updates. */
 const VEHICLE_PUZZLE_VERSION=9;
@@ -2751,137 +2688,10 @@ function drawVehicleBlueprint(){
   tctx.restore();
   syncInstalledVehicleParts();
 }
-
-function roomStyle(){return ROOM_STYLE_MAP[currentLibraryId]||ROOM_STYLE_MAP['room-scandi'];}
-function roomObjects(){return [...objectLayer.children].filter(o=>o.dataset.kind==='part');}
-function roomBudget(){return roomObjects().reduce((sum,o)=>sum+(ROOM_COSTS[o.dataset.partId]||80),0);}
-function roomTagSet(){const set=new Set();roomObjects().forEach(o=>objectTags(o).forEach(tag=>set.add(tag)));return set;}
-function roomDesignMetrics(){
-  const tags=roomTagSet(),ids=new Set(roomObjects().map(o=>o.dataset.partId));
-  const lounge=(ids.has('sofa')||ids.has('armchair'))&&ids.has('coffee-table')&&ids.has('television');
-  const dining=ids.has('dining-table')&&roomObjects().filter(o=>o.dataset.partId==='dining-chair').length>=2;
-  const kitchen=ids.has('kitchen-sink')&&ids.has('hob')&&ids.has('fridge');
-  const light=tags.has('light');
-  const smart=tags.has('smart');
-  const storage=tags.has('storage');
-  const budget=roomBudget(),budgetOK=budget<=2200;
-  const collisions=roomCollisionIssues();
-  let score=38+(lounge?12:0)+(dining?10:0)+(kitchen?14:0)+(light?8:0)+(smart?8:0)+(storage?5:0)+(budgetOK?5:0)-(collisions.length?10:0);
-  score=clamp(score,35,100);
-  return{lounge,dining,kitchen,light,smart,storage,budget,budgetOK,collisions,score};
-}
-function roomCollisionIssues(){
-  const objects=roomObjects(),large=objects.filter(o=>objectTags(o).includes('collision-large')),issues=[];
-  for(let i=0;i<large.length;i++)for(let j=i+1;j<large.length;j++){
-    const a=large[i].getBoundingClientRect(),b=large[j].getBoundingClientRect();
-    const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left)),h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
-    const overlap=w*h,small=Math.min(a.width*a.height,b.width*b.height);if(small&&overlap/small>.34)issues.push(`${large[i].dataset.label} / ${large[j].dataset.label}`);
-  }
-  return issues;
-}
-function roomImageDrawCover(img){
-  const W=templateCanvas.width,H=templateCanvas.height;if(!img||!img.complete||!img.naturalWidth)return false;
-  const ir=img.naturalWidth/img.naturalHeight,cr=W/H;let sx=0,sy=0,sw=img.naturalWidth,sh=img.naturalHeight;
-  if(ir>cr){sw=img.naturalHeight*cr;sx=(img.naturalWidth-sw)/2}else{sh=img.naturalWidth/cr;sy=(img.naturalHeight-sh)/2}
-  tctx.drawImage(img,sx,sy,sw,sh,0,0,W,H);return true;
-}
-function drawRoomDesignTemplate(){
-  const W=templateCanvas.width,H=templateCanvas.height,st=roomStyle(),m=roomDesignMetrics();
-  tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);
-  const wall=tctx.createLinearGradient(0,0,0,285);wall.addColorStop(0,'#f6f1ea');wall.addColorStop(1,st.wall);tctx.fillStyle=wall;tctx.fillRect(0,0,W,290);
-  const floor=tctx.createLinearGradient(0,290,0,H);floor.addColorStop(0,st.floor);floor.addColorStop(1,'#3d332d');tctx.fillStyle=floor;tctx.fillRect(0,290,W,H-290);
-  /* Perspective room shell */
-  tctx.strokeStyle='rgba(255,255,255,.42)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(0,290);tctx.lineTo(400,205);tctx.lineTo(800,290);tctx.moveTo(400,205);tctx.lineTo(400,0);tctx.stroke();
-  for(let x=-60;x<860;x+=70){tctx.strokeStyle='rgba(255,255,255,.09)';tctx.beginPath();tctx.moveTo(400,205);tctx.lineTo(x,450);tctx.stroke();}
-  for(let y=315;y<450;y+=26){tctx.strokeStyle='rgba(255,255,255,.08)';tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}
-  /* Fixed architecture: window, media wall, studio kitchen */
-  tctx.fillStyle='rgba(102,177,214,.28)';tctx.strokeStyle='rgba(205,241,255,.5)';tctx.lineWidth=3;tctx.fillRect(72,70,190,145);tctx.strokeRect(72,70,190,145);tctx.beginPath();tctx.moveTo(167,70);tctx.lineTo(167,215);tctx.moveTo(72,143);tctx.lineTo(262,143);tctx.stroke();
-  tctx.fillStyle='rgba(35,42,48,.82)';tctx.fillRect(548,72,188,125);tctx.fillStyle='rgba(68,80,88,.88)';tctx.fillRect(570,96,145,77);tctx.fillStyle='rgba(93,228,255,.08)';tctx.fillRect(570,96,145,77);
-  tctx.fillStyle='rgba(235,228,218,.93)';tctx.fillRect(475,215,282,58);tctx.fillStyle='rgba(74,65,58,.75)';tctx.fillRect(486,226,64,41);tctx.fillRect(559,226,64,41);tctx.fillRect(632,226,64,41);tctx.fillRect(705,226,42,41);
-  tctx.fillStyle='#c3c8c9';tctx.beginPath();tctx.ellipse(531,220,23,8,0,0,Math.PI*2);tctx.fill();tctx.strokeStyle='#5c6b72';tctx.lineWidth=4;tctx.beginPath();tctx.moveTo(531,216);tctx.lineTo(531,196);tctx.quadraticCurveTo(551,188,552,207);tctx.stroke();
-  tctx.fillStyle='#222a2d';tctx.fillRect(641,207,72,10);for(let i=0;i<4;i++){tctx.strokeStyle='#d99640';tctx.beginPath();tctx.arc(652+i*16,212,5,0,Math.PI*2);tctx.stroke();}
-  /* Zone labels */
-  const label=(x,y,w,text)=>{tctx.fillStyle='rgba(4,18,34,.65)';tctx.beginPath();tctx.roundRect(x,y,w,28,10);tctx.fill();tctx.fillStyle='#dff8ff';tctx.font='800 11px system-ui';tctx.textAlign='center';tctx.fillText(text,x+w/2,y+18)};
-  label(80,244,150,t('LIVING ZONE','ZONE SALON'));label(306,244,132,t('DINING ZONE','COIN REPAS'));label(548,244,154,t('STUDIO KITCHEN','CUISINE STUDIO'));
-  /* compact design HUD */
-  tctx.fillStyle='rgba(4,18,34,.82)';tctx.beginPath();tctx.roundRect(20,18,318,75,14);tctx.fill();tctx.fillStyle='#f3fbff';tctx.font='900 15px system-ui';tctx.textAlign='left';tctx.fillText(t('DREAM ROOM STUDIO','STUDIO CHAMBRE DE RÊVE'),35,43);tctx.fillStyle='#a8dff0';tctx.font='700 10px system-ui';tctx.fillText(t('Design for real life: comfort, flow, function and style.','Conçois pour la vraie vie : confort, circulation, fonction et style.'),35,62);tctx.fillText(`${t('Budget','Budget')}: £${m.budget.toLocaleString()} / £2,200   ·   ${t('Live score','Score')}: ${m.score}%`,35,80);
-  tctx.fillStyle='rgba(4,18,34,.82)';tctx.beginPath();tctx.roundRect(608,18,172,118,14);tctx.fill();tctx.fillStyle='#f1fbff';tctx.font='900 11px system-ui';tctx.fillText(t('MISSION GOALS','OBJECTIFS'),622,39);tctx.font='700 10px system-ui';const goals=[[m.lounge,t('Comfortable lounge','Salon confortable')],[m.dining,t('Dining area','Coin repas')],[m.kitchen,t('Working kitchen','Cuisine fonctionnelle')],[m.light,t('Useful lighting','Éclairage utile')],[m.smart,t('Smart-home detail','Détail intelligent')]];goals.forEach(([ok,txt],i)=>{tctx.fillStyle=ok?'#75ebb6':'#8fa7bd';tctx.fillText(`${ok?'✓':'○'} ${txt}`,622,58+i*16)});
-  tctx.restore();
-}
-function drawRoomHuman(x,y,scale=1,opts={}){
-  const walk=opts.walk||0,skin=opts.skin||'#a97558',shirt=opts.shirt||'#d6c4ae',pants=opts.pants||'#354554',sit=!!opts.sit,carry=!!opts.carry;
-  tctx.save();tctx.translate(x,y);tctx.scale(scale,scale);if(opts.flip)tctx.scale(-1,1);tctx.globalAlpha=opts.alpha??1;
-  tctx.fillStyle='rgba(0,0,0,.18)';tctx.beginPath();tctx.ellipse(0,31,16,5,0,0,Math.PI*2);tctx.fill();
-  tctx.fillStyle=skin;tctx.beginPath();tctx.arc(0,-35,8,0,Math.PI*2);tctx.fill();
-  tctx.fillStyle=shirt;tctx.beginPath();tctx.roundRect(-9,-26,18,28,7);tctx.fill();
-  tctx.strokeStyle=skin;tctx.lineWidth=5;tctx.lineCap='round';tctx.beginPath();tctx.moveTo(-7,-18);tctx.lineTo(-15,-4+(carry?3:Math.sin(walk)*4));tctx.moveTo(7,-18);tctx.lineTo(15,-5+(carry?-2:-Math.sin(walk)*4));tctx.stroke();
-  tctx.strokeStyle=pants;tctx.lineWidth=6;tctx.beginPath();if(sit){tctx.moveTo(-5,0);tctx.lineTo(-14,13);tctx.lineTo(1,18);tctx.moveTo(5,0);tctx.lineTo(13,13);tctx.lineTo(26,13)}else{tctx.moveTo(-5,1);tctx.lineTo(-8+Math.sin(walk)*5,28);tctx.moveTo(5,1);tctx.lineTo(8-Math.sin(walk)*5,28)}tctx.stroke();
-  if(carry){tctx.fillStyle='#eef2f2';tctx.fillRect(12,-10,12,8);}
-  tctx.restore();
-}
-function roomTvRect(){
-  return ({'room-scandi':[640,118,138,100],'room-luxury':[640,88,150,112],'room-afro':[646,92,142,118],'room-industrial':[675,105,122,145],'room-smart':[8,82,145,175]})[currentLibraryId]||[640,118,138,100];
-}
-function roomKitchenPoint(){return ({'room-scandi':[523,183],'room-luxury':[530,176],'room-afro':[444,173],'room-industrial':[590,175],'room-smart':[650,170]})[currentLibraryId]||[525,180];}
-function drawRoomAnimatedTV(p){
-  const [x,y,w,h]=roomTvRect();tctx.save();tctx.beginPath();tctx.roundRect(x,y,w,h,5);tctx.clip();
-  const g=tctx.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,'#0c3156');g.addColorStop(.5,'#4d4c9e');g.addColorStop(1,'#d06d48');tctx.fillStyle=g;tctx.fillRect(x,y,w,h);
-  const sunX=x+w*(.20+.60*((p*1.7)%1));tctx.fillStyle='rgba(255,225,141,.95)';tctx.beginPath();tctx.arc(sunX,y+h*.28,8,0,Math.PI*2);tctx.fill();
-  tctx.fillStyle='#183b50';tctx.beginPath();tctx.moveTo(x,y+h*.72);for(let i=0;i<7;i++)tctx.lineTo(x+i*w/6,y+h*(.42+.12*Math.sin(i*1.4+p*9)));tctx.lineTo(x+w,y+h);tctx.lineTo(x,y+h);tctx.fill();
-  tctx.fillStyle='rgba(5,15,25,.75)';tctx.fillRect(x,y+h-22,w,22);tctx.fillStyle='#fff';tctx.font=`800 ${Math.max(8,w*.055)}px system-ui`;tctx.textAlign='left';tctx.fillText(t('Children World Live · Design Story','Children World Live · Histoire design'),x+6,y+h-8);
-  tctx.restore();tctx.strokeStyle='rgba(225,246,255,.65)';tctx.lineWidth=2;tctx.strokeRect(x,y,w,h);
-}
-function drawRoomKitchenAnimation(p){
-  const [x,y]=roomKitchenPoint();
-  for(let i=0;i<6;i++){const q=(p*2+i/6)%1;tctx.strokeStyle=`rgba(244,246,248,${.42*(1-q)})`;tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x+i*4,y);tctx.bezierCurveTo(x-8+i*4,y-18-q*30,x+10+i*3,y-28-q*40,x+i*4,y-45-q*45);tctx.stroke();}
-  for(let i=0;i<11;i++){const q=(p*3+i/11)%1;tctx.fillStyle=`rgba(84,190,255,${.55*(1-q)})`;tctx.beginPath();tctx.arc(x-60+Math.sin(i)*6,y+28+q*45,2.5,0,Math.PI*2);tctx.fill();}
-}
-function drawRoomLiveFrame(ts){
-  if(!roomLiveActive)return;roomLiveProgress=clamp((ts-roomLiveStart)/roomLiveDuration,0,1);const p=roomLiveProgress,W=templateCanvas.width,H=templateCanvas.height;
-  tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);
-  const img=roomImageCache[currentLibraryId]||roomImageCache['room-scandi'];if(!roomImageDrawCover(img)){drawRoomDesignTemplate();tctx.restore();roomLiveRAF=requestAnimationFrame(drawRoomLiveFrame);return;}
-  const evening=clamp((p-.55)/.45,0,1);tctx.fillStyle=`rgba(10,18,29,${.08+.22*evening})`;tctx.fillRect(0,0,W,H);
-  /* lights breathe on rather than simply appearing */
-  const glow=.08+.15*(.5+.5*Math.sin(p*12));const lg=tctx.createRadialGradient(420,128,10,420,128,260);lg.addColorStop(0,`rgba(255,218,147,${glow})`);lg.addColorStop(1,'rgba(255,218,147,0)');tctx.fillStyle=lg;tctx.fillRect(0,0,W,H);
-  let label=t('Room waking up','La pièce prend vie'),sub=t('Lighting, media and people begin using the space.','L’éclairage, le média et les personnes commencent à utiliser la pièce.');
-  if(p<.18){
-    label=t('1 · LIGHTING & ARRIVAL','1 · ÉCLAIRAGE & ARRIVÉE');sub=t('A resident enters while the room shifts from daylight to a comfortable evening scene.','Une personne entre pendant que la pièce passe du jour à une ambiance du soir.');
-    const q=p/.18;drawRoomHuman(100+250*q,346,1.04,{walk:q*18,shirt:'#d8c7b4',pants:'#334658',carry:q>.55});
-  }else if(p<.36){
-    label=t('2 · REMOTE → SOFA → TV','2 · TÉLÉCOMMANDE → CANAPÉ → TV');sub=t('She collects the remote, sits down and switches on moving media content.','Elle prend la télécommande, s’assoit et allume un contenu média animé.');
-    const q=(p-.18)/.18;if(q<.45)drawRoomHuman(350+120*q,344,1.04,{walk:q*15,carry:true});else drawRoomHuman(470,352,1.04,{sit:true,carry:true});drawRoomAnimatedTV(q);
-    const rx=360+110*Math.min(1,q*1.8),ry=320-8*Math.sin(q*Math.PI);tctx.fillStyle='#18232d';tctx.fillRect(rx,ry,17,5);
-  }else if(p<.54){
-    label=t('3 · WORKING KITCHEN','3 · CUISINE EN ACTION');sub=t('The hob heats, steam rises and running water shows that the kitchen really works.','La plaque chauffe, la vapeur monte et l’eau coule : la cuisine fonctionne réellement.');
-    const q=(p-.36)/.18;drawRoomHuman(535,335,1.0,{walk:q*4,shirt:'#65715e',pants:'#303c46'});drawRoomKitchenAnimation(q);drawRoomAnimatedTV(q*.5);
-  }else if(p<.70){
-    label=t('4 · DINING & FAMILY USE','4 · REPAS & VIE DE FAMILLE');sub=t('A second person carries food to the table while the media and kitchen continue running.','Une deuxième personne apporte le repas pendant que le média et la cuisine restent actifs.');
-    const q=(p-.54)/.16;drawRoomHuman(560-210*q,340,1.0,{walk:q*16,shirt:'#b97961',pants:'#394d62',carry:true,flip:true});drawRoomKitchenAnimation(q);drawRoomAnimatedTV(q);
-  }else if(p<.86){
-    label=t('5 · SMART HOME RESPONSE','5 · MAISON INTELLIGENTE');sub=t('The robot vacuum crosses the floor while lighting and media adapt automatically.','L’aspirateur robot traverse le sol pendant que lumière et média s’adaptent automatiquement.');
-    const q=(p-.70)/.16;const vx=80+620*q,vy=410+8*Math.sin(q*Math.PI*4);tctx.fillStyle='#17232e';tctx.beginPath();tctx.ellipse(vx,vy,23,10,0,0,Math.PI*2);tctx.fill();tctx.strokeStyle='#5de4ff';tctx.lineWidth=2;tctx.stroke();tctx.fillStyle='#5de4ff';tctx.beginPath();tctx.arc(vx,vy-2,3,0,Math.PI*2);tctx.fill();drawRoomAnimatedTV(q);
-  }else{
-    const m=roomDesignMetrics();label=t('6 · LIVE-USE RESULT','6 · RÉSULTAT EN VIE');sub=t('The design is judged by comfort, function, kitchen use, lighting, smart-home detail and budget.','Le design est évalué selon confort, fonction, cuisine, lumière, maison intelligente et budget.');drawRoomAnimatedTV(p);
-    tctx.fillStyle='rgba(4,18,30,.88)';tctx.beginPath();tctx.roundRect(185,112,430,225,20);tctx.fill();tctx.strokeStyle='rgba(93,228,255,.35)';tctx.stroke();tctx.textAlign='center';tctx.fillStyle='#fff';tctx.font='900 26px system-ui';tctx.fillText(t('DREAM ROOM — LIVE RESULT','CHAMBRE DE RÊVE — RÉSULTAT'),400,151);tctx.fillStyle='#75ebb6';tctx.font='900 46px system-ui';tctx.fillText(`${m.score}%`,400,207);tctx.fillStyle='#d7eff8';tctx.font='800 12px system-ui';const r=[`${m.lounge?'✓':'○'} ${t('Comfortable lounge','Salon confortable')}`,`${m.dining?'✓':'○'} ${t('Dining area','Coin repas')}`,`${m.kitchen?'✓':'○'} ${t('Working kitchen','Cuisine fonctionnelle')}`,`${m.light?'✓':'○'} ${t('Lighting','Éclairage')}`,`${m.smart?'✓':'○'} ${t('Smart home','Maison intelligente')}`,`${m.budgetOK?'✓':'○'} ${t('Budget','Budget')} £${m.budget.toLocaleString()} / £2,200`];r.forEach((x,i)=>tctx.fillText(x,400,238+i*16));
-  }
-  tctx.fillStyle='rgba(3,13,23,.82)';tctx.beginPath();tctx.roundRect(18,18,510,70,14);tctx.fill();tctx.fillStyle='#f4fbff';tctx.font='900 15px system-ui';tctx.textAlign='left';tctx.fillText(label,33,43);tctx.fillStyle='#b9e9f7';tctx.font='700 10px system-ui';const words=sub.split(' ');let line='',yy=62;for(const word of words){const test=line?line+' '+word:word;if(tctx.measureText(test).width>474){tctx.fillText(line,33,yy);yy+=14;line=word}else line=test}if(line)tctx.fillText(line,33,yy);
-  /* timeline */tctx.fillStyle='rgba(255,255,255,.18)';tctx.fillRect(18,420,764,8);tctx.fillStyle='#5de4ff';tctx.fillRect(18,420,764*p,8);
-  tctx.restore();
-  if(p>=1){roomLiveRAF=0;const m=roomDesignMetrics();$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>${m.score}</b><small>/100</small></div><div><b>${t('Dream Room live-use test complete','Test d’usage réel terminé')}</b><p>${t('The room was tested as a living space — not just a static picture. Stop the test to return to editing and improve anything you want.','La pièce a été testée comme un vrai espace de vie — pas comme une image statique. Arrête le test pour revenir à l’édition et améliorer ce que tu veux.')}</p></div></div>`;$('creatorCoach').textContent=t('Live-use test complete. Check the score, then return to edit mode if you want to improve the room.','Test terminé. Vérifie le score puis reviens en édition si tu veux améliorer la pièce.');window.playTone?.(true);return;}
-  roomLiveRAF=requestAnimationFrame(drawRoomLiveFrame);
-}
-function startRoomLiveTest(){
-  if(!roomBuildComplete()){updateRoomProgressUI();$('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Complete the Dream Room build first','Termine d’abord la construction de la Chambre de rêve')}</b><p>${t('Test My Creation unlocks only after every required build area is complete.','Tester ma création se déverrouille uniquement lorsque toutes les zones requises sont terminées.')}</p></div>`;$('creatorCoach').textContent=t('Finish the required parts in each build area before testing.','Termine les pièces requises de chaque zone avant le test.');return;}
-  const objs=roomObjects();
-  stopTest(false);testRunning=true;roomLiveActive=true;roomLiveProgress=0;roomLiveStart=performance.now();stage.classList.add('testing','test-active','room-live-test');$('stopCreationTest').hidden=false;selectObject(null);simulation.className='creator-simulation';simulation.innerHTML='';
-  const m=roomDesignMetrics();$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>${m.score}</b><small>/100</small></div><div><b>${t('Live-use room test running','Test d’usage réel en cours')}</b><p>${t('Watch the lighting, people, TV, kitchen and smart-home activity. The scene runs as a continuous room story.','Observe la lumière, les personnes, la TV, la cuisine et la maison intelligente. La scène fonctionne comme une histoire continue.')}</p></div></div>`;$('creatorCoach').textContent=t('Keep watching: this test uses a full live-room sequence, not a static scan.','Continue à regarder : ce test utilise une séquence de pièce vivante, pas un simple scan statique.');roomLiveRAF=requestAnimationFrame(drawRoomLiveFrame);window.playTone?.(true);
-}
-function stopRoomLiveTest(){if(roomLiveRAF)cancelAnimationFrame(roomLiveRAF);roomLiveRAF=0;roomLiveActive=false;roomLiveProgress=0;stage.classList.remove('room-live-test');renderTemplate('room');}
 function renderTemplate(id){
   tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);
   if(!templateOn&&!(id==='vehicle'&&vehicleRevealActive))return;
   if(id==='vehicle'){drawVehicleBlueprint();return}
-  if(id==='room'){drawRoomDesignTemplate();return}
   tctx.save();tctx.strokeStyle='rgba(132,222,255,.30)';tctx.fillStyle='rgba(92,124,255,.06)';tctx.lineWidth=4;tctx.setLineDash([12,10]);
   if(id==='room'){tctx.strokeRect(120,70,560,320);tctx.strokeRect(140,92,250,120);tctx.strokeRect(420,92,230,120);tctx.beginPath();tctx.moveTo(400,70);tctx.lineTo(400,390);tctx.stroke()}
   else if(id==='park'){tctx.beginPath();tctx.moveTo(70,330);tctx.bezierCurveTo(220,210,330,410,480,250);tctx.bezierCurveTo(590,140,680,220,755,120);tctx.stroke();tctx.beginPath();tctx.ellipse(610,315,105,65,0,0,Math.PI*2);tctx.stroke()}
@@ -2889,13 +2699,12 @@ function renderTemplate(id){
 }
 function updateBlueprintVisibility(){
   stage.classList.toggle('blueprints-off',!templateOn);
-  const generic=$('toggleTemplate'),vehicleToggle=$('vehicleToggleTemplate'),drawingToolbar=$('creatorDrawingToolbar')||document.querySelector('.creator-toolbar');
+  const generic=$('toggleTemplate'),vehicleToggle=$('vehicleToggleTemplate'),drawingToolbar=$('creatorDrawingToolbar');
   const label=templateOn?t('👻 Blueprint on','👻 Plan activé'):t('👻 Blueprint off','👻 Plan désactivé');
-  if(generic){generic.textContent=label;generic.hidden=active==='vehicle';generic.classList.toggle('active',templateOn);}
+  if(generic){generic.textContent=label;generic.hidden=active==='vehicle';}
   if(vehicleToggle){vehicleToggle.textContent=label;vehicleToggle.classList.toggle('active',templateOn);}
-  if(drawingToolbar){drawingToolbar.hidden=active==='vehicle'&&templateOn;drawingToolbar.classList.toggle('room-blueprint-locked',active==='room'&&templateOn);}
-  if((active==='vehicle'||active==='room')&&templateOn&&tool!=='select')setTool('select');
-  if(active==='room')updateRoomProgressUI();
+  if(drawingToolbar)drawingToolbar.hidden=active==='vehicle'&&templateOn;
+  if(active==='vehicle'&&templateOn&&tool!=='select')setTool('select');
 }
 function vehicleAngleLabel(){
   if(vehicleViewMode==='interior')return t('Interior puzzle view','Vue puzzle intérieure');
@@ -2959,20 +2768,10 @@ function renderLibrary(m){
     const select=$('vehiclePickerSelect');if(select)select.onchange=()=>{const item=vehicleLibrary.find(v=>v.id===select.value);if(item)chooseLibrary(item)};
     return;
   }
-  if(active==='room'){
-    $('creatorLibraryTitle').textContent=t('Choose the room style you want to design.','Choisis le style de pièce que tu veux concevoir.');
-    $('creatorLibraryHelp').textContent=t('One room style is shown at a time. Use the compact list to switch styles without making the page longer.','Un seul style de pièce est affiché à la fois. Utilise la liste compacte pour changer de style sans allonger la page.');
-    const current=m.library.find(v=>v.id===currentLibraryId)||m.library[0];currentLibraryId=current.id;
-    const opts=m.library.map(v=>`<option value="${v.id}" ${v.id===current.id?'selected':''}>${v.name}</option>`).join('');
-    host.className='creator-library-grid creator-room-picker';
-    host.innerHTML=`<div class="creator-room-preview"><img src="${current.img}" alt="${current.name}" width="960" height="540" loading="eager" decoding="async"><div class="creator-room-preview-copy"><span><b>${current.name}</b><small>${current.subtitle}</small></span><strong>${t('Selected','Sélectionné')} ✓</strong></div></div><div class="creator-room-picker-control"><label for="roomPickerSelect">${t('Room style list','Liste des styles')}</label><select id="roomPickerSelect">${opts}</select><small>${t('Choose another style here. Your current room build stays in place unless you clear the project.','Choisis un autre style ici. Ta construction actuelle reste en place tant que tu n’effaces pas le projet.')}</small></div>`;
-    const select=$('roomPickerSelect');if(select)select.onchange=()=>{const item=m.library.find(v=>v.id===select.value);if(item)chooseLibrary(item)};
-    return;
-  }
   host.className='creator-library-grid';
   m.library.forEach(item=>{const b=document.createElement('button');b.type='button';b.className='creator-library-card';b.dataset.libraryId=item.id;b.dataset.status=t('✓ blueprint added','✓ plan ajouté');b.innerHTML=`<img src="${item.img}" alt="${item.name}"><span><b>${item.name}</b><small>${item.subtitle}</small></span>`;b.onclick=()=>chooseLibrary(item);host.appendChild(b)});refreshLibraryCards();
 }
-function refreshLibraryCards(){document.querySelectorAll('.creator-library-card').forEach(card=>{const exists=(active==='vehicle'||active==='room')?card.dataset.libraryId===currentLibraryId:[...objectLayer.children].some(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===card.dataset.libraryId);card.classList.toggle('active',exists)});}
+function refreshLibraryCards(){document.querySelectorAll('.creator-library-card').forEach(card=>{const exists=active==='vehicle'?card.dataset.libraryId===currentLibraryId:[...objectLayer.children].some(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===card.dataset.libraryId);card.classList.toggle('active',exists)});}
 function chooseLibrary(item){if(active==='vehicle'){
   const changed=!!currentLibraryId&&currentLibraryId!==item.id;
   if(changed){stashCurrentVehicleBuild();resetVehiclePresentationForSwitch();}
@@ -2990,76 +2789,24 @@ function chooseLibrary(item){if(active==='vehicle'){
     $('creatorTestResult').innerHTML='';
   }
   commitHistory();return
-}
-if(active==='room'){
-  currentLibraryId=item.id;
-  renderLibrary(missions.room);
-  renderTemplate('room');
-  $('creatorCoach').textContent=t('Style selected. Now build a usable room: lounge, dining, kitchen, lighting and smart-home details.','Style sélectionné. Construis maintenant une pièce utilisable : salon, repas, cuisine, lumière et maison intelligente.');
-  commitHistory();return;
-}
-currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
+}currentLibraryId=item.id;const existing=[...objectLayer.children].find(o=>o.dataset.kind==='blueprint'&&o.dataset.blueprintId===item.id);if(existing){selectObject(existing);renderModes(missions[active],activeMode);return}const count=[...objectLayer.children].filter(o=>o.dataset.kind==='blueprint').length;const x=.30+((count%3)*.22),y=.30+(Math.floor(count/3)*.28);addBlueprint(item,clamp(x,.18,.82),clamp(y,.22,.78),active==='robot'?180:310,0,{commit:true,select:true});renderModes(missions[active],null);refreshLibraryCards();}
 
-const ROOM_MODE_REQUIREMENTS={
-  shell:{'room-door':1,'room-window':1,'rug':1},
-  lounge:{sofa:1,'coffee-table':1,television:1},
-  dining:{'dining-table':1,'dining-chair':4},
-  kitchen:{'kitchen-counter':1,'kitchen-sink':1,hob:1,fridge:1},
-  style:{'floor-lamp':1,'wall-art':1,curtains:1},
-  smart:{'smart-speaker':1,thermostat:1,'robot-vacuum':1,'smart-light':1}
-};
-function roomModeRequirements(modeId){return ROOM_MODE_REQUIREMENTS[modeId]||{};}
-function roomPartRequirement(id,modeId=activeMode){return Number(roomModeRequirements(modeId)[id]||0);}
-function roomPlacedPartCount(id){return [...objectLayer.children].filter(o=>o.dataset.kind==='part'&&o.dataset.partId===id).length;}
-function roomPartComplete(id,modeId=activeMode){const need=roomPartRequirement(id,modeId);return need>0&&roomPlacedPartCount(id)>=need;}
-function roomModeComplete(modeId){const req=roomModeRequirements(modeId),ids=Object.keys(req);return ids.length>0&&ids.every(id=>roomPlacedPartCount(id)>=req[id]);}
-function roomBuildComplete(){return roomModes.every(md=>roomModeComplete(md.id));}
-function roomNextIncomplete(fromId=activeMode){const start=Math.max(0,roomModes.findIndex(md=>md.id===fromId));for(let i=1;i<=roomModes.length;i++){const md=roomModes[(start+i)%roomModes.length];if(!roomModeComplete(md.id))return md.id}return null;}
-function refreshRoomComponentButtons(){
-  if(active!=='room')return;
-  document.querySelectorAll('#creatorComponents .creator-component[data-part-id]').forEach(b=>{
-    const id=b.dataset.partId,need=roomPartRequirement(id,activeMode),done=roomPlacedPartCount(id),complete=need>0&&done>=need;
-    b.disabled=complete;b.classList.toggle('is-complete',complete);b.setAttribute('aria-disabled',complete?'true':'false');
-    const counter=b.querySelector('[data-part-counter]');if(counter&&need)counter.textContent=complete?t(`✓ ${done}/${need} placed`,`✓ ${done}/${need} placé${need>1?'s':''}`):`${done}/${need}`;
-  });
-}
-function updateRoomProgressUI(opts={}){
-  if(active!=='room')return;
-  const autoAdvance=!!opts.autoAdvance;
-  document.querySelectorAll('#creatorModes .creator-mode[data-mode-id]').forEach(card=>{
-    const id=card.dataset.modeId,complete=roomModeComplete(id);card.classList.toggle('is-complete',complete);
-    let status=card.querySelector('.creator-mode-status');
-    if(complete&&!status){status=document.createElement('small');status.className='creator-mode-status';status.textContent=`✓ ${t('Complete','Terminé')}`;card.appendChild(status)}
-    if(!complete&&status)status.remove();
-  });
-  refreshRoomComponentButtons();
-  const btn=$('testCreation'),ready=roomBuildComplete();if(btn){btn.disabled=!ready;btn.classList.toggle('room-ready',ready);btn.title=ready?'':t('Complete every Dream Room build area before testing.','Termine toutes les zones de construction de la Chambre de rêve avant le test.');}
-  if(ready){
-    $('creatorCoach').textContent=t('Dream Room build complete. Test My Creation is unlocked.','Construction de la Chambre de rêve terminée. Tester ma création est déverrouillé.');
-    if(!testRunning)$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Dream Room build complete — ready to test','Chambre de rêve terminée — prête à tester')}</b><p>${t('All six build areas are complete. Test My Creation is now unlocked.','Les six zones de construction sont terminées. Tester ma création est maintenant déverrouillé.')}</p></div></div>`;
-    return;
-  }
-  if(autoAdvance&&roomModeComplete(activeMode)){
-    const next=roomNextIncomplete(activeMode);if(next&&next!==activeMode){const finished=activeMode;activeMode=next;renderModes(missions.room,activeMode);renderTemplate('room');updateBlueprintVisibility();$('creatorCoach').textContent=t(`${roomModes.find(m=>m.id===finished)?.label?.[0]||'Build area'} complete. Moving to the next unfinished area.`,`${roomModes.find(m=>m.id===finished)?.label?.[1]||'Zone'} terminée. Passage à la prochaine zone inachevée.`);}
-  }
-}
 function renderModes(m,preferred){
   const modes=modesForMission(m);if(!modes.length)return;
   activeMode=(preferred&&modes.some(x=>x.id===preferred))?preferred:(activeMode&&modes.some(x=>x.id===activeMode)?activeMode:modes[0].id);
   const host=$('creatorModes');host.innerHTML='';
   modes.forEach(md=>{
-    const complete=(active==='vehicle'&&vehicleModeComplete(md.id))||(active==='room'&&roomModeComplete(md.id));
+    const complete=active==='vehicle'&&vehicleModeComplete(md.id);
     const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'')+(complete?' is-complete':'');b.dataset.modeId=md.id;
     const modeCardHelp=(active==='vehicle'&&vehicleIs('tractor')&&md.id==='body')?t('Build the farm machine, cab and the real front/rear implement connection system.','Construis la machine agricole, la cabine et les vrais systèmes de connexion des outils avant/arrière.'):(active==='vehicle'&&vehicleIs('tractor')&&md.id==='future')?t('Fit precision GPS, soil sensing, crop cameras, autonomous guidance and the farm-drone dock.','Installe le GPS de précision, les capteurs du sol, les caméras de cultures, le guidage autonome et la station du drone agricole.'):L(md.help);
     b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${modeCardHelp}</small>${complete?`<small class="creator-mode-status">✓ ${t('Complete','Terminé')}</small>`:''}`;
-    b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}if(active==='room'){renderTemplate('room');updateRoomProgressUI();}commitHistory()};host.appendChild(b)
+    b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}commitHistory()};host.appendChild(b)
   });
   const selected=modes.find(x=>x.id===activeMode);
   $('creatorModeHelp').textContent=(active==='vehicle'&&vehicleIs('tractor')&&selected.id==='future')
     ?t('Build GPS guidance, soil sensing, crop cameras, autonomous control and a farm-drone dock — technology that makes real field work smarter and more precise.','Construis le guidage GPS, les capteurs du sol, les caméras de cultures, le contrôle autonome et la station du drone agricole — des technologies qui rendent le travail des champs plus intelligent et précis.')
     :L(selected.help);renderComponents(selected);
   if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}
-  if(active==='room')updateRoomProgressUI();
 }
 function vehicleAllPuzzleSlots(){return[...vehicleSlotDefinitions(),...vehicleInteriorSlots(),...vehiclePowerSlots(),...vehicleSafetySlots(),...vehicleFutureSlots()];}
 function vehicleModePartIds(){const md=modesForMission(missions.vehicle).find(x=>x.id===activeMode);return new Set((md?.parts||[]).map(x=>x.id));}
@@ -3076,7 +2823,6 @@ function refreshVehicleComponentButtons(){
 }
 function addPalettePart(p){
   if(active==='vehicle'&&vehiclePartComplete(p.id))return;
-  if(active==='room'&&roomPartRequirement(p.id)>0&&roomPartComplete(p.id))return;
   const el=addObject(p,.5,.5,p.defaultSize||58,0,{commit:false,select:true});
   if(active==='vehicle'){
     const target=vehicleTargetFor(el);
@@ -3088,7 +2834,7 @@ function addPalettePart(p){
       el.dataset.size=startSize;applyObjectStyle(el);
     }
   }
-  commitHistory();if(active==='room'){renderTemplate('room');updateRoomProgressUI({autoAdvance:true})}return el;
+  commitHistory();return el;
 }
 function renderComponents(md){
   const host=$('creatorComponents');
@@ -3134,7 +2880,7 @@ function renderComponents(md){
     (md.parts||[]).filter(p=>ids.has(p.id)&&config.required.includes(p.id)).forEach(p=>appendVehiclePartButton(host,p));
     const change=document.createElement('button');change.type='button';change.className='creator-component';change.innerHTML=`<span>↺</span><small>${t('Change Future Tech','Changer la technologie future')}</small>`;change.onclick=resetVehicleFutureSystem;host.appendChild(change);refreshVehicleComponentButtons();return;
   }
-  host.innerHTML=`<div class="creator-palette-title"><b>${t('Parts for','Pièces pour')} ${L(md.label)}</b><small>${active==='room'?t('Place the required real-room pieces. Required buttons lock when their count is complete; optional pieces stay available.','Place les éléments requis de la pièce. Les boutons requis se verrouillent quand leur quantité est complète ; les éléments facultatifs restent disponibles.'):t('Choose the matching puzzle piece. When every required copy is fitted, its button locks.','Choisis la pièce de puzzle correspondante. Quand tous les exemplaires requis sont fixés, son bouton se verrouille.')}</small></div>`;(md.parts||[]).filter(p=>active!=='vehicle'||vehiclePartRequirement(p.id)>0).forEach(p=>appendVehiclePartButton(host,p));refreshVehicleComponentButtons();if(active==='room')refreshRoomComponentButtons();
+  host.innerHTML=`<div class="creator-palette-title"><b>${t('Parts for','Pièces pour')} ${L(md.label)}</b><small>${t('Choose the matching puzzle piece. When every required copy is fitted, its button locks.','Choisis la pièce de puzzle correspondante. Quand tous les exemplaires requis sont fixés, son bouton se verrouille.')}</small></div>`;(md.parts||[]).filter(p=>active!=='vehicle'||vehiclePartRequirement(p.id)>0).forEach(p=>appendVehiclePartButton(host,p));refreshVehicleComponentButtons();
 }
 function vehiclePartDisplayLabel(p){
   if(active!=='vehicle')return L(p.label);const id=vehicleProfile().id;
@@ -3145,34 +2891,8 @@ function vehiclePartDisplayLabel(p){
     tractor:{door:t('Cabin door','Porte de cabine'),window:t('Cabin side window','Vitre latérale de cabine'),hood:t('Engine bonnet','Capot moteur'),roof:t('Cabin roof','Toit de cabine')}
   };return map[id]?.[p.id]||L(p.label);
 }
-function appendVehiclePartButton(host,p){const b=document.createElement('button');b.type='button';b.className='creator-component';b.dataset.partId=p.id;const need=active==='vehicle'?vehiclePartRequirement(p.id):active==='room'?roomPartRequirement(p.id):0,done=active==='vehicle'?vehicleInstalledPartCount(p.id):active==='room'?roomPlacedPartCount(p.id):0;b.innerHTML=`<span>${paletteVisual(p)}</span><small>${vehiclePartDisplayLabel(p)}${need?` <em data-part-counter>${done}/${need}</em>`:''}</small>`;b.onclick=()=>addPalettePart(p);host.appendChild(b);if(active==='room'&&need>0&&done>=need){b.disabled=true;b.classList.add('is-complete');b.setAttribute('aria-disabled','true')}}
-
-function roomPartSvg(id){
-  const svg=(body,view='0 0 120 80')=>`<svg class="creator-object-icon room-object-svg" viewBox="${view}" aria-hidden="true">${body}</svg>`;
-  const shadow='<ellipse cx="60" cy="70" rx="46" ry="6" fill="rgba(0,0,0,.18)"/>';
-  switch(id){
-    case 'sofa':return svg(`${shadow}<defs><linearGradient id="rs" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f5efe7"/><stop offset="1" stop-color="#b9a996"/></linearGradient></defs><rect x="13" y="31" width="94" height="31" rx="10" fill="url(#rs)" stroke="#6f655a"/><rect x="18" y="18" width="84" height="27" rx="10" fill="#ded2c5" stroke="#776d63"/><rect x="19" y="29" width="8" height="35" rx="4" fill="#9b8a78"/><rect x="93" y="29" width="8" height="35" rx="4" fill="#9b8a78"/><line x1="58" y1="22" x2="58" y2="43" stroke="#b7a99a"/>`);
-    case 'armchair':return svg(`${shadow}<rect x="27" y="28" width="66" height="36" rx="12" fill="#c9b396" stroke="#665a4d"/><rect x="35" y="15" width="50" height="31" rx="12" fill="#dbcbb6"/><rect x="23" y="34" width="12" height="27" rx="6" fill="#a88d6f"/><rect x="85" y="34" width="12" height="27" rx="6" fill="#a88d6f"/>`);
-    case 'coffee-table':return svg(`${shadow}<ellipse cx="60" cy="36" rx="45" ry="19" fill="#8b5d3b" stroke="#4a3427"/><ellipse cx="60" cy="32" rx="42" ry="16" fill="#a97750"/><rect x="54" y="42" width="12" height="25" rx="3" fill="#49352b"/>`);
-    case 'television':return svg(`<rect x="10" y="10" width="100" height="58" rx="5" fill="#111b26" stroke="#93a8bb" stroke-width="2"/><rect x="15" y="15" width="90" height="48" rx="2" fill="url(#tvgrad)"/><defs><linearGradient id="tvgrad" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#153c70"/><stop offset=".5" stop-color="#7b4fb5"/><stop offset="1" stop-color="#ff8a55"/></linearGradient></defs><rect x="48" y="69" width="24" height="4" rx="2" fill="#5c6570"/>`);
-    case 'tv-stand':return svg(`${shadow}<rect x="9" y="34" width="102" height="29" rx="4" fill="#6d513b" stroke="#3f3025"/><rect x="17" y="42" width="26" height="14" rx="2" fill="#261f1b"/><rect x="48" y="42" width="27" height="14" rx="2" fill="#8c6e50"/><rect x="80" y="42" width="23" height="14" rx="2" fill="#261f1b"/>`);
-    case 'shelf':return svg(`<rect x="28" y="7" width="64" height="68" rx="3" fill="#5f4837" stroke="#30251e"/><g stroke="#c0996b" stroke-width="3"><line x1="31" y1="25" x2="89" y2="25"/><line x1="31" y1="43" x2="89" y2="43"/><line x1="31" y1="61" x2="89" y2="61"/></g><g fill="#d9b56f"><rect x="36" y="12" width="7" height="11"/><rect x="46" y="10" width="8" height="13"/><rect x="67" y="30" width="8" height="11"/><circle cx="77" cy="54" r="6" fill="#5d8d62"/></g>`);
-    case 'dining-table':return svg(`${shadow}<polygon points="18,31 72,18 106,35 53,48" fill="#9b6e48" stroke="#49352a"/><line x1="27" y1="39" x2="25" y2="69" stroke="#4b382d" stroke-width="7"/><line x1="94" y1="39" x2="95" y2="69" stroke="#4b382d" stroke-width="7"/>`);
-    case 'dining-chair':return svg(`${shadow}<rect x="39" y="27" width="42" height="27" rx="4" fill="#b99f81" stroke="#655543"/><rect x="42" y="8" width="36" height="27" rx="5" fill="#d2c1aa"/><g stroke="#53463a" stroke-width="5"><line x1="44" y1="52" x2="40" y2="72"/><line x1="76" y1="52" x2="80" y2="72"/></g>`);
-    case 'kitchen-counter':return svg(`${shadow}<rect x="8" y="27" width="104" height="37" rx="3" fill="#b3a48e" stroke="#5e5549"/><rect x="6" y="22" width="108" height="9" rx="3" fill="#e6e0d6"/><g stroke="#756a5a"><line x1="42" y1="32" x2="42" y2="62"/><line x1="78" y1="32" x2="78" y2="62"/></g>`);
-    case 'kitchen-sink':return svg(`<rect x="13" y="31" width="94" height="27" rx="4" fill="#ae9c80"/><ellipse cx="60" cy="40" rx="27" ry="10" fill="#bfcbd0" stroke="#687b84"/><path d="M60 36V18c0-10 22-10 22 1v10" fill="none" stroke="#596e76" stroke-width="5"/>`);
-    case 'hob':return svg(`<rect x="15" y="20" width="90" height="48" rx="6" fill="#222a2d" stroke="#8da0a8"/><g fill="none" stroke="#e3a24b" stroke-width="3"><circle cx="39" cy="38" r="12"/><circle cx="80" cy="38" r="12"/><circle cx="59" cy="58" r="9"/></g>`);
-    case 'oven':return svg(`<rect x="28" y="7" width="64" height="68" rx="5" fill="#2d3438" stroke="#8d9aa0"/><rect x="35" y="26" width="50" height="35" rx="3" fill="#151d22" stroke="#75858d"/><circle cx="40" cy="17" r="3" fill="#d4e4e9"/><circle cx="51" cy="17" r="3" fill="#d4e4e9"/>`);
-    case 'fridge':return svg(`<rect x="33" y="4" width="54" height="72" rx="5" fill="#d6dde0" stroke="#75858d"/><line x1="35" y1="34" x2="85" y2="34" stroke="#89979d"/><line x1="77" y1="12" x2="77" y2="28" stroke="#4e5f66" stroke-width="3"/>`);
-    case 'floor-lamp':return svg(`${shadow}<circle cx="61" cy="19" r="18" fill="#f0d3a2" stroke="#6c5a45"/><line x1="61" y1="36" x2="61" y2="69" stroke="#3d4650" stroke-width="5"/><ellipse cx="61" cy="72" rx="18" ry="4" fill="#343a40"/>`);
-    case 'plant':return svg(`${shadow}<path d="M52 69h16l7-24H45z" fill="#a27453"/><g fill="#4f8b59"><ellipse cx="43" cy="32" rx="12" ry="24" transform="rotate(-25 43 32)"/><ellipse cx="75" cy="30" rx="12" ry="25" transform="rotate(28 75 30)"/><ellipse cx="60" cy="22" rx="11" ry="25"/></g>`);
-    case 'robot-vacuum':return svg(`${shadow}<ellipse cx="60" cy="48" rx="38" ry="22" fill="#1d2730" stroke="#66d9ff" stroke-width="2"/><ellipse cx="60" cy="42" rx="32" ry="17" fill="#293744"/><circle cx="60" cy="42" r="5" fill="#64e4ff"/>`);
-    case 'smart-speaker':return svg(`${shadow}<rect x="42" y="18" width="36" height="48" rx="18" fill="#252f38"/><ellipse cx="60" cy="24" rx="14" ry="5" fill="#64dfff"/><circle cx="60" cy="43" r="2" fill="#d9faff"/>`);
-    case 'room-rug':return svg(`<polygon points="18,25 84,15 108,54 38,70" fill="#d8d0c2" stroke="#8d8273"/><path d="M30 31L88 24M35 42L95 34M42 53L100 45" stroke="#b0a698"/>`);
-    default:return '';
-  }
-}
-function paletteVisual(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;const roomVisual=roomPartSvg(p.id);if(roomVisual)return roomVisual;if(p.className==='park-bench')return '<span class="creator-mini-bench"><i></i><i></i><i></i></span>';if(p.className==='shelf')return '▤';if(p.className==='sofa')return '🛋️';if(p.className==='fluorescent')return '▬';if(p.className==='chassis')return '▰';if(p.className==='amphibious')return '⛴️';if(p.className==='wing')return '🪽';return p.icon||'◆';}
+function appendVehiclePartButton(host,p){const b=document.createElement('button');b.type='button';b.className='creator-component';b.dataset.partId=p.id;const need=active==='vehicle'?vehiclePartRequirement(p.id):0,done=active==='vehicle'?vehicleInstalledPartCount(p.id):0;b.innerHTML=`<span>${paletteVisual(p)}</span><small>${vehiclePartDisplayLabel(p)}${need?` <em data-part-counter>${done}/${need}</em>`:''}</small>`;b.onclick=()=>addPalettePart(p);host.appendChild(b);}
+function paletteVisual(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;if(p.className==='park-bench')return '<span class="creator-mini-bench"><i></i><i></i><i></i></span>';if(p.className==='shelf')return '▤';if(p.className==='sofa')return '🛋️';if(p.className==='fluorescent')return '▬';if(p.className==='chassis')return '▰';if(p.className==='amphibious')return '⛴️';if(p.className==='wing')return '🪽';return p.icon||'◆';}
 
 function renderPlan(m,saved={}){const host=$('creatorPlanFields');host.innerHTML='';host.hidden=active==='vehicle';if(active!=='vehicle')m.prompts.forEach((q,i)=>{const l=document.createElement('label');l.textContent=L(q);const inp=document.createElement('input');inp.dataset.plan=i;inp.value=saved.plan?.[i]||'';l.appendChild(inp);host.appendChild(l)});$('creatorNotes').value=saved.notes||'';}
 
@@ -3203,7 +2923,7 @@ function vehiclePartSvg(id){
   if(id==='emergency-stop')return `<svg ${common} viewBox="0 0 100 100"><circle cx="50" cy="50" r="39" fill="#ed5968" stroke="#fff1f3" stroke-width="5"/><rect x="29" y="43" width="42" height="14" rx="7" fill="#fff"/></svg>`;
   return '';
 }
-function visualHTML(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;const roomVisual=roomPartSvg(p.id);if(roomVisual)return roomVisual;switch(p.className){case'park-bench':return '<span class="creator-object-icon creator-visual creator-bench-visual"><i></i><i></i><i></i><i></i></span>';case'shelf':return '<span class="creator-object-icon creator-visual creator-shelf-visual"></span>';case'sofa':return '<span class="creator-object-icon creator-visual creator-sofa-visual"></span>';case'fluorescent':return '<span class="creator-object-icon creator-visual creator-fluorescent-visual"></span>';case'tvstand':return '<span class="creator-object-icon creator-visual creator-tvstand-visual"></span>';case'settop':return '<span class="creator-object-icon creator-visual creator-settop-visual"></span>';case'chassis':return '<span class="creator-object-icon creator-visual creator-chassis-visual"></span>';case'amphibious':return '<span class="creator-object-icon creator-visual creator-amphibious-visual"></span>';case'wing':return '<span class="creator-object-icon creator-visual creator-wing-visual"></span>';case'toilet':return '<span class="creator-object-icon creator-toilet-visual"></span>';default:return `<span class="creator-object-icon">${p.icon||'◆'}</span>`;}}
+function visualHTML(p){const carVisual=vehiclePartSvg(p.id);if(carVisual)return carVisual;switch(p.className){case'park-bench':return '<span class="creator-object-icon creator-visual creator-bench-visual"><i></i><i></i><i></i><i></i></span>';case'shelf':return '<span class="creator-object-icon creator-visual creator-shelf-visual"></span>';case'sofa':return '<span class="creator-object-icon creator-visual creator-sofa-visual"></span>';case'fluorescent':return '<span class="creator-object-icon creator-visual creator-fluorescent-visual"></span>';case'tvstand':return '<span class="creator-object-icon creator-visual creator-tvstand-visual"></span>';case'settop':return '<span class="creator-object-icon creator-visual creator-settop-visual"></span>';case'chassis':return '<span class="creator-object-icon creator-visual creator-chassis-visual"></span>';case'amphibious':return '<span class="creator-object-icon creator-visual creator-amphibious-visual"></span>';case'wing':return '<span class="creator-object-icon creator-visual creator-wing-visual"></span>';case'toilet':return '<span class="creator-object-icon creator-toilet-visual"></span>';default:return `<span class="creator-object-icon">${p.icon||'◆'}</span>`;}}
 function robotBlueprintSvg(id){const accent=id==='robot-c'?'#ffd45b':id==='robot-d'?'#ff647c':id==='robot-e'?'#5ee3a4':id==='robot-f'?'#9cefff':'#5de4ff';const wheeled=id==='robot-b';const flying=id==='robot-d'||id==='robot-f';return `<svg class="creator-object-icon" viewBox="0 0 120 150" aria-hidden="true"><g fill="none" stroke="${accent}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="35" y="12" width="50" height="34" rx="15"/><path d="M44 29h10m12 0h10"/><path d="M48 39q12 8 24 0"/><path d="M42 48l-10 38h56L78 48z"/><path d="M32 56L12 86m76-30 20 30"/><circle cx="12" cy="88" r="8"/><circle cx="108" cy="88" r="8"/>${wheeled?'<circle cx="38" cy="120" r="16"/><circle cx="82" cy="120" r="16"/><path d="M34 86l4 18m48-18-4 18"/>':'<path d="M47 86l-8 48h18l3-33 3 33h18l-8-48"/>'}${flying?'<path d="M35 55L5 35l20 35m60-15 30-20-20 35"/>':''}</g></svg>`;}
 
 function addBlueprint(item,x,y,size,rotation,opt={}){const el=document.createElement('div');el.className='creator-object is-blueprint'+(item.blueprintType==='scene'?' scene-blueprint':'');el.dataset.kind='blueprint';el.dataset.blueprintId=item.id;el.dataset.label=item.name;el.dataset.x=x;el.dataset.y=y;el.dataset.size=size;el.dataset.rotation=rotation;el.dataset.aspect=item.blueprintType==='scene'?1.333:.80;el.dataset.image=item.img||'';if(item.blueprintType==='robot')el.innerHTML=robotBlueprintSvg(item.id);else el.innerHTML=`<img class="creator-object-icon" src="${item.img}" alt="">`;makeObjectInteractive(el);objectLayer.appendChild(el);applyObjectStyle(el);if(opt.select)selectObject(el);if(opt.commit)commitHistory();return el;}
@@ -3240,7 +2960,7 @@ function applyVehicleSurfaceProjection(el,pr){
   el.style.zIndex=String(200+Math.round((pr.depth||0)*20));
 }
 function objectTags(el){try{return JSON.parse(el.dataset.tags||'[]')}catch(_){return[]}}
-function makeObjectInteractive(el){el.addEventListener('pointerdown',e=>{if(testRunning||el.dataset.installed==='1')return;e.preventDefault();e.stopPropagation();if(tool==='eraser'){selectObject(el);deleteSelected();return}selectObject(el);const r=stage.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,startX=+el.dataset.x,startY=+el.dataset.y;el.setPointerCapture?.(e.pointerId);el.classList.add('dragging');const move=ev=>{el.dataset.installed='0';el.classList.remove('installed-part');clearVehicleProjectedStyle(el);el.dataset.x=clamp(startX+(ev.clientX-sx)/r.width,.02,.98);el.dataset.y=clamp(startY+(ev.clientY-sy)/r.height,.02,.98);applyObjectStyle(el)};const up=()=>{el.classList.remove('dragging');el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);softSnap(el);commitHistory();if(active==='room')renderTemplate('room')};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});}
+function makeObjectInteractive(el){el.addEventListener('pointerdown',e=>{if(testRunning||el.dataset.installed==='1')return;e.preventDefault();e.stopPropagation();if(tool==='eraser'){selectObject(el);deleteSelected();return}selectObject(el);const r=stage.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,startX=+el.dataset.x,startY=+el.dataset.y;el.setPointerCapture?.(e.pointerId);el.classList.add('dragging');const move=ev=>{el.dataset.installed='0';el.classList.remove('installed-part');clearVehicleProjectedStyle(el);el.dataset.x=clamp(startX+(ev.clientX-sx)/r.width,.02,.98);el.dataset.y=clamp(startY+(ev.clientY-sy)/r.height,.02,.98);applyObjectStyle(el)};const up=()=>{el.classList.remove('dragging');el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);softSnap(el);commitHistory()};el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});}
 function selectObject(el){if(selectedObject)selectedObject.classList.remove('selected');selectedObject=el||null;if(selectedObject){selectedObject.classList.add('selected');$('selectedObjectLabel').textContent=selectedObject.dataset.label||t('Selected object','Objet sélectionné');$('objectSize').disabled=false;$('objectRotate').disabled=false;['shrinkObject','growObject','duplicateObject','sendBackObject','bringFrontObject','deleteObject'].forEach(id=>$(id).disabled=false);$('objectSize').value=clamp(+selectedObject.dataset.size||68,24,420);$('objectRotate').value=+(selectedObject.dataset.rotation||0);if(selectedObject.dataset.kind==='blueprint'){currentLibraryId=selectedObject.dataset.blueprintId;renderModes(missions[active],null)}}else{$('selectedObjectLabel').textContent=t('Select an object or drawn shape to edit it','Sélectionne un objet ou une forme à modifier');$('objectSize').disabled=true;$('objectRotate').disabled=true;['shrinkObject','growObject','duplicateObject','sendBackObject','bringFrontObject','deleteObject'].forEach(id=>$(id).disabled=true)}refreshLibraryCards();}
 
 
@@ -3446,12 +3166,12 @@ function resetHistory(){history=[snapshot()];historyIndex=0;updateHistoryButtons
 function commitHistory(){if(restoring||!active)return;history=history.slice(0,historyIndex+1);history.push(snapshot());if(history.length>50)history.shift();historyIndex=history.length-1;updateHistoryButtons();}
 function updateHistoryButtons(){$('undoDraw').disabled=historyIndex<=0;$('redoDraw').disabled=historyIndex<0||historyIndex>=history.length-1;}
 function restoreDrawing(data,cb){ctx.clearRect(0,0,canvas.width,canvas.height);if(!data){cb?.();return}const img=new Image();img.onload=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);cb?.()};img.onerror=()=>cb?.();img.src=data;}
-function restoreSnapshot(s){restoring=true;templateOn=s.templateOn!==false;gridOn=!!s.gridOn;activeMode=s.activeMode;currentLibraryId=s.currentLibraryId;vehicleYaw=Number.isFinite(s.vehicleYaw)?s.vehicleYaw:vehicleYaw;vehiclePitch=Number.isFinite(s.vehiclePitch)?s.vehiclePitch:vehiclePitch;vehicleViewMode=s.vehicleViewMode||vehicleViewMode;vehiclePowertrain=s.vehiclePowertrain||'';vehicleHybridType=s.vehicleHybridType||'self';vehicleFutureAbility=s.vehicleFutureAbility||'';vehicleFlightSystem=s.vehicleFlightSystem||'';vehiclePowerVariants=JSON.parse(JSON.stringify(s.vehiclePowerVariants||{}));vehicleFutureVariants=JSON.parse(JSON.stringify(s.vehicleFutureVariants||{}));stage.classList.toggle('show-grid',gridOn);updateBlueprintVisibility();renderTemplate(active);updateVehicleViewUI();renderModes(missions[active],activeMode);restoreDrawing(s.drawing,()=>{restoreObjects(s.objects);restoring=false;updateHistoryButtons();if(active==='room')updateRoomProgressUI();});}
+function restoreSnapshot(s){restoring=true;templateOn=s.templateOn!==false;gridOn=!!s.gridOn;activeMode=s.activeMode;currentLibraryId=s.currentLibraryId;vehicleYaw=Number.isFinite(s.vehicleYaw)?s.vehicleYaw:vehicleYaw;vehiclePitch=Number.isFinite(s.vehiclePitch)?s.vehiclePitch:vehiclePitch;vehicleViewMode=s.vehicleViewMode||vehicleViewMode;vehiclePowertrain=s.vehiclePowertrain||'';vehicleHybridType=s.vehicleHybridType||'self';vehicleFutureAbility=s.vehicleFutureAbility||'';vehicleFlightSystem=s.vehicleFlightSystem||'';vehiclePowerVariants=JSON.parse(JSON.stringify(s.vehiclePowerVariants||{}));vehicleFutureVariants=JSON.parse(JSON.stringify(s.vehicleFutureVariants||{}));stage.classList.toggle('show-grid',gridOn);updateBlueprintVisibility();renderTemplate(active);updateVehicleViewUI();renderModes(missions[active],activeMode);restoreDrawing(s.drawing,()=>{restoreObjects(s.objects);restoring=false;updateHistoryButtons()});}
 
-function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;if(id==='vehicle'&&!vehicleLibrary.some(v=>v.id===currentLibraryId))currentLibraryId='vehicle-sport';if(id==='vehicle'){vehicleBuildStates=saved.vehicleBuildStates||{};if(!vehicleBuildStates[currentLibraryId]&&(saved.objects||[]).length)vehicleBuildStates[currentLibraryId]={objects:saved.objects,activeMode:saved.activeMode||'body',vehicleYaw:saved.vehicleYaw,vehiclePitch:saved.vehiclePitch,vehicleViewMode:saved.vehicleViewMode,vehiclePowertrain:saved.vehiclePowertrain,vehicleHybridType:saved.vehicleHybridType,vehicleFutureAbility:saved.vehicleFutureAbility,vehicleFlightSystem:saved.vehicleFlightSystem,vehicleCreationName:saved.vehicleCreationName,vehiclePaintColor:saved.vehiclePaintColor,vehiclePowerVariants:saved.vehiclePowerVariants||{},vehicleFutureVariants:saved.vehicleFutureVariants||{}};}const vehicleSaved=id==='vehicle'?(vehicleBuildStates[currentLibraryId]||saved):saved;if(id==='vehicle'&&!activeMode)activeMode=vehicleSaved.activeMode||'body';vehicleYaw=Number.isFinite(vehicleSaved.vehicleYaw)?vehicleSaved.vehicleYaw:0;vehiclePitch=Number.isFinite(vehicleSaved.vehiclePitch)?vehicleSaved.vehiclePitch:.10;vehicleViewMode=vehicleSaved.vehicleViewMode||'left';vehiclePowertrain=id==='vehicle'?(vehicleSaved.vehiclePowertrain||''):'';vehicleHybridType=id==='vehicle'?(vehicleSaved.vehicleHybridType||'self'):'self';vehicleFutureAbility=id==='vehicle'?(vehicleSaved.vehicleFutureAbility||''):'';vehicleFlightSystem=id==='vehicle'?(vehicleSaved.vehicleFlightSystem||''):'';vehicleCreationName=id==='vehicle'?(vehicleSaved.vehicleCreationName||''):'';vehiclePaintColor=id==='vehicle'?(vehicleSaved.vehiclePaintColor||'#5de4ff'):'#5de4ff';vehiclePowerVariants=id==='vehicle'?JSON.parse(JSON.stringify(vehicleSaved.vehiclePowerVariants||{})):{};vehicleFutureVariants=id==='vehicle'?JSON.parse(JSON.stringify(vehicleSaved.vehicleFutureVariants||{})):{};vehiclePhase5Named=!!vehicleCreationName;stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(id==='vehicle'?(vehicleBuildStates[currentLibraryId]?.objects||saved.objects||[]):(saved.objects||[]));drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);updateBlueprintVisibility();if(id==='vehicle')updateVehicleProgressUI();if(id==='room'){renderTemplate('room');updateRoomProgressUI();}resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
+function openMission(id){const m=missions[id];if(!m)return;stopTest(false);active=id;activeMode=null;currentLibraryId=m.library?.[0]?.id||null;drawStrokes=0;selectedObject=null;ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';simulation.innerHTML='';$('creatorTestResult').innerHTML='';$('creatorTitle').textContent=L(m.title);$('creatorPrompt').textContent=L(m.prompt);$('creatorSteps').innerHTML=[t('Choose a blueprint if this mission offers one','Choisis un plan si la mission en propose un'),t('Choose a design mode and load the matching small parts','Choisis un mode et charge les petites pièces correspondantes'),t('Draw, arrange, resize, rotate and combine pieces','Dessine, organise, redimensionne, tourne et combine les pièces'),t('Test, stop, improve and test again','Teste, arrête, améliore puis reteste')].map((x,i)=>`<li><span>${i+1}</span>${x}</li>`).join('');let saved=loadStore()[id]||{};if(id==='vehicle'&&saved.vehiclePuzzleVersion!==VEHICLE_PUZZLE_VERSION){saved={plan:saved.plan||[],notes:saved.notes||'',templateOn:true,gridOn:!!saved.gridOn,currentLibraryId:saved.currentLibraryId||currentLibraryId,vehicleYaw:0,vehiclePitch:.06,vehicleViewMode:'left',objects:[]};}templateOn=saved.templateOn!==false;gridOn=!!saved.gridOn;activeMode=saved.activeMode||null;currentLibraryId=saved.currentLibraryId||currentLibraryId;if(id==='vehicle'&&!vehicleLibrary.some(v=>v.id===currentLibraryId))currentLibraryId='vehicle-sport';if(id==='vehicle'){vehicleBuildStates=saved.vehicleBuildStates||{};if(!vehicleBuildStates[currentLibraryId]&&(saved.objects||[]).length)vehicleBuildStates[currentLibraryId]={objects:saved.objects,activeMode:saved.activeMode||'body',vehicleYaw:saved.vehicleYaw,vehiclePitch:saved.vehiclePitch,vehicleViewMode:saved.vehicleViewMode,vehiclePowertrain:saved.vehiclePowertrain,vehicleHybridType:saved.vehicleHybridType,vehicleFutureAbility:saved.vehicleFutureAbility,vehicleFlightSystem:saved.vehicleFlightSystem,vehicleCreationName:saved.vehicleCreationName,vehiclePaintColor:saved.vehiclePaintColor,vehiclePowerVariants:saved.vehiclePowerVariants||{},vehicleFutureVariants:saved.vehicleFutureVariants||{}};}const vehicleSaved=id==='vehicle'?(vehicleBuildStates[currentLibraryId]||saved):saved;if(id==='vehicle'&&!activeMode)activeMode=vehicleSaved.activeMode||'body';vehicleYaw=Number.isFinite(vehicleSaved.vehicleYaw)?vehicleSaved.vehicleYaw:0;vehiclePitch=Number.isFinite(vehicleSaved.vehiclePitch)?vehicleSaved.vehiclePitch:.10;vehicleViewMode=vehicleSaved.vehicleViewMode||'left';vehiclePowertrain=id==='vehicle'?(vehicleSaved.vehiclePowertrain||''):'';vehicleHybridType=id==='vehicle'?(vehicleSaved.vehicleHybridType||'self'):'self';vehicleFutureAbility=id==='vehicle'?(vehicleSaved.vehicleFutureAbility||''):'';vehicleFlightSystem=id==='vehicle'?(vehicleSaved.vehicleFlightSystem||''):'';vehicleCreationName=id==='vehicle'?(vehicleSaved.vehicleCreationName||''):'';vehiclePaintColor=id==='vehicle'?(vehicleSaved.vehiclePaintColor||'#5de4ff'):'#5de4ff';vehiclePowerVariants=id==='vehicle'?JSON.parse(JSON.stringify(vehicleSaved.vehiclePowerVariants||{})):{};vehicleFutureVariants=id==='vehicle'?JSON.parse(JSON.stringify(vehicleSaved.vehicleFutureVariants||{})):{};vehiclePhase5Named=!!vehicleCreationName;stage.classList.toggle('show-grid',gridOn);renderTemplate(id);updateBlueprintVisibility();updateVehicleViewUI();$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');renderLibrary(m);renderModes(m,activeMode);renderPlan(m,saved);$('creatorCoach').textContent=L(m.coach);$('creatorSaved').textContent=saved.updatedAt?t('Saved project restored. Keep creating.','Projet enregistré restauré. Continue à créer.'):'';$('creatorWorkspace').hidden=false;restoreDrawing(saved.drawing,()=>{restoreObjects(id==='vehicle'?(vehicleBuildStates[currentLibraryId]?.objects||saved.objects||[]):(saved.objects||[]));drawStrokes=saved.drawing?3:0;renderLibrary(m);renderModes(m,activeMode);updateBlueprintVisibility();if(id==='vehicle')updateVehicleProgressUI();resetHistory();$('creatorWorkspace').scrollIntoView({behavior:'smooth',block:'start'})});}
 
 function save(){if(!active)return;if(active==='vehicle')stashCurrentVehicleBuild();const all=loadStore();const plan=[...document.querySelectorAll('#creatorPlanFields [data-plan]')].map(i=>i.value.trim());all[active]={plan,notes:$('creatorNotes').value.trim(),drawing:canvas.toDataURL('image/png'),objects:objectData(),templateOn,gridOn,activeMode,currentLibraryId,vehicleYaw,vehiclePitch,vehicleViewMode,vehiclePowertrain:active==='vehicle'?vehiclePowertrain:undefined,vehicleHybridType:active==='vehicle'?vehicleHybridType:undefined,vehicleFutureAbility:active==='vehicle'?vehicleFutureAbility:undefined,vehicleFlightSystem:active==='vehicle'?vehicleFlightSystem:undefined,vehicleCreationName:active==='vehicle'?vehicleCreationName:undefined,vehiclePaintColor:active==='vehicle'?vehiclePaintColor:undefined,vehiclePowerVariants:active==='vehicle'?vehiclePowerVariants:undefined,vehicleFutureVariants:active==='vehicle'?vehicleFutureVariants:undefined,vehiclePuzzleVersion:active==='vehicle'?VEHICLE_PUZZLE_VERSION:undefined,vehicleBuildStates:active==='vehicle'?vehicleBuildStates:undefined,updatedAt:Date.now()};try{saveStore(all);$('creatorSaved').textContent=t('✅ Project saved. You can return and continue later.','✅ Projet enregistré. Tu peux revenir plus tard.')}catch(_){$('creatorSaved').textContent=t('This design is too large to save on this device.','Ce design est trop volumineux pour cet appareil.')}window.CWState?.setProgress?.('creator',Math.min(95,Object.keys(all).length*16),{lastMission:active});window.CWState?.logActivity?.({id:'creator-'+active,title:`Creator Studio: ${missions[active].title[0]}`,icon:'🎨',detail:'Saved interactive design',href:'creator.html'});}
-function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);if(active==='vehicle'){vehiclePowertrain='';vehicleHybridType='self';vehicleFutureAbility='';vehicleFlightSystem='';vehicleCreationName='';vehiclePhase5Named=false;vehiclePaintColor='#5de4ff';vehiclePreviousPaintColor='#5de4ff';vehicleBuildStates={};vehiclePowerVariants={};vehicleFutureVariants={};activeMode='body';currentLibraryId='vehicle-sport';templateOn=true;vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';}if(active==='room'){currentLibraryId='room-scandi';templateOn=true;activeMode='shell';}const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);renderModes(missions[active],activeMode);updateBlueprintVisibility();if(active==='vehicle'){renderTemplate('vehicle');updateVehicleViewUI();updateVehicleProgressUI();}if(active==='room'){renderTemplate('room');updateRoomProgressUI();}resetHistory();closeClearDialog();}
+function clearProjectNow(){stopTest(false);ctx.clearRect(0,0,canvas.width,canvas.height);objectLayer.innerHTML='';drawStrokes=0;selectObject(null);if(active==='vehicle'){vehiclePowertrain='';vehicleHybridType='self';vehicleFutureAbility='';vehicleFlightSystem='';vehicleCreationName='';vehiclePhase5Named=false;vehiclePaintColor='#5de4ff';vehiclePreviousPaintColor='#5de4ff';vehicleBuildStates={};vehiclePowerVariants={};vehicleFutureVariants={};activeMode='body';currentLibraryId='vehicle-sport';templateOn=true;vehicleYaw=0;vehiclePitch=.06;vehicleViewMode='left';}const all=loadStore();delete all[active];saveStore(all);$('creatorNotes').value='';document.querySelectorAll('#creatorPlanFields input').forEach(i=>i.value='');$('creatorSaved').textContent=t('Project cleared. Start a new design.','Projet effacé. Commence un nouveau design.');$('creatorTestResult').innerHTML='';renderLibrary(missions[active]);renderModes(missions[active],activeMode);updateBlueprintVisibility();if(active==='vehicle'){renderTemplate('vehicle');updateVehicleViewUI();updateVehicleProgressUI();}resetHistory();closeClearDialog();}
 function openClearDialog(){$('creatorClearDialog').hidden=false;document.body.classList.add('creator-dialog-open');setTimeout(()=>$('keepProject').focus(),0)}
 function closeClearDialog(){$('creatorClearDialog').hidden=true;document.body.classList.remove('creator-dialog-open')}
 
@@ -4145,21 +3865,20 @@ function startTest(){if(!active)return;
     $('creatorCoach').textContent=t('Build complete. Save this vehicle; its unique final test will be connected when we design this vehicle’s ending.','Construction terminée. Enregistre ce véhicule ; son test final unique sera connecté lorsque nous concevrons sa fin.');
     showVehicleStageNotice(t('Vehicle build complete','Construction terminée'),`${model} · ${t('ready for final test design','prêt pour la conception du test final')}`,{duration:0});window.playTone?.(true);return;
   }
-  if(active==='room'){startRoomLiveTest();return;}
   const m=missions[active],objectCount=objectLayer.children.length,enough=drawStrokes>=1||objectCount>=2;if(!enough){$('creatorTestResult').innerHTML=`<div class="creator-report warning"><b>${t('Needs more design work','Il faut encore travailler le design')}</b><p>${t('Add some drawing or at least two movable pieces before testing.','Ajoute un dessin ou au moins deux pièces avant de tester.')}</p></div>`;return}stopTest(false);testRunning=true;if(active==='vehicle')renderTemplate('vehicle');stage.classList.add('testing','test-active');$('stopCreationTest').hidden=false;selectObject(null);simulation.className='creator-simulation active';simulation.innerHTML='';addTestClasses();const tags=testTags();let special='';if(active==='vehicle'){const travel=Math.max(65,stage.clientWidth*.20);buildLayer.style.setProperty('--test-travel',travel+'px');if(tags.has('flight')){buildLayer.classList.add('test-fly');simulation.innerHTML='<span class="flight-cloud" style="top:18%">☁️</span><span class="flight-cloud">☁️</span>';special=t('Flying test: the completed vehicle lifts and flies because flight technology is installed.','Test de vol : le véhicule s’élève grâce aux technologies de vol.')}else if(tags.has('amphibious')){buildLayer.classList.add('test-water');simulation.innerHTML='<div class="water-test"></div>';[...objectLayer.children].filter(o=>objectTags(o).includes('wheel')).forEach(o=>{o.classList.remove('test-wheel');o.classList.add('test-water-wheel')});special=t('Water test: the environment changes to water and the wheels retract while the complete vehicle travels as one build.','Test aquatique : l’environnement devient aquatique et les roues se rétractent pendant que le véhicule complet avance.')}else{buildLayer.classList.add('test-road');special=t('Road test: the whole completed vehicle drives smoothly, pauses at each side, then reverses. The tyres rotate with the direction of travel.','Test routier : le véhicule complet roule en douceur, marque une pause à chaque côté puis repart. Les pneus tournent selon le sens.')}}else if(active==='room'){simulation.innerHTML='<div class="room-scan"></div>';special=roomCollisionReport();}else if(active==='park'){simulation.innerHTML='<span class="park-visitor" style="top:34%">🚶</span><span class="park-visitor">🧑‍🦽</span><span class="park-visitor">🧒</span>';special=t('Visitor simulation is running. Watch how people move through the park, then stop and improve the layout.','La simulation des visiteurs est en cours. Observe leurs déplacements puis arrête et améliore le parc.')}else if(active==='robot'){buildLayer.classList.add('test-robot');special=t('Robot systems test is running on the assembled design. This is the foundation for robot-specific movement tests in later upgrades.','Le test des systèmes fonctionne sur le robot assemblé.')}else if(active==='story'){simulation.innerHTML='<div class="story-frame"></div>';special=t('Story preview is running. Check whether the characters, setting and props communicate the scene clearly.','L’aperçu de l’histoire est en cours. Vérifie que personnages, décor et accessoires racontent clairement la scène.')}else if(active==='mars'){simulation.innerHTML='<div class="room-scan"></div>';special=t('Base systems scan is running. Check habitats, support systems, transport and connections.','Le contrôle de la base est en cours. Vérifie habitats, survie, transport et connexions.')}const checks=(m.checks||[]).map(([tag,label])=>({label,ok:tags.has(tag)||objectCount>=4}));let score=Math.min(100,40+objectCount*4+drawStrokes*5);$('creatorTestResult').innerHTML=`<div class="creator-report"><div class="creator-score-ring"><b>${score}</b><small>/100</small></div><div><b>${t('Live test running','Test en direct')}</b><p>${special}</p>${checks.length?`<ul>${checks.map(c=>`<li class="${c.ok?'pass':'miss'}">${c.ok?'✓':'○'} ${c.label}</li>`).join('')}</ul>`:''}</div></div>`;$('creatorCoach').textContent=special;window.playTone?.(true);}
-function stopTest(showMessage=true){hideVehicleStageNotice();if(roomLiveActive)stopRoomLiveTest();if(!testRunning&&showMessage)return;if(vehicleRevealActive)resetVehiclePhaseOneReveal();testRunning=false;stage.classList.remove('testing','test-active','room-live-test');$('stopCreationTest').hidden=true;simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}if(active==='room')renderTemplate('room');if(showMessage){$('creatorCoach').textContent=t('Test stopped. Adjust any part, resize it or add something new, then test again.','Test arrêté. Modifie une pièce, redimensionne-la ou ajoute un élément puis reteste.');$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Test stopped — back to edit mode','Test arrêté — retour au mode édition')}</b><p>${t('Build → Test → Stop → Improve → Test again.','Construis → Teste → Arrête → Améliore → Reteste.')}</p></div></div>`;}}
-function roomCollisionReport(){const issues=roomCollisionIssues();return issues.length?t(`Furniture collision found: ${issues[0]}. Move one object so the room remains usable.`,`Collision de mobilier : ${issues[0]}. Déplace un objet pour garder la pièce utilisable.`):t('The room has a clear circulation path and no major furniture collision was detected.','La pièce conserve une circulation claire et aucune collision importante n’a été détectée.');}
+function stopTest(showMessage=true){hideVehicleStageNotice();if(!testRunning&&showMessage)return;if(vehicleRevealActive)resetVehiclePhaseOneReveal();testRunning=false;stage.classList.remove('testing','test-active');$('stopCreationTest').hidden=true;simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}if(showMessage){$('creatorCoach').textContent=t('Test stopped. Adjust any part, resize it or add something new, then test again.','Test arrêté. Modifie une pièce, redimensionne-la ou ajoute un élément puis reteste.');$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Test stopped — back to edit mode','Test arrêté — retour au mode édition')}</b><p>${t('Build → Test → Stop → Improve → Test again.','Construis → Teste → Arrête → Améliore → Reteste.')}</p></div></div>`;}}
+function roomCollisionReport(){const objects=[...objectLayer.children].filter(o=>o.dataset.kind==='part'),large=objects.filter(o=>objectTags(o).includes('collision-large')),issues=[];for(let i=0;i<large.length;i++){for(let j=i+1;j<large.length;j++){const a=large[i].getBoundingClientRect(),b=large[j].getBoundingClientRect();const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left)),h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));const overlap=w*h,small=Math.min(a.width*a.height,b.width*b.height);if(small&&overlap/small>.28)issues.push(`${large[i].dataset.label} / ${large[j].dataset.label}`)}}return issues.length?t(`Furniture collision found: ${issues[0]}. Move one object so the room remains usable.`,`Collision de mobilier : ${issues[0]}. Déplace un objet pour garder la pièce utilisable.`):t('Room simulation is running. Lighting is switched on and no major furniture collision was detected.','La simulation de la pièce est en cours. L’éclairage est allumé et aucune collision importante n’a été détectée.');}
 
 function setObjectSize(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.size=clamp(v,24,420);selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
 function setObjectRotation(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.rotation=v;selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
-function duplicateSelected(){if(!selectedObject||selectedObject.dataset.installed==='1')return;const d=objectData().find((_,i)=>objectLayer.children[i]===selectedObject);if(!d)return;let copy;if(d.kind==='blueprint'){const item=(missions[active].library||[]).find(x=>x.id===d.blueprintId);copy=addBlueprint(item,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}else if(d.kind==='vector')copy=addVector({type:d.vectorType,color:d.vectorColor,stroke:d.vectorStroke,path:d.vectorPath,x:clamp(d.x+.05,.02,.98),y:clamp(d.y+.05,.02,.98),size:d.size,aspect:d.aspect,rotation:d.rotation,label:d.label},{select:true});else{const p=findPart(d.partId)||part(d.partId,d.icon,d.label,d.label,JSON.parse(d.tags||'[]'),d.className);copy=addObject(p,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}commitHistory();if(active==='room')renderTemplate('room');return copy;}
-function deleteSelected(){if(!selectedObject)return;if(selectedObject.dataset.installed==='1'){$('creatorCoach').textContent=t('That piece is already fitted into the car and is locked in place.','Cette pièce est déjà fixée dans la voiture et verrouillée.');return}selectedObject.remove();selectedObject=null;selectObject(null);refreshLibraryCards();refreshVehicleComponentButtons();if(active==='room')refreshRoomComponentButtons();commitHistory();if(active==='room'){renderTemplate('room');updateRoomProgressUI();}}
-function layerSelected(front){if(!selectedObject)return;front?objectLayer.appendChild(selectedObject):objectLayer.insertBefore(selectedObject,objectLayer.firstChild);commitHistory();if(active==='room')renderTemplate('room');}
+function duplicateSelected(){if(!selectedObject||selectedObject.dataset.installed==='1')return;const d=objectData().find((_,i)=>objectLayer.children[i]===selectedObject);if(!d)return;let copy;if(d.kind==='blueprint'){const item=(missions[active].library||[]).find(x=>x.id===d.blueprintId);copy=addBlueprint(item,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}else if(d.kind==='vector')copy=addVector({type:d.vectorType,color:d.vectorColor,stroke:d.vectorStroke,path:d.vectorPath,x:clamp(d.x+.05,.02,.98),y:clamp(d.y+.05,.02,.98),size:d.size,aspect:d.aspect,rotation:d.rotation,label:d.label},{select:true});else{const p=findPart(d.partId)||part(d.partId,d.icon,d.label,d.label,JSON.parse(d.tags||'[]'),d.className);copy=addObject(p,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}commitHistory();return copy;}
+function deleteSelected(){if(!selectedObject)return;if(selectedObject.dataset.installed==='1'){$('creatorCoach').textContent=t('That piece is already fitted into the car and is locked in place.','Cette pièce est déjà fixée dans la voiture et verrouillée.');return}selectedObject.remove();selectedObject=null;selectObject(null);refreshLibraryCards();refreshVehicleComponentButtons();commitHistory();}
+function layerSelected(front){if(!selectedObject)return;front?objectLayer.appendChild(selectedObject):objectLayer.insertBefore(selectedObject,objectLayer.firstChild);commitHistory();}
 
 // Controls
 document.querySelectorAll('[data-mission]').forEach(b=>b.onclick=()=>openMission(b.dataset.mission));
 $('toolSelect').onclick=()=>setTool('select');$('toolPen').onclick=()=>setTool('pen');$('toolEraser').onclick=()=>setTool('eraser');$('toolLine').onclick=()=>setTool('line');$('toolCurve').onclick=()=>setTool('curve');$('toolRect').onclick=()=>setTool('rect');$('toolCircle').onclick=()=>setTool('circle');
-const toggleBlueprint=()=>{templateOn=!templateOn;if((active==='vehicle'||active==='room')&&templateOn)setTool('select');renderTemplate(active);updateBlueprintVisibility();commitHistory();showVehicleStageNotice(templateOn?t('Build mode restored','Mode construction restauré'):t('Creative drawing tools available','Outils de dessin disponibles'),templateOn?t('Fit the matching vehicle pieces to the blueprint.','Place les pièces correspondantes sur le plan.'):t('The blueprint is hidden. Draw or decorate freely, then turn it back on to continue building.' ,'Le plan est masqué. Dessine ou décore librement, puis réactive-le pour continuer la construction.'),{duration:3000});};$('toggleTemplate').onclick=toggleBlueprint;if($('vehicleToggleTemplate'))$('vehicleToggleTemplate').onclick=toggleBlueprint;
+const toggleBlueprint=()=>{templateOn=!templateOn;if(active==='vehicle'&&templateOn)setTool('select');renderTemplate(active);updateBlueprintVisibility();commitHistory();showVehicleStageNotice(templateOn?t('Build mode restored','Mode construction restauré'):t('Creative drawing tools available','Outils de dessin disponibles'),templateOn?t('Fit the matching vehicle pieces to the blueprint.','Place les pièces correspondantes sur le plan.'):t('The blueprint is hidden. Draw or decorate freely, then turn it back on to continue building.' ,'Le plan est masqué. Dessine ou décore librement, puis réactive-le pour continuer la construction.'),{duration:3000});};$('toggleTemplate').onclick=toggleBlueprint;if($('vehicleToggleTemplate'))$('vehicleToggleTemplate').onclick=toggleBlueprint;
 $('toggleGrid').onclick=()=>{gridOn=!gridOn;stage.classList.toggle('show-grid',gridOn);$('toggleGrid').textContent=gridOn?t('# Grid on','# Grille activée'):t('# Grid off','# Grille désactivée');commitHistory()};
 $('undoDraw').onclick=()=>{if(historyIndex<=0)return;historyIndex--;restoreSnapshot(history[historyIndex])};$('redoDraw').onclick=()=>{if(historyIndex>=history.length-1)return;historyIndex++;restoreSnapshot(history[historyIndex])};
 $('objectSize').addEventListener('input',e=>setObjectSize(+e.target.value));$('objectSize').addEventListener('change',()=>commitHistory());$('objectRotate').addEventListener('input',e=>setObjectRotation(+e.target.value));$('objectRotate').addEventListener('change',()=>commitHistory());
