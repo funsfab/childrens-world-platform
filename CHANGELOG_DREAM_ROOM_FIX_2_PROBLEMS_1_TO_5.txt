@@ -1,0 +1,38 @@
+Children World — Dream Room Correction Batch
+Problems 1–5
+
+Problem 1 — Admin complimentary family/tester access layout
+- Restored the admin form/grid styles that were lost by the Dream Room build.
+- Improved tablet/mobile containment so fields no longer run into each other.
+- Preserved the complimentary-access feature itself.
+
+Problem 2 — Dream Room style selector
+- Replaced the five large stacked style cards with one large selected preview plus a compact dropdown/list.
+- The pattern scales to future room styles without making the page excessively long.
+
+Problem 3 — Future Vehicle selector regression
+- Restored the previously approved compact Future Vehicle selector styling.
+- Vehicle preview remains one controlled preview with the dropdown/list beside it.
+- Restored vehicle preview sizing and text layout without changing the vehicle build/test logic.
+
+Problem 4 — Reuse approved Creator Studio build logic
+- Dream Room now tracks completion per build area.
+- Required pieces/counts are shown and lock when complete.
+- Completed areas display ✓ Complete.
+- Finishing an area automatically advances to the next unfinished area.
+- Saved/restored room objects determine completion state, so progress is not lost by switching modes.
+
+Problem 5 — Blueprint/Test My Creation state rules
+- Blueprint ON hides drawing/colour tools for Dream Room while leaving the Blueprint toggle available.
+- Blueprint ON forces Select mode.
+- Test My Creation stays disabled until all required Dream Room build areas are complete.
+- A defensive test guard also blocks testing if completion is not actually satisfied.
+- Once all build areas are complete, Test My Creation unlocks and stays available.
+
+Responsive protection
+- Compact selector/admin fixes include mobile portrait, mobile landscape, tablet portrait,
+  tablet landscape and desktop/laptop rules.
+
+Files in this patch
+- css/style.css
+- js/creator.js
