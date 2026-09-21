@@ -1,0 +1,16 @@
+Children World — Dream Room / Creator Studio Fix 3
+New batch — Problem 1
+
+Problem 1 — Restore approved Blueprint ON/OFF behaviour
+- Restored the dedicated Blueprint ON/OFF button inside Vehicle Blueprint Views.
+- Added the drawing-toolbar hook that had been lost from creator.html.
+- Blueprint ON now hides Pencil, Eraser, Line, Curve, Rectangle, Circle, Brush Size, colour palette, Grid, Undo and Redo in Future Vehicle build mode.
+- Blueprint ON forces Select/fitting mode.
+- Blueprint OFF restores the creative drawing tools.
+- The Blueprint toggle itself always remains accessible inside Vehicle Blueprint Views.
+- Added a JavaScript fallback so the toolbar is still found even if the element id is accidentally lost later.
+- The same Select-on-Blueprint-ON rule is applied to Dream Room.
+
+Files included
+- creator.html
+- js/creator.js
