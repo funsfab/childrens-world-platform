@@ -2179,7 +2179,22 @@ function drawCoachCelebration(){
 }
 
 function drawTractorDriver(x,y,scale=1,shirt='#e7b94e'){
-  tctx.save();tctx.translate(x,y);tctx.scale(scale,scale);tctx.fillStyle='#8f6248';tctx.beginPath();tctx.arc(0,-25,8,0,Math.PI*2);tctx.fill();tctx.fillStyle=shirt;tctx.fillRect(-7,-17,14,25);tctx.strokeStyle='#273844';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-5,7);tctx.lineTo(-10,19);tctx.moveTo(5,7);tctx.lineTo(10,19);tctx.stroke();tctx.restore();
+  /* The tractor model's local FRONT is to the left. The whole tractor flips when travel direction changes,
+     so the seated driver, seat and steering wheel always remain physically correct inside the cab. */
+  tctx.save();tctx.translate(x,y);tctx.scale(scale,scale);
+  /* seat */
+  tctx.fillStyle='#22323a';tctx.fillRect(4,-14,18,29);tctx.fillStyle='#314650';tctx.fillRect(1,10,25,7);
+  /* steering column + wheel */
+  tctx.strokeStyle='#1d2b32';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-15,-7);tctx.lineTo(-24,-18);tctx.stroke();
+  tctx.beginPath();tctx.arc(-27,-21,8,0,Math.PI*2);tctx.stroke();
+  /* seated driver: torso, head, bent legs */
+  tctx.fillStyle='#8f6248';tctx.beginPath();tctx.arc(-2,-38,8,0,Math.PI*2);tctx.fill();
+  tctx.fillStyle=shirt;tctx.beginPath();tctx.moveTo(-10,-29);tctx.lineTo(8,-29);tctx.lineTo(11,-5);tctx.lineTo(-7,-5);tctx.closePath();tctx.fill();
+  /* arms reaching the steering wheel */
+  tctx.strokeStyle='#8f6248';tctx.lineWidth=4;tctx.lineCap='round';tctx.beginPath();tctx.moveTo(-7,-23);tctx.lineTo(-19,-18);tctx.lineTo(-26,-21);tctx.moveTo(4,-22);tctx.lineTo(-13,-14);tctx.lineTo(-23,-19);tctx.stroke();
+  /* bent legs: hip -> knee -> feet */
+  tctx.strokeStyle='#273844';tctx.lineWidth=5;tctx.beginPath();tctx.moveTo(-1,-4);tctx.lineTo(-12,6);tctx.lineTo(-20,17);tctx.moveTo(7,-4);tctx.lineTo(-4,8);tctx.lineTo(-10,19);tctx.stroke();
+  tctx.restore();
 }
 function drawFarmPerson(x,y,scale=1,opts={}){
   const skin=opts.skin||'#a76f50',shirt=opts.shirt||'#3d7391',child=!!opts.child;
@@ -2210,7 +2225,7 @@ function drawTractorAt(cx,cy,scale,opts={}){
     tctx.globalAlpha=bodyAlpha;path([[-200,20],[-180,-18],[-120,-34],[-84,-82],[-56,-148],[62,-148],[98,-94],[110,-36],[170,-26],[206,12],[192,52],[-183,57]]);const g=tctx.createLinearGradient(-190,-145,205,55);g.addColorStop(0,light);g.addColorStop(.38,paint);g.addColorStop(.76,dark);g.addColorStop(1,paint);tctx.fillStyle=g;tctx.fill();tctx.strokeStyle='rgba(232,247,251,.76)';tctx.lineWidth=2;tctx.stroke();
     /* long engine bonnet */ tctx.fillStyle=vehicleShade(paint,-18);tctx.fillRect(-191,-18,96,54);tctx.strokeStyle='rgba(20,39,46,.48)';tctx.strokeRect(-191,-18,96,54);
     /* transparent cab */ const glass=[[[-70,-80],[-48,-133],[-4,-133],[-4,-78]],[[8,-133],[51,-133],[82,-88],[82,-78],[8,-78]]];tctx.globalAlpha=glassAlpha;glass.forEach(sh=>{path(sh);const gg=tctx.createLinearGradient(sh[0][0],sh[0][1],sh[2][0],sh[2][1]);gg.addColorStop(0,'rgba(181,234,249,.66)');gg.addColorStop(.5,'rgba(58,111,133,.62)');gg.addColorStop(1,'rgba(15,49,67,.80)');tctx.fillStyle=gg;tctx.fill();tctx.strokeStyle='rgba(224,248,255,.72)';tctx.stroke();});tctx.globalAlpha=bodyAlpha;
-    if(driver){tctx.save();tctx.globalAlpha=Math.min(1,glassAlpha+.15);drawTractorDriver(23,-78,.86);tctx.restore();}
+    if(driver){tctx.save();tctx.globalAlpha=Math.min(1,glassAlpha+.15);drawTractorDriver(-28,-82,.88);tctx.restore();}
     /* exhaust / intake */tctx.fillStyle='#26343b';tctx.fillRect(-105,-101,10,77);tctx.fillRect(-112,-108,24,9);
     /* hitch + PTO + hydraulics */tctx.strokeStyle='#41515a';tctx.lineWidth=6;tctx.beginPath();tctx.moveTo(175,28);tctx.lineTo(213,44);tctx.moveTo(175,28);tctx.lineTo(210,8);tctx.stroke();tctx.fillStyle='#adbcc4';tctx.beginPath();tctx.arc(205,26,7,0,Math.PI*2);tctx.fill();
     if(smart){tctx.fillStyle='#eafcff';tctx.beginPath();tctx.arc(22,-159,8,0,Math.PI*2);tctx.fill();tctx.strokeStyle='#7beeff';tctx.lineWidth=2;tctx.beginPath();tctx.arc(22,-159,15,0,Math.PI*2);tctx.stroke();tctx.fillStyle='#1d313d';tctx.fillRect(55,-149,30,12);}
@@ -2234,41 +2249,138 @@ function drawFarmHud(task,progress,metric1,metric2){
 function drawTractorFarmWorld(){
   const p=clamp(vehiclePhase3Progress,0,1);tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.globalAlpha=1;tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);
   let seg=0,local=0,kind='',task='',m1='',m2='';
-  if(p<.12){seg=0;local=p/.12;kind='';task=t('Farm systems start-up','Démarrage des systèmes agricoles');m1=t('Hydraulics: READY','Hydraulique : PRÊT');m2=t('PTO: READY · Driver: READY','PTO : PRÊTE · Conducteur : PRÊT');}
-  else if(p<.29){seg=1;local=(p-.12)/.17;kind='mower';task=t('Job 1 · Mow & clear','Tâche 1 · Faucher et dégager');m1=t(`Field coverage: ${Math.round(local*100)}%`,`Couverture : ${Math.round(local*100)}%`);m2=t('PTO mower speed: stable','Vitesse de faucheuse PTO : stable');}
-  else if(p<.47){seg=2;local=(p-.29)/.18;kind='plough';task=t('Job 2 · Prepare soil','Tâche 2 · Préparer le sol');m1=t(`Furrows prepared: ${Math.round(local*12)}/12`,`Sillons préparés : ${Math.round(local*12)}/12`);m2=t('Hydraulic depth control: active','Contrôle hydraulique de profondeur : actif');}
+  if(p<.12){seg=0;local=p/.12;kind='';task=t('Farm systems start-up','Démarrage des systèmes agricoles');m1=t('Hydraulics: READY','Hydraulique : PRÊT');m2=t('PTO: READY · Driver: SEATED & READY','PTO : PRÊTE · Conducteur : ASSIS ET PRÊT');}
+  else if(p<.29){seg=1;local=(p-.12)/.17;kind='mower';task=t('Job 1 · Mow & clear','Tâche 1 · Faucher et dégager');m1=t(`Field coverage: ${Math.round(local*100)}%`,`Couverture : ${Math.round(local*100)}%`);m2=t('Grass is being cut behind the mower','L’herbe est coupée derrière la faucheuse');}
+  else if(p<.47){seg=2;local=(p-.29)/.18;kind='plough';task=t('Job 2 · Prepare soil','Tâche 2 · Préparer le sol');m1=t(`Furrows prepared: ${Math.round(local*12)}/12`,`Sillons préparés : ${Math.round(local*12)}/12`);m2=t('Soil is turning behind the plough','Le sol se retourne derrière la charrue');}
   else if(p<.64){seg=3;local=(p-.47)/.17;kind='seeder';task=t('Job 3 · Precision planting','Tâche 3 · Semis de précision');m1=t(`Seed rows: ${Math.round(local*12)}/12`,`Rangs semés : ${Math.round(local*12)}/12`);m2=t('Seed spacing: 18 cm · GPS locked','Espacement : 18 cm · GPS verrouillé');}
-  else if(p<.82){seg=4;local=(p-.64)/.18;kind='irrigator';task=t('Job 4 · Precision irrigation','Tâche 4 · Irrigation de précision');m1=t(`Soil moisture: ${31+Math.round(local*27)}%`,`Humidité du sol : ${31+Math.round(local*27)}%`);m2=t('Water use: optimised','Utilisation de l’eau : optimisée');}
-  else{seg=5;local=(p-.82)/.18;kind='loader';task=t('Job 5 · Move & level material','Tâche 5 · Déplacer et niveler');m1=t(`Level zone: ${Math.round(local*100)}%`,`Zone nivelée : ${Math.round(local*100)}%`);m2=t('Loader hydraulics: stable','Hydraulique du chargeur : stable');}
-  drawFarmFieldBase(t('MULTI-PURPOSE FARM MISSION','MISSION AGRICOLE MULTIFONCTION'),t('One tractor · many implements · one connected farm','Un tracteur · de nombreux outils · une ferme connectée'));
-  /* field transformation layers */
-  if(seg>=1){tctx.fillStyle='#6eaa52';tctx.fillRect(0,295,800,155);for(let x=20;x<800;x+=22){tctx.strokeStyle='rgba(238,245,200,.45)';tctx.beginPath();tctx.moveTo(x,295);tctx.lineTo(x,450);tctx.stroke();}}
-  if(seg>=2){tctx.fillStyle='#8b6138';tctx.fillRect(0,315,800,135);for(let y=327;y<450;y+=13){tctx.strokeStyle='rgba(61,40,26,.42)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}}
-  if(seg>=3){for(let y=330;y<445;y+=19){for(let x=24;x<790;x+=32){tctx.fillStyle='#d4bf64';tctx.beginPath();tctx.arc(x,y,2.2,0,Math.PI*2);tctx.fill();}}}
-  if(seg>=4){for(let y=330;y<445;y+=19){for(let x=24;x<790;x+=32){tctx.fillStyle='#4d9e4e';tctx.fillRect(x-2,y-8,4,10);}}}
-  if(seg===5){tctx.fillStyle='#73523a';tctx.beginPath();tctx.arc(650,345,45,Math.PI,Math.PI*2);tctx.fill();tctx.fillStyle='#9a7653';tctx.fillRect(545,390,200,22);}
-  /* family helpers: adult pair + boy + girl */drawFarmPerson(78,286,1,{shirt:'#365e80'});drawFarmPerson(112,287,1,{skin:'#d29a76',shirt:'#8a5d6a'});drawFarmPerson(145,294,.92,{child:true,shirt:'#d19943'});drawFarmPerson(171,294,.92,{skin:'#c5835e',child:true,shirt:'#6c5b99'});
-  const moving=seg>0,tx=moving?255+330*local:390,ty=323,spin=moving?local*12:0;drawTractorAt(tx,ty,.60,{paint:vehiclePaintColor,glow:.30,wheelSpin:spin,faceRight:true,implement:kind,smart:true,driver:true});
-  if(kind==='irrigator'){tctx.save();tctx.strokeStyle='rgba(107,216,255,.55)';tctx.lineWidth=2;for(let i=0;i<14;i++){const x=tx-95+i*14;tctx.beginPath();tctx.moveTo(x,280);tctx.lineTo(x+8,334);tctx.stroke();}tctx.restore();}
-  if(seg===5){/* bucket visibly moves soil */tctx.fillStyle='rgba(120,82,49,.65)';for(let i=0;i<9;i++){tctx.beginPath();tctx.arc(tx+120+i*5,335-(i%3)*5,5,0,Math.PI*2);tctx.fill();}}
+  else if(p<.82){seg=4;local=(p-.64)/.18;kind='irrigator';task=t('Job 4 · Precision irrigation','Tâche 4 · Irrigation de précision');m1=t(`Soil moisture: ${31+Math.round(local*27)}%`,`Humidité du sol : ${31+Math.round(local*27)}%`);m2=t('Visible spray is wetting the crop rows','Le jet visible arrose les rangs de cultures');}
+  else{seg=5;local=(p-.82)/.18;kind='loader';task=t('Job 5 · Move & level material','Tâche 5 · Déplacer et niveler');m1=t(`Level zone: ${Math.round(local*100)}%`,`Zone nivelée : ${Math.round(local*100)}%`);m2=t('Loader is moving soil into a level surface','Le chargeur déplace le sol pour niveler la surface');}
+  drawFarmFieldBase(t('MULTI-PURPOSE FARM MISSION','MISSION AGRICOLE MULTIFONCTION'),t('Watch the implement change the land — not just the background','Observe l’outil transformer réellement le terrain'));
+
+  const faceRight=seg===0?true:(seg%2===1);
+  const tx=seg===0?395:(faceRight?220+360*local:580-360*local),ty=323;
+  const processedEdge=faceRight?Math.max(0,tx-70):Math.min(800,tx+70);
+  const behindX=faceRight?0:processedEdge,behindW=faceRight?processedEdge:800-processedEdge;
+
+  /* FARM TEAM: deliberately spread across the scene instead of posing in one cluster. */
+  drawFarmPerson(72,286,1,{skin:'#d29a76',shirt:'#8a5d6a'});               // woman
+  drawFarmPerson(118,296,.92,{child:true,shirt:'#d19943'});               // boy
+  drawFarmPerson(708,286,1,{shirt:'#365e80'});                            // man
+  drawFarmPerson(645,302,.92,{skin:'#c5835e',child:true,shirt:'#6c5b99'});// girl
+
+  /* Draw task-specific BEFORE -> WORKING -> AFTER evidence. */
+  if(seg===0){
+    tctx.fillStyle='#6fa94e';tctx.fillRect(0,300,800,150);
+    for(let x=8;x<800;x+=13){tctx.strokeStyle='rgba(58,112,49,.72)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x,448);tctx.lineTo(x+3,405-(x%31));tctx.stroke();}
+  }
+  if(seg===1){
+    /* Tall grass ahead, short stubble behind the moving mower. */
+    tctx.fillStyle='#78ad4f';tctx.fillRect(0,300,800,150);
+    for(let x=8;x<800;x+=11){const ahead=faceRight?x>processedEdge:x<processedEdge;tctx.strokeStyle=ahead?'rgba(51,110,42,.90)':'rgba(111,151,67,.78)';tctx.lineWidth=ahead?2.4:1.5;tctx.beginPath();tctx.moveTo(x,447);tctx.lineTo(x+(x%3),ahead?401-(x%27):434-(x%7));tctx.stroke();}
+    /* cut-grass clippings leaving the mower */
+    const rear=tx+(faceRight?-112:112);for(let i=0;i<26;i++){const a=i*.77+local*9,rr=9+(i%7)*4;tctx.fillStyle=`rgba(194,207,91,${.35+(i%4)*.10})`;tctx.fillRect(rear+Math.cos(a)*rr,343+Math.sin(a)*10,4,2);}
+  }
+  if(seg===2){
+    tctx.fillStyle='#7fa958';tctx.fillRect(0,300,800,150);
+    tctx.fillStyle='#8b6138';tctx.fillRect(behindX,300,behindW,150);
+    tctx.save();tctx.beginPath();tctx.rect(behindX,300,behindW,150);tctx.clip();for(let y=315;y<450;y+=14){tctx.strokeStyle='rgba(61,40,26,.50)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}tctx.restore();
+    /* soil chunks physically thrown by the plough */
+    const rear=tx+(faceRight?-135:135);for(let i=0;i<30;i++){const q=(i*17)%37;tctx.fillStyle=i%2?'rgba(94,58,34,.82)':'rgba(136,88,47,.78)';tctx.beginPath();tctx.arc(rear+(faceRight?-1:1)*(8+q),329-((i*11)%28),2+(i%4),0,Math.PI*2);tctx.fill();}
+  }
+  if(seg===3){
+    tctx.fillStyle='#8b6138';tctx.fillRect(0,300,800,150);
+    /* GPS row guides */
+    for(let y=318;y<447;y+=20){tctx.strokeStyle='rgba(111,225,255,.18)';tctx.lineWidth=1;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}
+    /* Seeds only appear on the land already passed by the planter. */
+    tctx.save();tctx.beginPath();tctx.rect(behindX,300,behindW,150);tctx.clip();for(let y=322;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.fillStyle='#e1c96b';tctx.beginPath();tctx.arc(x,y,2.4,0,Math.PI*2);tctx.fill();}}tctx.restore();
+    const rear=tx+(faceRight?-125:125);for(let i=0;i<10;i++){tctx.fillStyle='rgba(228,204,102,.85)';tctx.beginPath();tctx.arc(rear+(faceRight?-i*5:i*5),335+(i%3)*7,2.2,0,Math.PI*2);tctx.fill();}
+  }
+  if(seg===4){
+    tctx.fillStyle='#8a633d';tctx.fillRect(0,300,800,150);
+    for(let y=320;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.fillStyle='#4d9e4e';tctx.fillRect(x-2,y-9,4,11);}}
+    /* Wet soil appears only after the irrigator has passed. */
+    tctx.fillStyle='rgba(48,103,109,.28)';tctx.fillRect(behindX,300,behindW,150);
+    /* real water fan behind the tanker boom */
+    const rear=tx+(faceRight?-112:112);for(let i=0;i<32;i++){const spread=(i-16)*5;tctx.strokeStyle=`rgba(102,214,255,${.32+(i%5)*.08})`;tctx.lineWidth=1.6;tctx.beginPath();tctx.moveTo(rear,291);tctx.quadraticCurveTo(rear+(faceRight?-35:35),307,rear+(faceRight?-75:75),338+spread*.18);tctx.stroke();tctx.fillStyle='rgba(131,225,255,.58)';tctx.beginPath();tctx.arc(rear+(faceRight?-70:70),340+spread*.18,2,0,Math.PI*2);tctx.fill();}
+  }
+  if(seg===5){
+    tctx.fillStyle='#8a6545';tctx.fillRect(0,300,800,150);
+    const pileX=faceRight?650:150,pileR=48*(1-local*.72);tctx.fillStyle='#6d4b32';tctx.beginPath();tctx.ellipse(pileX,372,pileR,24+pileR*.35,0,Math.PI,Math.PI*2);tctx.fill();
+    /* smooth level surface grows as the loader works */
+    tctx.fillStyle='#a47c58';if(faceRight)tctx.fillRect(220,394,Math.max(0,360*local),24);else tctx.fillRect(580-360*local,394,Math.max(0,360*local),24);
+    const front=tx+(faceRight?132:-132);for(let i=0;i<18;i++){tctx.fillStyle='rgba(116,77,45,.70)';tctx.beginPath();tctx.arc(front+(i%6)*4*(faceRight?1:-1),343-(i%5)*4,3+(i%3),0,Math.PI*2);tctx.fill();}
+  }
+
+  /* visible tyre tracks stay on the soil while the tractor is working */
+  if(seg>=2){tctx.save();tctx.globalAlpha=.22;tctx.strokeStyle='#2d2722';tctx.lineWidth=3;tctx.setLineDash([9,7]);tctx.beginPath();tctx.moveTo(behindX,386);tctx.lineTo(behindX+behindW,386);tctx.moveTo(behindX,407);tctx.lineTo(behindX+behindW,407);tctx.stroke();tctx.setLineDash([]);tctx.restore();}
+
+  const spin=seg===0?0:(faceRight?local*13:-local*13);
+  drawTractorAt(tx,ty,.60,{paint:vehiclePaintColor,glow:.30,wheelSpin:spin,faceRight,implement:kind,smart:true,driver:true});
   drawFarmHud(task,local,m1,m2);tctx.restore();
 }
 function drawTractorPrecisionFinale(){
-  const p=clamp(vehiclePhase4Progress,0,1),W=templateCanvas.width,H=templateCanvas.height;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);const g=tctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#17394a');g.addColorStop(1,'#0d242e');tctx.fillStyle=g;tctx.fillRect(0,0,W,H);
-  /* top-down precision field */tctx.fillStyle='#426f3e';tctx.fillRect(55,95,690,330);for(let i=0;i<12;i++){const x=82+i*54;tctx.strokeStyle=i%2?'rgba(140,213,109,.48)':'rgba(184,229,126,.48)';tctx.lineWidth=8;tctx.beginPath();tctx.moveTo(x,112);tctx.lineTo(x,407);tctx.stroke();}
-  /* planned autonomous route */tctx.save();tctx.setLineDash([9,7]);tctx.strokeStyle='rgba(95,232,255,.85)';tctx.lineWidth=3;tctx.beginPath();for(let i=0;i<10;i++){const x=100+i*58,y1=i%2?390:130,y2=i%2?130:390;if(i===0)tctx.moveTo(x,y1);else tctx.lineTo(x,y1);tctx.lineTo(x,y2);}tctx.stroke();tctx.restore();
-  const row=Math.min(9,Math.floor(p*10)),rowP=(p*10)%1,x=100+row*58,y=row%2?(390-260*rowP):(130+260*rowP),faceRight=row%2===0;drawTractorAt(x,y,.28,{paint:vehiclePaintColor,glow:.58,wheelSpin:p*34,faceRight,smart:true,driver:true});
-  /* farm drone scanning */const dx=170+430*p,dy=72+18*Math.sin(p*Math.PI*4);tctx.save();tctx.translate(dx,dy);tctx.strokeStyle='#ddfbff';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-18,0);tctx.lineTo(18,0);tctx.moveTo(0,-18);tctx.lineTo(0,18);tctx.stroke();tctx.strokeStyle='rgba(91,232,255,.30)';tctx.beginPath();tctx.moveTo(0,12);tctx.lineTo(-40,86);tctx.lineTo(40,86);tctx.closePath();tctx.stroke();tctx.restore();
-  drawRoundedPanel(18,16,322,62,15,'rgba(4,20,29,.84)','rgba(147,232,255,.24)');tctx.fillStyle='#f0fbff';tctx.font='900 15px system-ui';tctx.textAlign='left';tctx.fillText(t('AUTONOMOUS PRECISION MODE','MODE DE PRÉCISION AUTONOME'),32,40);tctx.fillStyle='#aeeeff';tctx.font='700 11px system-ui';tctx.fillText(t('GPS route + crop scan + soil map + drone coordination','Itinéraire GPS + scan cultures + carte du sol + coordination drone'),32,61);
-  drawRoundedPanel(552,16,230,108,15,'rgba(4,20,29,.84)','rgba(147,232,255,.24)');tctx.fillStyle='#eaf9ff';tctx.font='800 11px system-ui';const metrics=[t('Route accuracy: 98%','Précision itinéraire : 98 %'),t(`Rows scanned: ${Math.min(12,Math.floor(p*13))}/12`,`Rangs scannés : ${Math.min(12,Math.floor(p*13))}/12`),t(`Soil zones: ${Math.min(6,Math.floor(p*7))}/6`,`Zones de sol : ${Math.min(6,Math.floor(p*7))}/6`),t('Water use: OPTIMISED','Utilisation de l’eau : OPTIMISÉE')];metrics.forEach((m,i)=>tctx.fillText(m,567,40+i*19));tctx.restore();
+  const p=clamp(vehiclePhase4Progress,0,1),W=templateCanvas.width,H=templateCanvas.height;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);
+  const sky=tctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#163b50');sky.addColorStop(.52,'#6ca5a5');sky.addColorStop(1,'#304d36');tctx.fillStyle=sky;tctx.fillRect(0,0,W,H);
+  /* smart-farm field with visible crop rows */
+  tctx.fillStyle='#416f3e';tctx.fillRect(0,238,W,212);for(let y=265;y<448;y+=25){tctx.strokeStyle='rgba(172,221,117,.50)';tctx.lineWidth=8;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(W,y);tctx.stroke();}
+  tctx.fillStyle='#244d36';tctx.fillRect(0,233,W,9);
+
+  let stageLabel='',stageExplain='',tractorX=205,tractorY=340,faceRight=true,wheelSpin=0,implement='',droneX=220,droneY=190,scan=false,dryAlpha=0,stressAlpha=0,moisture=24;
+  if(p<.12){
+    const q=p/.12;stageLabel=t('1 · DRONE LAUNCH','1 · LANCEMENT DU DRONE');stageExplain=t('The farm drone is taking off to inspect crop and soil conditions.','Le drone agricole décolle pour inspecter les cultures et le sol.');
+    droneX=230+70*q;droneY=280-165*q;tractorX=205;wheelSpin=0;
+  }else if(p<.34){
+    const q=(p-.12)/.22;stageLabel=t('2 · FIELD SCAN IN PROGRESS','2 · ANALYSE DU CHAMP EN COURS');stageExplain=t('Cameras and sensors are checking moisture, crop colour and weak-growth zones.','Les caméras et capteurs vérifient l’humidité, la couleur des cultures et les zones de faible croissance.');
+    droneX=300+390*q;droneY=108+18*Math.sin(q*Math.PI*3);scan=true;tractorX=205;
+  }else if(p<.43){
+    const q=(p-.34)/.09;stageLabel=t('3 · DRY ZONE DETECTED','3 · ZONE SÈCHE DÉTECTÉE');stageExplain=t('The drone has marked a low-moisture area and sent its coordinates to the tractor.','Le drone a marqué une zone peu humide et envoyé ses coordonnées au tracteur.');
+    droneX=665;droneY=115;scan=true;dryAlpha=.45+.45*Math.sin(q*Math.PI*4);tractorX=205;
+  }else if(p<.61){
+    const q=(p-.43)/.18,e=1-Math.pow(1-q,3);stageLabel=t('4 · TRACTOR MOVING TO TARGET','4 · TRACTEUR EN ROUTE VERS LA CIBLE');stageExplain=t('GPS guidance is taking the tractor smoothly to the dry zone.','Le guidage GPS conduit doucement le tracteur vers la zone sèche.');
+    tractorX=205+(565-205)*e;faceRight=true;wheelSpin=q*15;droneX=665;droneY=115;dryAlpha=.72;
+    tctx.save();tctx.setLineDash([8,7]);tctx.strokeStyle='rgba(86,232,255,.85)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(230,373);tctx.lineTo(565,373);tctx.stroke();tctx.setLineDash([]);tctx.restore();
+  }else if(p<.74){
+    const q=(p-.61)/.13;stageLabel=t('5 · IRRIGATING DRY ZONE','5 · IRRIGATION DE LA ZONE SÈCHE');stageExplain=t('The tractor applies water only where the drone found low moisture.','Le tracteur apporte de l’eau uniquement là où le drone a détecté un manque d’humidité.');
+    tractorX=565;implement='irrigator';droneX=665;droneY=115;dryAlpha=.72*(1-q);moisture=24+Math.round(q*39);
+    /* targeted visible irrigation spray */
+    for(let i=0;i<34;i++){const xx=430+(i%17)*8,yy=323+(i%5)*7;tctx.strokeStyle=`rgba(107,220,255,${.30+(i%4)*.10})`;tctx.lineWidth=1.7;tctx.beginPath();tctx.moveTo(482+(i%5)*7,286);tctx.quadraticCurveTo(xx,300,xx,yy);tctx.stroke();}
+  }else if(p<.82){
+    const q=(p-.74)/.08;stageLabel=t('6 · SECOND SCAN — CROP STRESS','6 · DEUXIÈME ANALYSE — STRESS DES CULTURES');stageExplain=t('The drone finds a second area with weak crop growth after the dry zone is treated.','Le drone détecte une deuxième zone de faible croissance après le traitement de la zone sèche.');
+    tractorX=565;droneX=650-270*q;droneY=112+12*Math.sin(q*Math.PI*3);scan=true;stressAlpha=.38+.40*Math.sin(q*Math.PI*4);moisture=63;
+  }else if(p<.94){
+    const q=(p-.82)/.12,e=q*q*(3-2*q);stageLabel=t('7 · MOVING TO CROP-STRESS ZONE','7 · DÉPLACEMENT VERS LA ZONE DE CULTURES FAIBLES');stageExplain=t('The tractor turns and follows the new coordinates sent by the drone.','Le tracteur tourne et suit les nouvelles coordonnées envoyées par le drone.');
+    tractorX=565-(565-350)*e;faceRight=false;wheelSpin=-q*12;droneX=380;droneY=112;stressAlpha=.72;moisture=63;
+    tctx.save();tctx.setLineDash([8,7]);tctx.strokeStyle='rgba(86,232,255,.85)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(565,373);tctx.lineTo(350,373);tctx.stroke();tctx.setLineDash([]);tctx.restore();
+  }else{
+    const q=(p-.94)/.06;stageLabel=t('8 · TARGETED CROP SUPPORT','8 · TRAITEMENT CIBLÉ DES CULTURES');stageExplain=t('A precise nutrient mist is applied only to the weak-growth zone.','Une brume nutritive précise est appliquée uniquement sur la zone de faible croissance.');
+    tractorX=350;faceRight=false;implement='irrigator';droneX=380;droneY=112;stressAlpha=.72*(1-q);moisture=63;
+    for(let i=0;i<25;i++){const xx=415+(i%13)*6,yy=326+(i%5)*6;tctx.fillStyle=`rgba(193,236,125,${.35+(i%4)*.12})`;tctx.beginPath();tctx.arc(xx,yy,2+(i%2),0,Math.PI*2);tctx.fill();}
+  }
+
+  /* marked problem zones */
+  if(dryAlpha>0){tctx.save();tctx.globalAlpha=dryAlpha;tctx.fillStyle='rgba(241,159,62,.50)';tctx.fillRect(520,292,145,92);tctx.strokeStyle='#ffd07d';tctx.lineWidth=3;tctx.strokeRect(520,292,145,92);tctx.fillStyle='#fff0cf';tctx.font='900 11px system-ui';tctx.textAlign='center';tctx.fillText(t('DRY ZONE','ZONE SÈCHE'),592,312);tctx.restore();}
+  if(stressAlpha>0){tctx.save();tctx.globalAlpha=stressAlpha;tctx.fillStyle='rgba(219,188,74,.42)';tctx.fillRect(280,315,138,82);tctx.strokeStyle='#f7e47d';tctx.lineWidth=3;tctx.strokeRect(280,315,138,82);tctx.fillStyle='#fff6bd';tctx.font='900 11px system-ui';tctx.textAlign='center';tctx.fillText(t('CROP STRESS','CULTURE FAIBLE'),349,334);tctx.restore();}
+
+  /* drone + scanning cone */
+  tctx.save();tctx.translate(droneX,droneY);tctx.strokeStyle='#e5fbff';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-20,0);tctx.lineTo(20,0);tctx.moveTo(0,-20);tctx.lineTo(0,20);tctx.stroke();for(const [rx,ry] of [[-22,-6],[22,-6],[-22,6],[22,6]]){tctx.beginPath();tctx.arc(rx,ry,6,0,Math.PI*2);tctx.stroke();}
+  if(scan){tctx.strokeStyle='rgba(91,232,255,.42)';tctx.fillStyle='rgba(91,232,255,.08)';tctx.beginPath();tctx.moveTo(0,14);tctx.lineTo(-70,154);tctx.lineTo(70,154);tctx.closePath();tctx.fill();tctx.stroke();for(let yy=46;yy<145;yy+=22){tctx.strokeStyle='rgba(115,238,255,.24)';tctx.beginPath();tctx.moveTo(-yy*.38,yy);tctx.lineTo(yy*.38,yy);tctx.stroke();}}
+  tctx.restore();
+
+  drawTractorAt(tractorX,tractorY,.48,{paint:vehiclePaintColor,glow:.50,wheelSpin,faceRight,smart:true,driver:true,implement});
+
+  /* explanatory labels so the child knows WHY each technology is being used. */
+  drawRoundedPanel(18,16,500,78,15,'rgba(4,20,29,.88)','rgba(147,232,255,.28)');tctx.fillStyle='#f0fbff';tctx.font='900 15px system-ui';tctx.textAlign='left';tctx.fillText(stageLabel,32,40);tctx.fillStyle='#c9f3ff';tctx.font='700 11px system-ui';const lines=stageExplain.length>82?[stageExplain.slice(0,82),stageExplain.slice(82)]:[stageExplain];lines.forEach((line,i)=>tctx.fillText(line,32,61+i*15));
+  drawRoundedPanel(548,16,234,118,15,'rgba(4,20,29,.88)','rgba(147,232,255,.26)');tctx.fillStyle='#eaf9ff';tctx.font='800 11px system-ui';const metrics=[t('Drone link: CONNECTED','Liaison drone : CONNECTÉE'),t(`Soil moisture: ${moisture}%`,`Humidité du sol : ${moisture} %`),t('GPS accuracy: 2.5 cm','Précision GPS : 2,5 cm'),p>.61?t('Response: TARGETED','Réponse : CIBLÉE'):t('Response: WAITING','Réponse : EN ATTENTE')];metrics.forEach((m,i)=>tctx.fillText(m,563,40+i*20));
+  tctx.restore();
 }
 function drawTractorCelebration(){
   const W=templateCanvas.width,H=templateCanvas.height,p=vehicleRevealStage==='phase5'?clamp(vehiclePhase5Progress,0,1):1;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);const sky=tctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#e18b55');sky.addColorStop(.42,'#8d6570');sky.addColorStop(1,'#1d3440');tctx.fillStyle=sky;tctx.fillRect(0,0,W,H);tctx.fillStyle='rgba(255,222,150,.9)';tctx.beginPath();tctx.arc(650,102,38,0,Math.PI*2);tctx.fill();tctx.fillStyle='#527348';tctx.fillRect(0,260,W,H-260);for(let y=302;y<440;y+=20){tctx.strokeStyle='rgba(36,62,32,.52)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(W,y);tctx.stroke();}
-  const arrive=clamp(p/.42,0,1),settle=1-Math.pow(1-arrive,3);drawTractorAt(410+(1-settle)*230,330-(1-settle)*20,.70,{paint:vehiclePaintColor,glow:.56,wheelSpin:p<.42?-p*8:0,faceRight:true,smart:true,driver:true});drawFarmPerson(110,327,1,{shirt:'#315e7d'});drawFarmPerson(145,327,1,{skin:'#d39a76',shirt:'#8a5d6a'});drawFarmPerson(177,333,.9,{child:true,shirt:'#d19943'});drawFarmPerson(202,333,.9,{skin:'#c5835e',child:true,shirt:'#6c5b99'});
+  const arrive=clamp(p/.42,0,1),settle=1-Math.pow(1-arrive,3);drawTractorAt(410+(1-settle)*230,330-(1-settle)*20,.70,{paint:vehiclePaintColor,glow:.56,wheelSpin:p<.42?-p*8:0,faceRight:true,smart:true,driver:true});
+  /* The farm team remains naturally spread out in the final wide shot. */
+  drawFarmPerson(78,327,1,{skin:'#d39a76',shirt:'#8a5d6a'});drawFarmPerson(123,336,.9,{child:true,shirt:'#d19943'});drawFarmPerson(704,325,1,{shirt:'#315e7d'});drawFarmPerson(655,338,.9,{skin:'#c5835e',child:true,shirt:'#6c5b99'});
   const a=clamp((p-.28)/.28,0,1);tctx.globalAlpha=a;tctx.textAlign='center';tctx.fillStyle='#fff7ec';tctx.font='900 24px system-ui';tctx.fillText(t('PRECISION FARM MISSION COMPLETE','MISSION AGRICOLE DE PRÉCISION TERMINÉE'),400,52);tctx.fillStyle='rgba(222,248,255,.95)';tctx.font='800 13px system-ui';tctx.fillText(t('Precision Agriculture Engineer','Ingénieur en agriculture de précision'),400,77);tctx.globalAlpha=1;
-  const r=clamp((p-.52)/.28,0,1);tctx.globalAlpha=r;drawRoundedPanel(96,94,608,56,15,'rgba(8,28,34,.72)','rgba(205,246,255,.20)');tctx.fillStyle='#e7fbff';tctx.font='800 11px system-ui';tctx.fillText(t('Mowed ✓  Soil prepared ✓  Seeds planted ✓  Irrigated ✓  Land levelled ✓  Smart systems passed ✓','Fauchage ✓  Sol préparé ✓  Semis ✓  Irrigation ✓  Nivellement ✓  Systèmes intelligents ✓'),400,127);tctx.globalAlpha=1;tctx.restore();
+  const r=clamp((p-.52)/.28,0,1);tctx.globalAlpha=r;drawRoundedPanel(96,94,608,70,15,'rgba(8,28,34,.72)','rgba(205,246,255,.20)');tctx.fillStyle='#e7fbff';tctx.font='800 11px system-ui';tctx.fillText(t('Mowed ✓  Soil prepared ✓  Seeds planted ✓  Irrigated ✓  Land levelled ✓','Fauchage ✓  Sol préparé ✓  Semis ✓  Irrigation ✓  Nivellement ✓'),400,122);tctx.fillText(t('Drone scan ✓  Dry zone treated ✓  Crop-stress zone treated ✓','Scan drone ✓  Zone sèche traitée ✓  Zone de cultures faibles traitée ✓'),400,143);tctx.globalAlpha=1;tctx.restore();
 }
-
 function drawCanonicalFinishedVehicle(){
   if(vehicleIs('tractor')){drawTractorFinishedVehicleReveal();return;}
   if(vehicleIs('suv')){drawSUVFinishedVehicleReveal();return;}
@@ -3236,7 +3348,7 @@ function startVehiclePhaseThreeWorld(){
       :`<div class="creator-report"><div><b>${t('Future Test World','Monde de test du futur')}</b><p>${t('Your finished car is entering a living world with roads, useful places and a special zone for its future ability.','Ta voiture finie entre dans un monde vivant avec routes, lieux utiles et une zone spéciale pour sa capacité future.')}</p></div></div>`;
   showVehicleStageNotice(isTractor?t('Precision farm mission','Mission agricole de précision'):isCoach?t('Intercity journey','Trajet interurbain'):isVan?t('Passenger & cargo test','Test passagers et chargement'):t('Entering Test World','Entrée dans le Monde de test'),isTractor?t('Five real farm jobs, visible driver and connected smart systems.','Cinq vrais travaux agricoles, conducteur visible et systèmes intelligents connectés.'):isCoach?t('Boarding, luggage, highway travel and a scheduled stopover.','Embarquement, bagages, trajet routier et arrêt intermédiaire.'):isVan?t('Passengers first, then cargo loading and delivery.','D’abord les passagers, puis le chargement et la livraison.'):t('Road test first, then your special vehicle ability.','D’abord le test routier, puis la capacité spéciale du véhicule.'),{duration:3500});
   $('creatorCoach').textContent=isTractor?t('Watch the driver and farm team work through mowing, soil preparation, planting, irrigation and levelling. Each implement has a real job.','Observe le conducteur et l’équipe agricole réaliser la fauche, la préparation du sol, le semis, l’irrigation et le nivellement. Chaque outil a un vrai rôle.'):isCoach?t('Follow the route display, boarding process, luggage loading, stopover and final-city journey.','Suis l’affichage d’itinéraire, l’embarquement, les bagages, l’arrêt intermédiaire et le trajet vers la ville finale.'):isVan?t('Watch how the van transports people, uses its rear cargo doors and completes a delivery route.','Observe comment le van transporte des personnes, utilise ses portes arrière et effectue une livraison.'):t('Watch the finished car drive through the town, pass the service area and use its future ability in the last zone.','Regarde la voiture finie traverser la ville, passer par la zone de service et utiliser sa capacité future dans la dernière zone.');
-  const duration=isTractor?27000:isCoach?18000:isVan?15600:12800;
+  const duration=isTractor?34000:isCoach?18000:isVan?15600:12800;
   const tick=()=>{
     if(!testRunning||!vehicleRevealActive){if(vehiclePhase3Timer)clearInterval(vehiclePhase3Timer);vehiclePhase3Timer=0;return}
     vehiclePhase3Progress=clamp((Date.now()-vehiclePhase3Start)/duration,0,1);
@@ -3348,7 +3460,7 @@ function startVehiclePhaseFourJourney(){
   stage.classList.remove('blueprints-off');
   vehicleRevealStage='phase4';vehiclePhase4Progress=0;vehiclePhase4Start=Date.now();
   const continuity=vehicleIs('tractor')
-    ?t('The tractor is now using GPS guidance, crop cameras, soil sensing and a farm drone to work the field autonomously with precise row spacing and optimised resource use.','Le tracteur utilise maintenant le guidage GPS, les caméras de cultures, les capteurs du sol et un drone agricole pour travailler le champ de façon autonome avec des rangs précis et une utilisation optimisée des ressources.')
+    ?t('The drone now scans the field, identifies real problem zones and sends coordinates to the tractor. The tractor then drives smoothly to each target and performs the correct treatment.','Le drone analyse maintenant le champ, identifie de vraies zones à problème et envoie leurs coordonnées au tracteur. Le tracteur se rend ensuite doucement vers chaque cible et applique le traitement adapté.')
     :vehicleIs('coach')
     ?(vehicleFutureAbility==='flight'
       ?t('A route disruption has triggered the coach’s aerial bypass. Passenger safety, power and Future Tech are checked before the coach rejoins the motorway and reaches the final terminal.','Une coupure d’itinéraire déclenche la déviation aérienne de l’autocar. La sécurité passagers, l’énergie et la technologie future sont vérifiées avant le retour sur la route et l’arrivée au terminal final.')
@@ -3360,9 +3472,9 @@ function startVehiclePhaseFourJourney(){
       :vehicleFutureAbility==='flight'
         ?t('The car is already airborne. The test continues the flight, checks Movement, Power and Safety, then returns and lands.','La voiture est déjà en vol. Le test poursuit le vol, vérifie Mouvement, Énergie et Sécurité, puis revient et atterrit.')
         :t('The car is already in open water. The test continues across the water, checks Movement, Power and Safety, then returns to shore and deploys the wheels.','La voiture est déjà en eau libre. Le test poursuit le trajet aquatique, vérifie Mouvement, Énergie et Sécurité, puis revient sur la rive et redéploie les roues.');
-  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${vehicleIs('tractor')?t('Precision Agriculture Test','Test d’agriculture de précision'):t('Full Systems Test','Test complet des systèmes')}</b><p>${continuity}</p></div></div>`;showVehicleStageNotice(vehicleIs('tractor')?t('Autonomous Precision Mode','Mode de précision autonome'):t('Full Systems Test','Test complet des systèmes'),vehicleIs('tractor')?t('GPS, crop, soil and drone systems are working together.','Les systèmes GPS, cultures, sol et drone travaillent ensemble.'):vehicleFutureAbility==='flight'?t('Flight, power and safety checks are running.','Les contrôles de vol, énergie et sécurité sont en cours.'):t('Water, power and safety checks are running.','Les contrôles aquatiques, énergie et sécurité sont en cours.'),{duration:3400});
+  $('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${vehicleIs('tractor')?t('Precision Agriculture Test','Test d’agriculture de précision'):t('Full Systems Test','Test complet des systèmes')}</b><p>${continuity}</p></div></div>`;showVehicleStageNotice(vehicleIs('tractor')?t('Autonomous Precision Mode','Mode de précision autonome'):t('Full Systems Test','Test complet des systèmes'),vehicleIs('tractor')?t('Watch the drone detect a problem, mark it, and guide the tractor to the exact treatment zone.','Observe le drone détecter un problème, le marquer et guider le tracteur vers la zone exacte à traiter.'):vehicleFutureAbility==='flight'?t('Flight, power and safety checks are running.','Les contrôles de vol, énergie et sécurité sont en cours.'):t('Water, power and safety checks are running.','Les contrôles aquatiques, énergie et sécurité sont en cours.'),{duration:3400});
   $('creatorCoach').textContent=continuity;
-  const duration=vehicleIs('tractor')?16000:vehicleIs('coach')?14500:vehicleIs('van')?12400:15800;
+  const duration=vehicleIs('tractor')?24000:vehicleIs('coach')?14500:vehicleIs('van')?12400:15800;
   const tick=()=>{
     if(!testRunning||!vehicleRevealActive){if(vehiclePhase4Timer)clearInterval(vehiclePhase4Timer);vehiclePhase4Timer=0;return}
     vehiclePhase4Progress=clamp((Date.now()-vehiclePhase4Start)/duration,0,1);
