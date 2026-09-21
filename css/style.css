@@ -239,25 +239,18 @@ html[data-admin="true"] .hq-topbar{top:var(--admin-preview-offset,38px)}
 .creator-component:disabled:hover,.creator-component.is-complete:hover{border-color:rgba(94,239,185,.28);background:rgba(94,239,185,.06)}
 .creator-component [data-part-counter]{font-style:normal;font-weight:900;color:#7eecc5;margin-left:4px;white-space:nowrap}
 
-
-/* Future Vehicle polish pass: compact build workflow, child-facing status and admin access tools */
-.creator-toolbar[hidden]{display:none!important}
-.creator-vehicle-picker{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(190px,.7fr);gap:12px;align-items:stretch}
-.creator-vehicle-preview{position:relative;overflow:hidden;border:1px solid rgba(93,228,255,.34);border-radius:16px;background:#07182a;min-height:190px}
-.creator-vehicle-preview img{width:100%;height:145px;object-fit:contain;display:block;background:#fff}
-.creator-vehicle-preview-copy{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px}
-.creator-vehicle-preview-copy b{font-size:.85rem}.creator-vehicle-preview-copy small{display:block;margin-top:2px;color:#93aac0;font-size:.65rem}
-.creator-vehicle-picker-control{display:grid;align-content:center;gap:8px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(255,255,255,.035);padding:14px}
-.creator-vehicle-picker-control label{font-size:.75rem;font-weight:900;color:#dff8ff}
-.creator-vehicle-picker-control select{width:100%;padding:11px 12px;border:1px solid rgba(93,228,255,.25);border-radius:11px;background:#0b223a;color:#fff;font-weight:800}
-.creator-vehicle-picker-control small{color:#91a9bf;line-height:1.45;font-size:.65rem}
-.creator-mode.is-complete{border-color:rgba(100,245,190,.52);background:rgba(43,153,112,.10)}
-.creator-mode .creator-mode-status{grid-column:2;font-size:.58rem!important;color:#8ef0c5!important;font-weight:900;letter-spacing:.02em}
-#testCreation:disabled{opacity:.42;filter:saturate(.35);cursor:not-allowed;box-shadow:none}
-#testCreation.vehicle-ready{animation:vehicleReadyPulse 1.5s ease-in-out 2}
-@keyframes vehicleReadyPulse{50%{box-shadow:0 0 0 5px rgba(93,228,255,.12),0 0 28px rgba(155,109,255,.28);transform:translateY(-1px)}}
-.vehicle-stage-notice{position:absolute;left:50%;bottom:16px;z-index:18;transform:translateX(-50%);width:min(520px,calc(100% - 30px));padding:11px 13px;border:1px solid rgba(147,232,255,.35);border-radius:15px;background:rgba(7,24,42,.92);box-shadow:0 12px 35px rgba(0,0,0,.28);backdrop-filter:blur(10px);color:#eaf8ff;text-align:left}
-.vehicle-stage-notice[hidden]{display:none}.vehicle-stage-notice b{display:block;color:#9cefff;font-size:.78rem}.vehicle-stage-notice span{display:block;margin-top:3px;color:#c5d9e8;font-size:.68rem;line-height:1.4}.vehicle-stage-notice button{margin-top:8px;border:0;border-radius:999px;padding:7px 11px;background:#eaf8ff;color:#0c2740;font-weight:900;cursor:pointer}
-.vehicle-quiz{display:grid;gap:12px;width:100%}.vehicle-quiz-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.vehicle-quiz-progress{font-size:.68rem;color:#91bad2;font-weight:900}.vehicle-quiz-question{font-size:.92rem;color:#effaff;line-height:1.45}.vehicle-quiz-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.vehicle-quiz-option{border:1px solid rgba(147,232,255,.20);border-radius:12px;background:rgba(10,34,55,.75);color:#fff;padding:11px;text-align:left;font-weight:800;cursor:pointer}.vehicle-quiz-option.correct{border-color:rgba(104,245,190,.7);background:rgba(37,134,99,.20)}.vehicle-quiz-option.wrong{border-color:rgba(255,116,135,.55);background:rgba(158,57,73,.18)}.vehicle-quiz-feedback{min-height:26px;color:#a9efff;font-size:.75rem;line-height:1.4}.vehicle-quiz-actions{display:flex;flex-wrap:wrap;gap:8px}.vehicle-quiz-actions button{border:0;border-radius:999px;padding:9px 13px;font-weight:900;cursor:pointer}
-.admin-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.admin-form-grid label{display:grid;gap:5px;font-size:.72rem;font-weight:850;color:#d9e9f5}.admin-form-grid input,.admin-form-grid select,.admin-form-grid textarea{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid rgba(255,255,255,.13);border-radius:10px;background:#081a2e;color:#fff}.admin-form-grid textarea{min-height:74px;resize:vertical}.admin-form-wide{grid-column:1/-1}.complimentary-list{display:grid;gap:8px;margin-top:12px}.complimentary-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.complimentary-row b{display:block}.complimentary-row small{display:block;margin-top:3px;color:#9fb7ca;line-height:1.4}.complimentary-row .admin-actions{justify-content:flex-end}
-@media(max-width:700px){.creator-vehicle-picker{grid-template-columns:1fr}.creator-vehicle-preview{min-height:150px}.creator-vehicle-preview img{height:105px}.vehicle-quiz-options{grid-template-columns:1fr}.vehicle-stage-notice{bottom:10px}.admin-form-grid{grid-template-columns:1fr}.admin-form-wide{grid-column:auto}.complimentary-row{grid-template-columns:1fr}.complimentary-row .admin-actions{justify-content:flex-start}}
+/* Dream Room Studio — realistic room-design mission */
+.creator-room-style-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.creator-room-style-grid .creator-library-card{min-height:165px;padding:0;overflow:hidden;position:relative;background:rgba(255,255,255,.035)}
+.creator-room-style-grid .creator-library-card img{height:112px;width:100%;object-fit:cover;filter:saturate(.92) contrast(1.02);transition:transform .25s ease,filter .25s ease}
+.creator-room-style-grid .creator-library-card span{padding:8px 9px;display:grid;gap:3px;text-align:left}
+.creator-room-style-grid .creator-library-card.active{border-color:rgba(93,228,255,.88);box-shadow:0 0 0 1px rgba(93,228,255,.24),0 12px 30px rgba(0,0,0,.25)}
+.creator-room-style-grid .creator-library-card.active img{transform:scale(1.025);filter:saturate(1.08) contrast(1.04)}
+.creator-object .room-object-svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 8px 7px rgba(0,0,0,.28));transform:perspective(240px) rotateX(3deg);transform-origin:50% 75%}
+.creator-design-stage.room-live-test{background:#071421;box-shadow:inset 0 0 0 1px rgba(93,228,255,.24),0 20px 50px rgba(0,0,0,.35)}
+.creator-design-stage.room-live-test .creator-object-layer,
+.creator-design-stage.room-live-test .creator-draw-canvas{opacity:0!important;visibility:hidden!important}
+.creator-design-stage.room-live-test .creator-template-canvas{filter:none!important;opacity:1!important;visibility:visible!important}
+.creator-design-stage.room-live-test.show-grid:before{display:none!important}
+.creator-design-stage.room-live-test .creator-build-layer{transform:none!important;animation:none!important}
+@media(max-width:900px){.creator-room-style-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.creator-room-style-grid .creator-library-card:last-child{grid-column:1/-1}.creator-room-style-grid .creator-library-card img{height:96px}}
