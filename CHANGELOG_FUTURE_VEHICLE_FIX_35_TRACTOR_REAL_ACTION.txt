@@ -1,0 +1,23 @@
+Children World — Future Vehicle Fix 35
+Tractor real-action animation rewrite
+
+Files included
+- js/creator.js
+- CHANGELOG_FUTURE_VEHICLE_FIX_35_TRACTOR_REAL_ACTION.txt
+
+Main changes
+1. Farm field ground is now earth/brown soil instead of a flat green floor.
+2. Mowing now uses a front-mounted mower, tall grass ahead, short stubble behind, spinning mower blades and flying grass clippings.
+3. Ploughing now shows lighter unworked soil, darker turned soil, furrows, animated dust and soil clods physically lifting and moving behind the plough.
+4. Precision planting now shows live seed streams dropping from the seeder into the soil plus planted rows remaining behind.
+5. Irrigation now uses continuously moving water droplets, arcs and landing splashes with visibly darker wet soil behind the tractor.
+6. Loader/levelling now shows moving soil particles and a shrinking mound while the levelled surface grows.
+7. Smart-farm/drone phase now uses brown soil with green crop rows rather than a flat green background.
+8. Drone rotors and scan sweep are continuously animated.
+9. Targeted irrigation and crop-support phases now show moving spray/mist rather than static graphics.
+10. Farm people/rest area remain visible through more stages and change positions/actions between phases.
+11. Girl rest-area cup now moves toward her mouth so the drinking action is visible.
+12. Tractor tool animation is independent of wheel spin; mower, seeder, irrigator and loader have their own motion.
+13. Left-moving precision phase wheel direction is corrected to match travel direction.
+
+This update keeps the existing file path js/creator.js so it replaces the previous JavaScript file rather than adding a duplicate.
