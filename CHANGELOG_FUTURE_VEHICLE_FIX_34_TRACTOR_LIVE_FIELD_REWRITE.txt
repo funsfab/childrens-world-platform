@@ -1,0 +1,14 @@
+Children World — Future Vehicle Fix 34
+Tractor live-field rewrite
+
+Files included
+- js/creator.js
+- CHANGELOG_FUTURE_VEHICLE_FIX_34_TRACTOR_LIVE_FIELD_REWRITE.txt
+
+Main tractor changes
+1. Reworked the tractor farm mission so the land changes more visibly during each job.
+2. Added phase-specific farm-character layouts so the people do not remain static in the same places.
+3. Added a visible rest area / tent scene and varied child placement across phases.
+4. Improved mowing, ploughing, planting, irrigation and loading visuals.
+5. Adjusted tractor wheel animation handling in the tractor farm mission.
+6. Kept the same file path for the JavaScript update: js/creator.js
