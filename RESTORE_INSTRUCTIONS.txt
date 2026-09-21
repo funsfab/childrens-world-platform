@@ -1,0 +1,19 @@
+Children World — Future Vehicle Protected Baseline Restore
+
+Purpose:
+Restore Creator Studio to the exact code state immediately after Future Vehicle Fix 35 and before Dream Room Studio changes.
+
+Upload/extract this patch over the current site.
+It replaces only the shared files that Dream Room changed and the clean Future Vehicle preview assets.
+
+Replaced files:
+- creator.html
+- css/style.css
+- js/creator.js
+- assets/creator/vehicle-sport-clean.svg
+- assets/creator/vehicle-suv-clean.svg
+- assets/creator/vehicle-van-clean.svg
+- assets/creator/vehicle-coach-clean.svg
+- assets/creator/vehicle-tractor-clean.svg
+
+Dream Room image files that may still exist in assets/creator are not referenced by this restored code and do not affect Future Vehicle.

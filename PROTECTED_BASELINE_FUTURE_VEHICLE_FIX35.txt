@@ -1,0 +1,22 @@
+Children World — Protected Creator Studio Baseline
+State: Immediately after Future Vehicle Fix 35 (before Dream Room Studio work)
+Date reconstructed: 2026-09-21
+
+This baseline was reconstructed by applying the actual Future Vehicle patches in delivery order:
+Fix 22 -> Fix 23 -> Fix 24 -> Fix 25 -> Fix 26 -> Fix 27 -> Fix 28 -> Fix 29 -> Fix 30 -> Fix 31 -> Fix 32 -> Fix 33 -> Fix 34 -> Fix 35.
+
+Protected Future Vehicle state includes:
+- Sport Car
+- 4x4 / SUV
+- Van
+- Intercity Coach / Bus
+- Farm Tractor
+- compact one-preview + dropdown vehicle selector
+- Blueprint ON/OFF control in Vehicle Blueprint Views
+- Blueprint ON fitting mode and Blueprint OFF drawing mode
+- vehicle-specific saved progress
+- Body / Power / Safety / Future Tech completion logic
+- Test My Creation gating and final vehicle test sequences
+- final Tractor real-action animation from Fix 35
+
+Dream Room Studio code is intentionally NOT included in this baseline.
