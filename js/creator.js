@@ -2209,7 +2209,7 @@ function drawFarmPerson(x,y,scale=1,opts={}){
     tctx.fillStyle=skin;tctx.beginPath();tctx.arc(0,-26,7,0,Math.PI*2);tctx.fill();
     tctx.fillStyle=shirt;tctx.fillRect(-7,-18,14,20);
     tctx.strokeStyle="#253746";tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-4,2);tctx.lineTo(10,6);tctx.lineTo(13,15);tctx.moveTo(3,2);tctx.lineTo(-8,7);tctx.lineTo(-8,16);tctx.moveTo(-6,-10);tctx.lineTo(-13,-2);tctx.moveTo(5,-10);tctx.lineTo(9+arm*.15,-2);tctx.stroke();
-    if(opts.cup){tctx.fillStyle="#f8f4df";tctx.fillRect(8,-7,6,8);tctx.strokeStyle="#d7c66a";tctx.lineWidth=1.5;tctx.strokeRect(8,-7,6,8);}
+    if(opts.cup){const sip=(Math.sin(time*3)+1)/2,cx=8-sip*5,cy=-7-sip*13;tctx.fillStyle="#f8f4df";tctx.fillRect(cx,cy,6,8);tctx.strokeStyle="#d7c66a";tctx.lineWidth=1.5;tctx.strokeRect(cx,cy,6,8);tctx.strokeStyle=skin;tctx.lineWidth=2.5;tctx.beginPath();tctx.moveTo(6,-9);tctx.lineTo(cx+2,cy+5);tctx.stroke();}
   }else if(opts.pose==="lie"){
     tctx.rotate(-.08);tctx.fillStyle=skin;tctx.beginPath();tctx.arc(-15,-6,7,0,Math.PI*2);tctx.fill();tctx.fillStyle=shirt;tctx.fillRect(-10,-14,28,13);tctx.strokeStyle="#253746";tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(16,-8);tctx.lineTo(28,-10);tctx.moveTo(15,-1);tctx.lineTo(28,4);tctx.moveTo(-2,-1);tctx.lineTo(12,11);tctx.moveTo(-6,-7);tctx.lineTo(6,8);tctx.stroke();
   }else{
@@ -2292,20 +2292,29 @@ function drawFarmPhaseCharacters(seg,local){
 function drawTractorImplement(kind,spin=0){
   tctx.save();tctx.lineCap='round';tctx.lineJoin='round';
   if(kind==='mower'){
-    tctx.strokeStyle='#6c7c88';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(184,20);tctx.lineTo(236,36);tctx.stroke();tctx.fillStyle='#d9b12f';tctx.fillRect(225,24,92,22);tctx.strokeStyle='#24333c';tctx.lineWidth=3;tctx.strokeRect(225,24,92,22);for(let i=0;i<3;i++){tctx.save();tctx.translate(243+i*28,47);tctx.rotate(spin*2.2);tctx.strokeStyle='#d7e2e7';tctx.lineWidth=2.5;tctx.beginPath();tctx.moveTo(-13,0);tctx.lineTo(13,0);tctx.stroke();tctx.restore();}
+    /* Front-mounted mower: the cutting deck reaches the grass before the tractor does. */
+    tctx.strokeStyle='#6c7c88';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(-184,20);tctx.lineTo(-232,34);tctx.stroke();
+    tctx.fillStyle='#d9b12f';tctx.fillRect(-318,22,92,24);tctx.strokeStyle='#24333c';tctx.lineWidth=3;tctx.strokeRect(-318,22,92,24);
+    for(let i=0;i<3;i++){tctx.save();tctx.translate(-300+i*29,48);tctx.rotate(spin*2.8+i*.8);tctx.strokeStyle='#f1f6f8';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-14,0);tctx.lineTo(14,0);tctx.moveTo(0,-6);tctx.lineTo(0,6);tctx.stroke();tctx.restore();}
   }else if(kind==='plough'){
-    tctx.strokeStyle='#667985';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(185,20);tctx.lineTo(234,30);tctx.lineTo(306,41);tctx.stroke();for(let i=0;i<4;i++){tctx.fillStyle='#b9c7ce';tctx.beginPath();tctx.moveTo(235+i*20,31);tctx.quadraticCurveTo(248+i*20,53,236+i*20,67);tctx.lineTo(252+i*20,61);tctx.quadraticCurveTo(260+i*20,43,250+i*20,34);tctx.closePath();tctx.fill();}
+    tctx.strokeStyle='#667985';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(185,20);tctx.lineTo(234,30);tctx.lineTo(306,41);tctx.stroke();
+    for(let i=0;i<4;i++){tctx.fillStyle='#b9c7ce';tctx.beginPath();tctx.moveTo(235+i*20,31);tctx.quadraticCurveTo(248+i*20,53,236+i*20,67);tctx.lineTo(252+i*20,61);tctx.quadraticCurveTo(260+i*20,43,250+i*20,34);tctx.closePath();tctx.fill();}
+    /* vibrating tine bar makes the implement look engaged rather than pasted on */
+    tctx.strokeStyle='rgba(230,244,248,.8)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(235,42+Math.sin(spin)*2);tctx.lineTo(303,52+Math.sin(spin+1)*2);tctx.stroke();
   }else if(kind==='seeder'){
     tctx.strokeStyle='#687983';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(185,20);tctx.lineTo(230,30);tctx.stroke();tctx.fillStyle='#dca43d';tctx.fillRect(228,10,86,42);tctx.fillStyle='#293b44';for(let i=0;i<5;i++)tctx.fillRect(235+i*16,50,5,18);
+    tctx.fillStyle='rgba(255,238,157,.9)';for(let i=0;i<5;i++){const yy=66+((spin*14+i*11)%18);tctx.beginPath();tctx.arc(237+i*16,yy,2,0,Math.PI*2);tctx.fill();}
   }else if(kind==='irrigator'){
-    tctx.strokeStyle='#6d7e87';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(185,20);tctx.lineTo(225,25);tctx.stroke();tctx.fillStyle='#4d93b1';tctx.beginPath();tctx.ellipse(260,17,45,28,0,0,Math.PI*2);tctx.fill();tctx.strokeStyle='#91e8ff';tctx.lineWidth=4;tctx.beginPath();tctx.moveTo(225,-10);tctx.lineTo(320,-18);tctx.stroke();for(let i=0;i<6;i++){const xx=236+i*16;tctx.strokeStyle='rgba(106,216,255,.72)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(xx,-15);tctx.lineTo(xx+4,20);tctx.stroke();}
+    tctx.strokeStyle='#6d7e87';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(185,20);tctx.lineTo(225,25);tctx.stroke();tctx.fillStyle='#4d93b1';tctx.beginPath();tctx.ellipse(260,17,45,28,0,0,Math.PI*2);tctx.fill();tctx.strokeStyle='#91e8ff';tctx.lineWidth=4;tctx.beginPath();tctx.moveTo(225,-10);tctx.lineTo(320,-18);tctx.stroke();
+    for(let i=0;i<6;i++){const xx=236+i*16,pulse=.55+.45*Math.sin(spin*2+i);tctx.strokeStyle=`rgba(106,216,255,${.40+.35*pulse})`;tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(xx,-15);tctx.quadraticCurveTo(xx+6,2,xx+4,24+pulse*5);tctx.stroke();}
   }else if(kind==='loader'){
-    tctx.strokeStyle='#d4a13a';tctx.lineWidth=11;tctx.beginPath();tctx.moveTo(-72,-40);tctx.lineTo(-166,-14);tctx.lineTo(-205,25);tctx.stroke();tctx.fillStyle='#8d6532';tctx.beginPath();tctx.moveTo(-224,18);tctx.lineTo(-175,18);tctx.lineTo(-158,48);tctx.lineTo(-232,48);tctx.closePath();tctx.fill();tctx.strokeStyle='#e6ba5a';tctx.lineWidth=3;tctx.stroke();
+    const lift=Math.sin(spin*.9)*5;
+    tctx.strokeStyle='#d4a13a';tctx.lineWidth=11;tctx.beginPath();tctx.moveTo(-72,-40);tctx.lineTo(-166,-14-lift);tctx.lineTo(-205,25-lift);tctx.stroke();tctx.fillStyle='#8d6532';tctx.beginPath();tctx.moveTo(-224,18-lift);tctx.lineTo(-175,18-lift);tctx.lineTo(-158,48-lift);tctx.lineTo(-232,48-lift);tctx.closePath();tctx.fill();tctx.strokeStyle='#e6ba5a';tctx.lineWidth=3;tctx.stroke();
   }
   tctx.restore();
 }
 function drawTractorAt(cx,cy,scale,opts={}){
-  const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,angle=opts.angle||0,faceRight=opts.faceRight!==false,bodyAlpha=opts.bodyAlpha??1,lineAlpha=opts.lineAlpha??0,glassAlpha=opts.glassAlpha??bodyAlpha,wheelAlpha=opts.wheelAlpha??bodyAlpha,lightAlpha=opts.lightAlpha??bodyAlpha;
+  const paint=opts.paint||vehiclePaintColor,glow=opts.glow||0,wheelSpin=opts.wheelSpin||0,toolSpin=opts.toolSpin??wheelSpin,angle=opts.angle||0,faceRight=opts.faceRight!==false,bodyAlpha=opts.bodyAlpha??1,lineAlpha=opts.lineAlpha??0,glassAlpha=opts.glassAlpha??bodyAlpha,wheelAlpha=opts.wheelAlpha??bodyAlpha,lightAlpha=opts.lightAlpha??bodyAlpha;
   const implement=opts.implement||'',driver=opts.driver!==false,smart=!!opts.smart,roadWheelSpin=-wheelSpin,dark=vehicleShade(paint,-74),light=vehicleShade(paint,62);
   const path=pts=>{tctx.beginPath();pts.forEach((q,i)=>i?tctx.lineTo(q[0],q[1]):tctx.moveTo(q[0],q[1]));tctx.closePath();};
   tctx.save();tctx.translate(cx,cy);tctx.rotate(angle);tctx.scale(faceRight?-scale:scale,scale);if(glow){tctx.shadowColor='rgba(90,230,255,.95)';tctx.shadowBlur=12+glow*18;}
@@ -2318,7 +2327,7 @@ function drawTractorAt(cx,cy,scale,opts={}){
     /* exhaust / intake */tctx.fillStyle='#26343b';tctx.fillRect(-105,-101,10,77);tctx.fillRect(-112,-108,24,9);
     /* hitch + PTO + hydraulics */tctx.strokeStyle='#41515a';tctx.lineWidth=6;tctx.beginPath();tctx.moveTo(175,28);tctx.lineTo(213,44);tctx.moveTo(175,28);tctx.lineTo(210,8);tctx.stroke();tctx.fillStyle='#adbcc4';tctx.beginPath();tctx.arc(205,26,7,0,Math.PI*2);tctx.fill();
     if(smart){tctx.fillStyle='#eafcff';tctx.beginPath();tctx.arc(22,-159,8,0,Math.PI*2);tctx.fill();tctx.strokeStyle='#7beeff';tctx.lineWidth=2;tctx.beginPath();tctx.arc(22,-159,15,0,Math.PI*2);tctx.stroke();tctx.fillStyle='#1d313d';tctx.fillRect(55,-149,30,12);}
-    if(implement)drawTractorImplement(implement,wheelSpin);
+    if(implement)drawTractorImplement(implement,toolSpin);
   }
   const wheels=[[-132,45,42],[93,39,72]];wheels.forEach(([x,y,r])=>{tctx.save();tctx.globalAlpha=wheelAlpha;tctx.translate(x,y);tctx.beginPath();tctx.arc(0,0,r,0,Math.PI*2);tctx.fillStyle='#11181c';tctx.fill();tctx.strokeStyle='#2f3b42';tctx.lineWidth=7;tctx.stroke();for(let k=0;k<12;k++){const a=roadWheelSpin+k*Math.PI/6;tctx.strokeStyle='rgba(129,145,153,.50)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(Math.cos(a)*(r*.72),Math.sin(a)*(r*.72));tctx.lineTo(Math.cos(a)*(r*.94),Math.sin(a)*(r*.94));tctx.stroke();}tctx.beginPath();tctx.arc(0,0,r*.43,0,Math.PI*2);tctx.fillStyle='#9aacb5';tctx.fill();tctx.beginPath();tctx.arc(0,0,r*.14,0,Math.PI*2);tctx.fillStyle='#26363f';tctx.fill();tctx.restore();});
   if(lightAlpha>0){tctx.save();tctx.globalAlpha=lightAlpha;tctx.fillStyle='#f2fcff';tctx.shadowColor='#d8fbff';tctx.shadowBlur=15;tctx.fillRect(-194,-8,16,9);tctx.restore();}
@@ -2330,157 +2339,196 @@ function drawTractorFinishedVehicleReveal(){
   tctx.save();tctx.translate(ox,oy);tctx.scale(sc,sc);drawTractorAt(400+slide,272+pulse*2,.78*(1+.035*pulse),{paint,glow:.45+pulse*.45,bodyAlpha:bodyT,lineAlpha:lineT,glassAlpha:glassT,wheelAlpha:wheelT,lightAlpha:lightT,wheelSpin:0,faceRight:true,smart:true,driver:true});if(phase2&&vehiclePaintMix<1){const xx=145+530*vehiclePaintMix;tctx.save();tctx.globalAlpha=.42;const g=tctx.createLinearGradient(xx-50,0,xx+35,0);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.6,'rgba(255,255,255,.88)');g.addColorStop(1,'rgba(255,255,255,0)');tctx.fillStyle=g;tctx.fillRect(xx-50,100,85,270);tctx.restore();}tctx.restore();
 }
 function drawFarmFieldBase(title,sub){
-  const W=templateCanvas.width,H=templateCanvas.height;const sky=tctx.createLinearGradient(0,0,0,245);sky.addColorStop(0,'#7cc8e8');sky.addColorStop(1,'#d8f0f4');tctx.fillStyle=sky;tctx.fillRect(0,0,W,245);tctx.fillStyle='#a8c969';tctx.fillRect(0,245,W,H-245);tctx.fillStyle='#667f46';tctx.beginPath();tctx.moveTo(0,245);tctx.quadraticCurveTo(150,182,310,236);tctx.quadraticCurveTo(510,175,800,242);tctx.lineTo(800,280);tctx.lineTo(0,280);tctx.closePath();tctx.fill();tctx.fillStyle='rgba(255,244,196,.86)';tctx.beginPath();tctx.arc(705,62,27,0,Math.PI*2);tctx.fill();drawRoundedPanel(18,16,300,72,15,'rgba(7,31,38,.78)','rgba(205,248,255,.28)');tctx.fillStyle='#f1fbff';tctx.textAlign='left';tctx.font='900 15px system-ui';tctx.fillText(title,32,40);tctx.fillStyle='rgba(220,244,250,.92)';tctx.font='700 11px system-ui';tctx.fillText(sub,32,61);
+  const W=templateCanvas.width,H=templateCanvas.height;
+  const sky=tctx.createLinearGradient(0,0,0,245);sky.addColorStop(0,'#7cc8e8');sky.addColorStop(1,'#d8f0f4');tctx.fillStyle=sky;tctx.fillRect(0,0,W,245);
+  /* Farm ground is earth, not a flat green stage. Green stays on the distant hills and crop/grass areas only. */
+  const earth=tctx.createLinearGradient(0,245,0,H);earth.addColorStop(0,'#a97949');earth.addColorStop(.55,'#8b6138');earth.addColorStop(1,'#6e4b31');tctx.fillStyle=earth;tctx.fillRect(0,245,W,H-245);
+  tctx.fillStyle='#667f46';tctx.beginPath();tctx.moveTo(0,245);tctx.quadraticCurveTo(150,182,310,236);tctx.quadraticCurveTo(510,175,800,242);tctx.lineTo(800,274);tctx.lineTo(0,274);tctx.closePath();tctx.fill();
+  tctx.fillStyle='rgba(255,244,196,.86)';tctx.beginPath();tctx.arc(705,62,27,0,Math.PI*2);tctx.fill();
+  drawRoundedPanel(18,16,300,72,15,'rgba(7,31,38,.78)','rgba(205,248,255,.28)');tctx.fillStyle='#f1fbff';tctx.textAlign='left';tctx.font='900 15px system-ui';tctx.fillText(title,32,40);tctx.fillStyle='rgba(220,244,250,.92)';tctx.font='700 11px system-ui';tctx.fillText(sub,32,61);
 }
 function drawFarmHud(task,progress,metric1,metric2){
   drawRoundedPanel(560,16,222,104,15,'rgba(7,31,38,.82)','rgba(205,248,255,.26)');tctx.fillStyle='#eefbff';tctx.textAlign='left';tctx.font='900 12px system-ui';tctx.fillText(task,575,38);tctx.font='700 10px system-ui';tctx.fillStyle='#bfefff';tctx.fillText(metric1,575,59);tctx.fillText(metric2,575,77);tctx.fillStyle='rgba(255,255,255,.14)';tctx.fillRect(575,91,190,8);tctx.fillStyle='#69e0a7';tctx.fillRect(575,91,190*clamp(progress,0,1),8);
 }
 function drawTractorFarmWorld(){
-  const p=clamp(vehiclePhase3Progress,0,1);
+  const p=clamp(vehiclePhase3Progress,0,1),time=(typeof performance!=='undefined'?performance.now():Date.now())/1000;
   tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.globalAlpha=1;tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);
   let seg=0,local=0,kind='',task='',m1='',m2='';
   if(p<.12){seg=0;local=p/.12;kind='';task=t('Farm systems start-up','Démarrage des systèmes agricoles');m1=t('Hydraulics: READY','Hydraulique : PRÊT');m2=t('PTO: READY · Driver: SEATED & READY','PTO : PRÊTE · Conducteur : ASSIS ET PRÊT');}
-  else if(p<.29){seg=1;local=(p-.12)/.17;kind='mower';task=t('Job 1 · Mow & clear','Tâche 1 · Faucher et dégager');m1=t(`Field coverage: ${Math.round(local*100)}%`,`Couverture : ${Math.round(local*100)}%`);m2=t('Grass is visibly being cut in the tractor path','L’herbe est visiblement coupée dans la trajectoire du tracteur');}
-  else if(p<.47){seg=2;local=(p-.29)/.18;kind='plough';task=t('Job 2 · Prepare soil','Tâche 2 · Préparer le sol');m1=t(`Furrows prepared: ${Math.round(local*12)}/12`,`Sillons préparés : ${Math.round(local*12)}/12`);m2=t('The plough is turning real soil and throwing clods','La charrue retourne le vrai sol et projette des mottes');}
-  else if(p<.64){seg=3;local=(p-.47)/.17;kind='seeder';task=t('Job 3 · Precision planting','Tâche 3 · Semis de précision');m1=t(`Seed rows: ${Math.round(local*12)}/12`,`Rangs semés : ${Math.round(local*12)}/12`);m2=t('Seeds are dropping into prepared rows','Les graines tombent dans les rangs préparés');}
-  else if(p<.82){seg=4;local=(p-.64)/.18;kind='irrigator';task=t('Job 4 · Precision irrigation','Tâche 4 · Irrigation de précision');m1=t(`Soil moisture: ${31+Math.round(local*27)}%`,`Humidité du sol : ${31+Math.round(local*27)}%`);m2=t('Visible spray is watering the crop rows','Le jet visible arrose les rangs de cultures');}
-  else{seg=5;local=(p-.82)/.18;kind='loader';task=t('Job 5 · Move & level material','Tâche 5 · Déplacer et niveler');m1=t(`Level zone: ${Math.round(local*100)}%`,`Zone nivelée : ${Math.round(local*100)}%`);m2=t('The loader is pushing soil into a flat working area','Le chargeur pousse le sol pour créer une zone plane');}
+  else if(p<.29){seg=1;local=(p-.12)/.17;kind='mower';task=t('Job 1 · Mow & clear','Tâche 1 · Faucher et dégager');m1=t(`Field coverage: ${Math.round(local*100)}%`,`Couverture : ${Math.round(local*100)}%`);m2=t('Front mower is cutting live grass now','La faucheuse avant coupe réellement l’herbe maintenant');}
+  else if(p<.47){seg=2;local=(p-.29)/.18;kind='plough';task=t('Job 2 · Prepare soil','Tâche 2 · Préparer le sol');m1=t(`Furrows prepared: ${Math.round(local*12)}/12`,`Sillons préparés : ${Math.round(local*12)}/12`);m2=t('Soil clods are lifting and rolling behind the plough','Des mottes de terre se soulèvent et roulent derrière la charrue');}
+  else if(p<.64){seg=3;local=(p-.47)/.17;kind='seeder';task=t('Job 3 · Precision planting','Tâche 3 · Semis de précision');m1=t(`Seed rows: ${Math.round(local*12)}/12`,`Rangs semés : ${Math.round(local*12)}/12`);m2=t('Seeds are visibly dropping into the prepared soil','Les graines tombent visiblement dans le sol préparé');}
+  else if(p<.82){seg=4;local=(p-.64)/.18;kind='irrigator';task=t('Job 4 · Precision irrigation','Tâche 4 · Irrigation de précision');m1=t(`Soil moisture: ${31+Math.round(local*27)}%`,`Humidité du sol : ${31+Math.round(local*27)}%`);m2=t('Moving water droplets are wetting the crop rows','Des gouttes d’eau en mouvement arrosent les rangs de cultures');}
+  else{seg=5;local=(p-.82)/.18;kind='loader';task=t('Job 5 · Move & level material','Tâche 5 · Déplacer et niveler');m1=t(`Level zone: ${Math.round(local*100)}%`,`Zone nivelée : ${Math.round(local*100)}%`);m2=t('The front loader is pushing and spreading soil','Le chargeur avant pousse et étale la terre');}
 
-  drawFarmFieldBase(t('MULTI-PURPOSE FARM MISSION','MISSION AGRICOLE MULTIFONCTION'),t('Watch the implement change the land — and the team change positions in each phase','Observe l’outil transformer réellement le terrain — et l’équipe changer de position à chaque phase'));
+  drawFarmFieldBase(t('MULTI-PURPOSE FARM MISSION','MISSION AGRICOLE MULTIFONCTION'),t('Every job has visible motion: grass, soil, seed, water and material all move','Chaque tâche montre un mouvement visible : herbe, terre, graines, eau et matériaux bougent'));
 
   const faceRight=seg===0?true:(seg%2===1);
-  const tx=seg===0?395:(faceRight?220+360*local:580-360*local),ty=323;
-  const workX=seg===0?tx:(tx+(faceRight?-118:118));
+  const tx=seg===0?395:(faceRight?205+390*local:595-390*local),ty=323;
+  const frontX=tx+(faceRight?150:-150),rearX=tx+(faceRight?-135:135);
+  const workX=(kind==='mower'||kind==='loader')?frontX:rearX;
   const processedEdge=faceRight?Math.max(0,workX):Math.min(800,workX);
   const behindX=faceRight?0:processedEdge,behindW=faceRight?processedEdge:800-processedEdge;
   const aheadX=faceRight?processedEdge:0,aheadW=faceRight?800-processedEdge:processedEdge;
-  const sway=Math.sin(local*10*Math.PI);
+  const backDir=faceRight?-1:1;
 
-  drawFarmPhaseCharacters(seg,local);
+  drawFarmPhaseCharacters(seg,(time*.15+local)%1);
 
   if(seg===0){
-    tctx.fillStyle='#7aae4f';tctx.fillRect(0,300,800,150);
-    for(let x=8;x<800;x+=13){const h=28+(x%23)*.7+Math.sin(local*7+x*.08)*3;tctx.strokeStyle='rgba(58,112,49,.72)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x,448);tctx.lineTo(x+Math.sin(local*6+x*.1)*2,448-h);tctx.stroke();}
+    tctx.fillStyle='#8d6540';tctx.fillRect(0,300,800,150);
+    for(let x=8;x<800;x+=13){const h=26+(x%23)*.65;tctx.strokeStyle='rgba(69,119,49,.78)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x,448);tctx.lineTo(x+Math.sin(time*2+x*.12)*2,448-h);tctx.stroke();}
   }
   if(seg===1){
-    tctx.fillStyle='#78ad4f';tctx.fillRect(0,300,800,150);
-    for(let x=8;x<800;x+=10){
+    tctx.fillStyle='#8c653d';tctx.fillRect(0,300,800,150);
+    /* Real grass grows from brown soil. Tall grass is ahead of the mower, short stubble is behind it. */
+    for(let x=6;x<800;x+=9){
       const ahead=faceRight?x>processedEdge:x<processedEdge;
-      const h=ahead?(38+((x%31)*.8)+Math.sin(local*9+x*.08)*4):(14+((x%5)*.9)+Math.sin(local*8+x*.05));
-      tctx.strokeStyle=ahead?'rgba(43,104,41,.92)':'rgba(130,161,73,.95)';
-      tctx.lineWidth=ahead?2.5:1.35;
-      tctx.beginPath();tctx.moveTo(x,448);tctx.lineTo(x+Math.sin(local*8+x*.06)*2,448-h);tctx.stroke();
+      const h=ahead?(43+((x%29)*.65)+Math.sin(time*3+x*.08)*5):(12+((x%7)*.6));
+      tctx.strokeStyle=ahead?'rgba(46,112,44,.96)':'rgba(112,156,69,.84)';tctx.lineWidth=ahead?2.6:1.3;
+      tctx.beginPath();tctx.moveTo(x,448);tctx.lineTo(x+Math.sin(time*4+x*.09)*2.5,448-h);tctx.stroke();
     }
-    for(let i=0;i<32;i++){
-      const a=i*.55+local*16,rr=10+(i%7)*4;
-      tctx.fillStyle=`rgba(194,207,91,${.35+(i%4)*.10})`;
-      tctx.fillRect(workX+Math.cos(a)*rr,340+Math.sin(a)*11,4,2);
+    /* grass clippings fly continuously behind the spinning front mower */
+    for(let i=0;i<42;i++){
+      const ph=(time*1.8+i*.071)%1,dist=15+ph*88,arc=Math.sin(ph*Math.PI)*30;
+      const px=workX+backDir*dist,py=342-arc+(i%5)*2;
+      tctx.save();tctx.translate(px,py);tctx.rotate(time*5+i);tctx.fillStyle=i%2?'rgba(206,218,103,.90)':'rgba(126,166,70,.92)';tctx.fillRect(-3,-1,7,2);tctx.restore();
     }
   }
   if(seg===2){
-    tctx.fillStyle='#8e6840';tctx.fillRect(0,300,800,150);
-    tctx.fillStyle='#a67a49';tctx.fillRect(aheadX,300,aheadW,150);
-    tctx.fillStyle='#7a5431';tctx.fillRect(behindX,300,behindW,150);
+    /* Entire work area is soil: lighter unworked earth ahead, darker freshly-turned earth behind. */
+    tctx.fillStyle='#a47748';tctx.fillRect(0,300,800,150);
+    tctx.fillStyle='#70472c';tctx.fillRect(behindX,300,behindW,150);
     tctx.save();tctx.beginPath();tctx.rect(behindX,300,behindW,150);tctx.clip();
-    for(let y=316;y<450;y+=14){tctx.strokeStyle='rgba(55,36,21,.62)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y+Math.sin(local*8+y*.03)*1.4);tctx.lineTo(800,y+Math.sin(local*8+y*.03)*1.4);tctx.stroke();}
+    for(let y=316;y<450;y+=14){tctx.strokeStyle='rgba(50,30,18,.72)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y+Math.sin(time*2.4+y*.04)*2);tctx.lineTo(800,y+Math.sin(time*2.4+y*.04)*2);tctx.stroke();}
     tctx.restore();
-    for(let i=0;i<36;i++){
-      const xoff=(faceRight?-1:1)*(10+((i*17)%39)),yoff=((i*11)%31),size=2+(i%4);
-      tctx.fillStyle=i%2?'rgba(94,58,34,.86)':'rgba(150,98,56,.80)';
-      tctx.beginPath();tctx.arc(workX+xoff,329-yoff+Math.sin(local*12+i)*2,size,0,Math.PI*2);tctx.fill();
+    /* animated soil clods follow ballistic arcs from the plough */
+    for(let i=0;i<54;i++){
+      const ph=(time*1.55+i*.083)%1,dist=10+ph*86,arc=Math.sin(ph*Math.PI)*(26+(i%4)*5);
+      const px=workX+backDir*dist,py=345-arc+(i%6)*2;
+      tctx.fillStyle=i%3===0?'#5d3823':i%3===1?'#81502f':'#a06a3c';
+      tctx.beginPath();tctx.arc(px,py,2.5+(i%4)*.9,0,Math.PI*2);tctx.fill();
+      if(ph>.76){tctx.strokeStyle='rgba(47,27,16,.26)';tctx.lineWidth=1;tctx.beginPath();tctx.moveTo(px-4,py+5);tctx.lineTo(px+5,py+5);tctx.stroke();}
     }
+    /* moving dust puff at the point where the blades are digging */
+    for(let i=0;i<16;i++){const ph=(time*1.2+i*.14)%1;tctx.fillStyle=`rgba(180,126,79,${.24*(1-ph)})`;tctx.beginPath();tctx.arc(workX+backDir*ph*35,338-ph*26,5+ph*10,0,Math.PI*2);tctx.fill();}
   }
   if(seg===3){
-    tctx.fillStyle='#8b6138';tctx.fillRect(0,300,800,150);
-    for(let y=318;y<447;y+=20){tctx.strokeStyle='rgba(111,225,255,.16)';tctx.lineWidth=1;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}
+    tctx.fillStyle='#825633';tctx.fillRect(0,300,800,150);
+    for(let y=318;y<447;y+=20){tctx.strokeStyle='rgba(111,225,255,.14)';tctx.lineWidth=1;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}
+    /* planted seeds remain in rows behind the seeder */
     tctx.save();tctx.beginPath();tctx.rect(behindX,300,behindW,150);tctx.clip();
-    for(let y=322;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.fillStyle='#e1c96b';tctx.beginPath();tctx.arc(x,y,2.3,0,Math.PI*2);tctx.fill();if((x+y)%56===0){tctx.strokeStyle='rgba(94,164,72,.75)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x,y-1);tctx.lineTo(x-3,y-8-Math.sin(local*10+x*.03));tctx.moveTo(x,y-1);tctx.lineTo(x+3,y-8-Math.sin(local*10+x*.03));tctx.stroke();}}}
+    for(let y=322;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.fillStyle='#e5ca70';tctx.beginPath();tctx.arc(x,y,2.4,0,Math.PI*2);tctx.fill();}}
     tctx.restore();
-    for(let i=0;i<14;i++){
-      const dropX=workX+(faceRight?-105:105)+(faceRight?-i*3:i*3),dropY=330+(i%4)*7+(local*22%8);
-      tctx.fillStyle='rgba(228,204,102,.90)';tctx.beginPath();tctx.arc(dropX,dropY,2.2,0,Math.PI*2);tctx.fill();
+    /* live seed stream drops from the drill tubes into the soil */
+    for(let i=0;i<32;i++){
+      const ph=(time*2.2+i*.097)%1,outlet=i%5,ox=workX+backDir*(5+outlet*7),oy=312;
+      const px=ox+backDir*ph*18,py=oy+ph*52;
+      tctx.fillStyle='#f0d477';tctx.beginPath();tctx.arc(px,py,2.2,0,Math.PI*2);tctx.fill();
+      if(ph>.82){tctx.fillStyle='rgba(120,77,42,.45)';tctx.beginPath();tctx.arc(px,py+2,4,0,Math.PI*2);tctx.fill();}
     }
   }
   if(seg===4){
-    tctx.fillStyle='#8a633d';tctx.fillRect(0,300,800,150);
-    for(let y=320;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.fillStyle='#4d9e4e';tctx.fillRect(x-2,y-9,4,11);}}
-    tctx.fillStyle='rgba(48,103,109,.30)';tctx.fillRect(behindX,300,behindW,150);
-    for(let i=0;i<42;i++){
-      const spread=(i-21)*4.6 + Math.sin(local*16+i)*2;
-      const sx=workX,sy=292;
-      tctx.strokeStyle=`rgba(102,214,255,${.30+(i%5)*.10})`;tctx.lineWidth=1.7;
-      tctx.beginPath();tctx.moveTo(sx,sy);tctx.quadraticCurveTo(sx+(faceRight?-28:28),306,sx+(faceRight?-84:84),337+spread*.18);tctx.stroke();
-      tctx.fillStyle='rgba(131,225,255,.62)';tctx.beginPath();tctx.arc(sx+(faceRight?-78:78),338+spread*.18+Math.sin(local*18+i)*1.2,2,0,Math.PI*2);tctx.fill();
+    tctx.fillStyle='#855a36';tctx.fillRect(0,300,800,150);
+    for(let y=320;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.strokeStyle='#4d9e4e';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(x,y);tctx.lineTo(x,y-11);tctx.moveTo(x,y-7);tctx.lineTo(x-4,y-11);tctx.moveTo(x,y-6);tctx.lineTo(x+4,y-10);tctx.stroke();}}
+    /* wet soil follows the tractor, visibly darker than the dry soil ahead */
+    tctx.fillStyle='rgba(38,78,76,.38)';tctx.fillRect(behindX,300,behindW,150);
+    /* animated water droplets travel from the boom to the ground */
+    for(let i=0;i<68;i++){
+      const ph=(time*2.4+i*.051)%1,side=((i%17)-8)*5.2;
+      const sx=workX,sy=288+side*.06;
+      const px=sx+backDir*(15+ph*92),py=sy+ph*58-Math.sin(ph*Math.PI)*19+side*.12;
+      tctx.strokeStyle='rgba(117,222,255,.78)';tctx.lineWidth=1.4;tctx.beginPath();tctx.moveTo(px,py-5);tctx.lineTo(px,py+4);tctx.stroke();
+      if(ph>.83){tctx.strokeStyle='rgba(131,225,255,.58)';tctx.lineWidth=1;tctx.beginPath();tctx.arc(px,py+5,4+(i%3),Math.PI,Math.PI*2);tctx.stroke();}
     }
   }
   if(seg===5){
-    tctx.fillStyle='#8a6545';tctx.fillRect(0,300,800,150);
-    const pileX=faceRight?650:150,pileR=48*(1-local*.72);
-    tctx.fillStyle='#6d4b32';tctx.beginPath();tctx.ellipse(pileX,372,pileR,24+pileR*.35,0,Math.PI,Math.PI*2);tctx.fill();
-    tctx.fillStyle='#a47c58';if(faceRight)tctx.fillRect(220,394,Math.max(0,360*local),24);else tctx.fillRect(580-360*local,394,Math.max(0,360*local),24);
-    const front=tx+(faceRight?132:-132);
-    for(let i=0;i<26;i++){tctx.fillStyle=`rgba(116,77,45,${.40+(i%4)*.08})`;tctx.beginPath();tctx.arc(front+(i%7)*4*(faceRight?1:-1),343-(i%5)*4+Math.sin(local*14+i)*1.5,3+(i%3),0,Math.PI*2);tctx.fill();}
-    for(let i=0;i<9;i++){tctx.strokeStyle='rgba(121,85,58,.55)';tctx.lineWidth=2;tctx.beginPath();const y=398+i*2;tctx.moveTo(faceRight?220:220+(1-local)*360,y);tctx.lineTo(faceRight?220+Math.max(0,360*local):580,y);tctx.stroke();}
+    tctx.fillStyle='#875d3b';tctx.fillRect(0,300,800,150);
+    const pileX=faceRight?650:150,pileR=52*(1-local*.70);
+    tctx.fillStyle='#65432c';tctx.beginPath();tctx.ellipse(pileX,372,pileR,26+pileR*.34,0,Math.PI,Math.PI*2);tctx.fill();
+    tctx.fillStyle='#a77b57';if(faceRight)tctx.fillRect(210,394,Math.max(0,390*local),25);else tctx.fillRect(600-390*local,394,Math.max(0,390*local),25);
+    /* soil moves in front of the bucket, not as a frozen mound */
+    for(let i=0;i<38;i++){
+      const ph=(time*1.6+i*.071)%1,dir=faceRight?1:-1;
+      const px=frontX+dir*(10+ph*50)+(i%5)*2,py=354-Math.sin(ph*Math.PI)*(13+(i%3)*4);
+      tctx.fillStyle=i%2?'#755039':'#9a6e49';tctx.beginPath();tctx.arc(px,py,3+(i%3),0,Math.PI*2);tctx.fill();
+    }
+    for(let i=0;i<11;i++){tctx.strokeStyle='rgba(121,85,58,.62)';tctx.lineWidth=2;tctx.beginPath();const y=398+i*2;tctx.moveTo(faceRight?210:210+(1-local)*390,y);tctx.lineTo(faceRight?210+Math.max(0,390*local):600,y);tctx.stroke();}
   }
 
-  if(seg>=2){tctx.save();tctx.globalAlpha=.22;tctx.strokeStyle='#2d2722';tctx.lineWidth=3;tctx.setLineDash([9,7]);tctx.beginPath();tctx.moveTo(behindX,386);tctx.lineTo(behindX+behindW,386);tctx.moveTo(behindX,407);tctx.lineTo(behindX+behindW,407);tctx.stroke();tctx.setLineDash([]);tctx.restore();}
+  if(seg>=2){tctx.save();tctx.globalAlpha=.24;tctx.strokeStyle='#2d2722';tctx.lineWidth=3;tctx.setLineDash([9,7]);tctx.beginPath();tctx.moveTo(behindX,386);tctx.lineTo(behindX+behindW,386);tctx.moveTo(behindX,407);tctx.lineTo(behindX+behindW,407);tctx.stroke();tctx.setLineDash([]);tctx.restore();}
 
+  /* local increases in every segment. drawTractorAt handles the mirrored wheel direction correctly. */
   const spin=seg===0?0:(local*13);
-  drawTractorAt(tx,ty,.60,{paint:vehiclePaintColor,glow:.30,wheelSpin:spin,faceRight,implement:kind,smart:true,driver:true});
+  drawTractorAt(tx,ty,.60,{paint:vehiclePaintColor,glow:.30,wheelSpin:spin,toolSpin:time*5.5,faceRight,implement:kind,smart:true,driver:true});
   drawFarmHud(task,local,m1,m2);
   tctx.restore();
 }
 function drawTractorPrecisionFinale(){
-  const p=clamp(vehiclePhase4Progress,0,1),W=templateCanvas.width,H=templateCanvas.height;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);
+  const p=clamp(vehiclePhase4Progress,0,1),W=templateCanvas.width,H=templateCanvas.height,time=(typeof performance!=='undefined'?performance.now():Date.now())/1000;
+  tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);
   const sky=tctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#163b50');sky.addColorStop(.52,'#6ca5a5');sky.addColorStop(1,'#304d36');tctx.fillStyle=sky;tctx.fillRect(0,0,W,H);
-  /* smart-farm field with visible crop rows */
-  tctx.fillStyle='#416f3e';tctx.fillRect(0,238,W,212);for(let y=265;y<448;y+=25){tctx.strokeStyle='rgba(172,221,117,.50)';tctx.lineWidth=8;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(W,y);tctx.stroke();}
+  /* Precision field = brown soil with living green crop rows, not a flat green screen. */
+  const soil=tctx.createLinearGradient(0,238,0,H);soil.addColorStop(0,'#9a6b40');soil.addColorStop(1,'#6f4a31');tctx.fillStyle=soil;tctx.fillRect(0,238,W,212);
+  for(let y=264;y<448;y+=25){
+    tctx.strokeStyle='rgba(116,177,77,.78)';tctx.lineWidth=7;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(W,y);tctx.stroke();
+    for(let x=10;x<W;x+=30){const sway=Math.sin(time*2+x*.05+y*.03)*2;tctx.strokeStyle='rgba(153,211,100,.82)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x,y);tctx.lineTo(x+sway,y-10);tctx.stroke();}
+  }
   tctx.fillStyle='#244d36';tctx.fillRect(0,233,W,9);
 
-  let stageLabel='',stageExplain='',tractorX=205,tractorY=340,faceRight=true,wheelSpin=0,implement='',droneX=220,droneY=190,scan=false,dryAlpha=0,stressAlpha=0,moisture=24;
+  let stageLabel='',stageExplain='',tractorX=205,tractorY=340,faceRight=true,wheelSpin=0,implement='',droneX=220,droneY=190,scan=false,dryAlpha=0,stressAlpha=0,moisture=24,stage=0;
   if(p<.12){
-    const q=p/.12;stageLabel=t('1 · DRONE LAUNCH','1 · LANCEMENT DU DRONE');stageExplain=t('The farm drone is taking off to inspect crop and soil conditions.','Le drone agricole décolle pour inspecter les cultures et le sol.');
-    droneX=230+70*q;droneY=280-165*q;tractorX=205;wheelSpin=0;
+    const q=p/.12;stage=0;stageLabel=t('1 · DRONE LAUNCH','1 · LANCEMENT DU DRONE');stageExplain=t('The farm drone is taking off to inspect crop and soil conditions.','Le drone agricole décolle pour inspecter les cultures et le sol.');droneX=230+70*q;droneY=280-165*q;tractorX=205;wheelSpin=0;
   }else if(p<.34){
-    const q=(p-.12)/.22;stageLabel=t('2 · FIELD SCAN IN PROGRESS','2 · ANALYSE DU CHAMP EN COURS');stageExplain=t('Cameras and sensors are checking moisture, crop colour and weak-growth zones.','Les caméras et capteurs vérifient l’humidité, la couleur des cultures et les zones de faible croissance.');
-    droneX=300+390*q;droneY=108+18*Math.sin(q*Math.PI*3);scan=true;tractorX=205;
+    const q=(p-.12)/.22;stage=1;stageLabel=t('2 · FIELD SCAN IN PROGRESS','2 · ANALYSE DU CHAMP EN COURS');stageExplain=t('Cameras and sensors are checking moisture, crop colour and weak-growth zones.','Les caméras et capteurs vérifient l’humidité, la couleur des cultures et les zones de faible croissance.');droneX=300+390*q;droneY=108+18*Math.sin(q*Math.PI*3);scan=true;tractorX=205;
   }else if(p<.43){
-    const q=(p-.34)/.09;stageLabel=t('3 · DRY ZONE DETECTED','3 · ZONE SÈCHE DÉTECTÉE');stageExplain=t('The drone has marked a low-moisture area and sent its coordinates to the tractor.','Le drone a marqué une zone peu humide et envoyé ses coordonnées au tracteur.');
-    droneX=665;droneY=115;scan=true;dryAlpha=.45+.45*Math.sin(q*Math.PI*4);tractorX=205;
+    const q=(p-.34)/.09;stage=2;stageLabel=t('3 · DRY ZONE DETECTED','3 · ZONE SÈCHE DÉTECTÉE');stageExplain=t('The drone has marked a low-moisture area and sent its coordinates to the tractor.','Le drone a marqué une zone peu humide et envoyé ses coordonnées au tracteur.');droneX=665;droneY=115;scan=true;dryAlpha=.45+.45*Math.sin(time*5);tractorX=205;
   }else if(p<.61){
-    const q=(p-.43)/.18,e=1-Math.pow(1-q,3);stageLabel=t('4 · TRACTOR MOVING TO TARGET','4 · TRACTEUR EN ROUTE VERS LA CIBLE');stageExplain=t('GPS guidance is taking the tractor smoothly to the dry zone.','Le guidage GPS conduit doucement le tracteur vers la zone sèche.');
-    tractorX=205+(565-205)*e;faceRight=true;wheelSpin=q*15;droneX=665;droneY=115;dryAlpha=.72;
+    const q=(p-.43)/.18,e=1-Math.pow(1-q,3);stage=3;stageLabel=t('4 · TRACTOR MOVING TO TARGET','4 · TRACTEUR EN ROUTE VERS LA CIBLE');stageExplain=t('GPS guidance is taking the tractor smoothly to the dry zone.','Le guidage GPS conduit doucement le tracteur vers la zone sèche.');tractorX=205+(565-205)*e;faceRight=true;wheelSpin=q*15;droneX=665;droneY=115;dryAlpha=.72;
     tctx.save();tctx.setLineDash([8,7]);tctx.strokeStyle='rgba(86,232,255,.85)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(230,373);tctx.lineTo(565,373);tctx.stroke();tctx.setLineDash([]);tctx.restore();
   }else if(p<.74){
-    const q=(p-.61)/.13;stageLabel=t('5 · IRRIGATING DRY ZONE','5 · IRRIGATION DE LA ZONE SÈCHE');stageExplain=t('The tractor applies water only where the drone found low moisture.','Le tracteur apporte de l’eau uniquement là où le drone a détecté un manque d’humidité.');
-    tractorX=565;implement='irrigator';droneX=665;droneY=115;dryAlpha=.72*(1-q);moisture=24+Math.round(q*39);
-    /* targeted visible irrigation spray */
-    for(let i=0;i<34;i++){const xx=430+(i%17)*8,yy=323+(i%5)*7;tctx.strokeStyle=`rgba(107,220,255,${.30+(i%4)*.10})`;tctx.lineWidth=1.7;tctx.beginPath();tctx.moveTo(482+(i%5)*7,286);tctx.quadraticCurveTo(xx,300,xx,yy);tctx.stroke();}
+    const q=(p-.61)/.13;stage=4;stageLabel=t('5 · IRRIGATING DRY ZONE','5 · IRRIGATION DE LA ZONE SÈCHE');stageExplain=t('The tractor applies water only where the drone found low moisture.','Le tracteur apporte de l’eau uniquement là où le drone a détecté un manque d’humidité.');tractorX=565;implement='irrigator';droneX=665;droneY=115;dryAlpha=.72*(1-q);moisture=24+Math.round(q*39);
+    /* Strong moving irrigation: droplets travel, arc and splash into the marked zone. */
+    for(let i=0;i<78;i++){
+      const ph=(time*2.6+i*.043)%1,side=((i%19)-9)*4.3;
+      const sx=500+(i%5)*5,sy=288+side*.05;
+      const px=sx-25-ph*105,py=sy+ph*62-Math.sin(ph*Math.PI)*23+side*.13;
+      tctx.strokeStyle='rgba(111,225,255,.86)';tctx.lineWidth=1.5;tctx.beginPath();tctx.moveTo(px,py-6);tctx.lineTo(px,py+4);tctx.stroke();
+      if(ph>.80){tctx.strokeStyle='rgba(157,235,255,.66)';tctx.lineWidth=1;tctx.beginPath();tctx.arc(px,py+6,4+(i%3),Math.PI,Math.PI*2);tctx.stroke();}
+    }
+    tctx.fillStyle=`rgba(38,86,86,${.16+.20*q})`;tctx.fillRect(500,292,165,96);
   }else if(p<.82){
-    const q=(p-.74)/.08;stageLabel=t('6 · SECOND SCAN — CROP STRESS','6 · DEUXIÈME ANALYSE — STRESS DES CULTURES');stageExplain=t('The drone finds a second area with weak crop growth after the dry zone is treated.','Le drone détecte une deuxième zone de faible croissance après le traitement de la zone sèche.');
-    tractorX=565;droneX=650-270*q;droneY=112+12*Math.sin(q*Math.PI*3);scan=true;stressAlpha=.38+.40*Math.sin(q*Math.PI*4);moisture=63;
+    const q=(p-.74)/.08;stage=5;stageLabel=t('6 · SECOND SCAN — CROP STRESS','6 · DEUXIÈME ANALYSE — STRESS DES CULTURES');stageExplain=t('The drone finds a second area with weak crop growth after the dry zone is treated.','Le drone détecte une deuxième zone de faible croissance après le traitement de la zone sèche.');tractorX=565;droneX=650-270*q;droneY=112+12*Math.sin(q*Math.PI*3);scan=true;stressAlpha=.38+.40*Math.sin(time*4);moisture=63;
   }else if(p<.94){
-    const q=(p-.82)/.12,e=q*q*(3-2*q);stageLabel=t('7 · MOVING TO CROP-STRESS ZONE','7 · DÉPLACEMENT VERS LA ZONE DE CULTURES FAIBLES');stageExplain=t('The tractor turns and follows the new coordinates sent by the drone.','Le tracteur tourne et suit les nouvelles coordonnées envoyées par le drone.');
-    tractorX=565-(565-350)*e;faceRight=false;wheelSpin=-q*12;droneX=380;droneY=112;stressAlpha=.72;moisture=63;
+    const q=(p-.82)/.12,e=q*q*(3-2*q);stage=6;stageLabel=t('7 · MOVING TO CROP-STRESS ZONE','7 · DÉPLACEMENT VERS LA ZONE DE CULTURES FAIBLES');stageExplain=t('The tractor turns and follows the new coordinates sent by the drone.','Le tracteur tourne et suit les nouvelles coordonnées envoyées par le drone.');tractorX=565-(565-350)*e;faceRight=false;wheelSpin=q*12;droneX=380;droneY=112;stressAlpha=.72;moisture=63;
     tctx.save();tctx.setLineDash([8,7]);tctx.strokeStyle='rgba(86,232,255,.85)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(565,373);tctx.lineTo(350,373);tctx.stroke();tctx.setLineDash([]);tctx.restore();
   }else{
-    const q=(p-.94)/.06;stageLabel=t('8 · TARGETED CROP SUPPORT','8 · TRAITEMENT CIBLÉ DES CULTURES');stageExplain=t('A precise nutrient mist is applied only to the weak-growth zone.','Une brume nutritive précise est appliquée uniquement sur la zone de faible croissance.');
-    tractorX=350;faceRight=false;implement='irrigator';droneX=380;droneY=112;stressAlpha=.72*(1-q);moisture=63;
-    for(let i=0;i<25;i++){const xx=415+(i%13)*6,yy=326+(i%5)*6;tctx.fillStyle=`rgba(193,236,125,${.35+(i%4)*.12})`;tctx.beginPath();tctx.arc(xx,yy,2+(i%2),0,Math.PI*2);tctx.fill();}
+    const q=(p-.94)/.06;stage=7;stageLabel=t('8 · TARGETED CROP SUPPORT','8 · TRAITEMENT CIBLÉ DES CULTURES');stageExplain=t('A precise nutrient mist is applied only to the weak-growth zone.','Une brume nutritive précise est appliquée uniquement sur la zone de faible croissance.');tractorX=350;faceRight=false;implement='irrigator';droneX=380;droneY=112;stressAlpha=.72*(1-q);moisture=63;
+    for(let i=0;i<64;i++){
+      const ph=(time*2.3+i*.049)%1,sx=430,sy=290,px=sx+ph*85,py=sy+ph*54-Math.sin(ph*Math.PI)*17+((i%13)-6)*1.1;
+      tctx.fillStyle=`rgba(199,239,128,${.45+(i%4)*.10})`;tctx.beginPath();tctx.arc(px,py,2+(i%2),0,Math.PI*2);tctx.fill();
+    }
   }
 
-  /* marked problem zones */
-  if(dryAlpha>0){tctx.save();tctx.globalAlpha=dryAlpha;tctx.fillStyle='rgba(241,159,62,.50)';tctx.fillRect(520,292,145,92);tctx.strokeStyle='#ffd07d';tctx.lineWidth=3;tctx.strokeRect(520,292,145,92);tctx.fillStyle='#fff0cf';tctx.font='900 11px system-ui';tctx.textAlign='center';tctx.fillText(t('DRY ZONE','ZONE SÈCHE'),592,312);tctx.restore();}
-  if(stressAlpha>0){tctx.save();tctx.globalAlpha=stressAlpha;tctx.fillStyle='rgba(219,188,74,.42)';tctx.fillRect(280,315,138,82);tctx.strokeStyle='#f7e47d';tctx.lineWidth=3;tctx.strokeRect(280,315,138,82);tctx.fillStyle='#fff6bd';tctx.font='900 11px system-ui';tctx.textAlign='center';tctx.fillText(t('CROP STRESS','CULTURE FAIBLE'),349,334);tctx.restore();}
+  /* Human activity remains present in smart-farm phases too. Positions change so the world stays alive. */
+  drawFarmRestArea(92,302,{occupant:stage%3===0?'girl':stage%3===1?null:'boy',mode:stage%2?'sit':'lie',time,showSign:true});
+  if(stage%2===0){drawFarmPerson(180,298,1,{skin:'#d29a76',shirt:'#8a5d6a',time});drawFarmActivityZone(728,310,{type:'plant',time});drawFarmPerson(650,294,1,{shirt:'#365e80',time});}
+  else{drawFarmActivityZone(180,312,{type:'plant',time});drawFarmPerson(710,294,1,{shirt:'#365e80',time});drawFarmPerson(620,306,.92,{skin:'#c5835e',child:true,shirt:'#6c5b99',time});}
 
-  /* drone + scanning cone */
-  tctx.save();tctx.translate(droneX,droneY);tctx.strokeStyle='#e5fbff';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-20,0);tctx.lineTo(20,0);tctx.moveTo(0,-20);tctx.lineTo(0,20);tctx.stroke();for(const [rx,ry] of [[-22,-6],[22,-6],[-22,6],[22,6]]){tctx.beginPath();tctx.arc(rx,ry,6,0,Math.PI*2);tctx.stroke();}
-  if(scan){tctx.strokeStyle='rgba(91,232,255,.42)';tctx.fillStyle='rgba(91,232,255,.08)';tctx.beginPath();tctx.moveTo(0,14);tctx.lineTo(-70,154);tctx.lineTo(70,154);tctx.closePath();tctx.fill();tctx.stroke();for(let yy=46;yy<145;yy+=22){tctx.strokeStyle='rgba(115,238,255,.24)';tctx.beginPath();tctx.moveTo(-yy*.38,yy);tctx.lineTo(yy*.38,yy);tctx.stroke();}}
+  if(dryAlpha>0){tctx.save();tctx.globalAlpha=dryAlpha;tctx.fillStyle='rgba(241,159,62,.46)';tctx.fillRect(520,292,145,92);tctx.strokeStyle='#ffd07d';tctx.lineWidth=3;tctx.strokeRect(520,292,145,92);tctx.fillStyle='#fff0cf';tctx.font='900 11px system-ui';tctx.textAlign='center';tctx.fillText(t('DRY ZONE','ZONE SÈCHE'),592,312);tctx.restore();}
+  if(stressAlpha>0){tctx.save();tctx.globalAlpha=stressAlpha;tctx.fillStyle='rgba(219,188,74,.38)';tctx.fillRect(280,315,138,82);tctx.strokeStyle='#f7e47d';tctx.lineWidth=3;tctx.strokeRect(280,315,138,82);tctx.fillStyle='#fff6bd';tctx.font='900 11px system-ui';tctx.textAlign='center';tctx.fillText(t('CROP STRESS','CULTURE FAIBLE'),349,334);tctx.restore();}
+
+  /* drone rotors and scan grid are continuously animated */
+  tctx.save();tctx.translate(droneX,droneY);tctx.strokeStyle='#e5fbff';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-20,0);tctx.lineTo(20,0);tctx.moveTo(0,-20);tctx.lineTo(0,20);tctx.stroke();
+  for(const [rx,ry] of [[-22,-6],[22,-6],[-22,6],[22,6]]){tctx.save();tctx.translate(rx,ry);tctx.rotate(time*10+(rx+ry));tctx.beginPath();tctx.moveTo(-8,0);tctx.lineTo(8,0);tctx.moveTo(0,-8);tctx.lineTo(0,8);tctx.stroke();tctx.restore();}
+  if(scan){
+    const sweep=(Math.sin(time*4)+1)/2;tctx.strokeStyle='rgba(91,232,255,.50)';tctx.fillStyle='rgba(91,232,255,.08)';tctx.beginPath();tctx.moveTo(0,14);tctx.lineTo(-70,154);tctx.lineTo(70,154);tctx.closePath();tctx.fill();tctx.stroke();
+    for(let yy=46;yy<145;yy+=22){tctx.strokeStyle='rgba(115,238,255,.24)';tctx.beginPath();tctx.moveTo(-yy*.38,yy);tctx.lineTo(yy*.38,yy);tctx.stroke();}
+    tctx.strokeStyle='rgba(168,249,255,.92)';tctx.lineWidth=3;tctx.beginPath();const sy=44+sweep*96;tctx.moveTo(-sy*.36,sy);tctx.lineTo(sy*.36,sy);tctx.stroke();
+  }
   tctx.restore();
 
-  drawTractorAt(tractorX,tractorY,.48,{paint:vehiclePaintColor,glow:.50,wheelSpin,faceRight,smart:true,driver:true,implement});
+  drawTractorAt(tractorX,tractorY,.48,{paint:vehiclePaintColor,glow:.50,wheelSpin,toolSpin:time*5.5,faceRight,smart:true,driver:true,implement});
 
-  /* explanatory labels so the child knows WHY each technology is being used. */
   drawRoundedPanel(18,16,500,78,15,'rgba(4,20,29,.88)','rgba(147,232,255,.28)');tctx.fillStyle='#f0fbff';tctx.font='900 15px system-ui';tctx.textAlign='left';tctx.fillText(stageLabel,32,40);tctx.fillStyle='#c9f3ff';tctx.font='700 11px system-ui';const lines=stageExplain.length>82?[stageExplain.slice(0,82),stageExplain.slice(82)]:[stageExplain];lines.forEach((line,i)=>tctx.fillText(line,32,61+i*15));
   drawRoundedPanel(548,16,234,118,15,'rgba(4,20,29,.88)','rgba(147,232,255,.26)');tctx.fillStyle='#eaf9ff';tctx.font='800 11px system-ui';const metrics=[t('Drone link: CONNECTED','Liaison drone : CONNECTÉE'),t(`Soil moisture: ${moisture}%`,`Humidité du sol : ${moisture} %`),t('GPS accuracy: 2.5 cm','Précision GPS : 2,5 cm'),p>.61?t('Response: TARGETED','Réponse : CIBLÉE'):t('Response: WAITING','Réponse : EN ATTENTE')];metrics.forEach((m,i)=>tctx.fillText(m,563,40+i*20));
   tctx.restore();
