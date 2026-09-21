@@ -2197,9 +2197,98 @@ function drawTractorDriver(x,y,scale=1,shirt='#e7b94e'){
   tctx.restore();
 }
 function drawFarmPerson(x,y,scale=1,opts={}){
-  const skin=opts.skin||'#a76f50',shirt=opts.shirt||'#3d7391',child=!!opts.child;
-  tctx.save();tctx.translate(x,y);tctx.scale(scale*(child ? .78 : 1),scale*(child ? .78 : 1));tctx.fillStyle=skin;tctx.beginPath();tctx.arc(0,-24,7,0,Math.PI*2);tctx.fill();tctx.fillStyle=shirt;tctx.fillRect(-7,-16,14,22);tctx.strokeStyle='#253746';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-5,6);tctx.lineTo(-8,20);tctx.moveTo(5,6);tctx.lineTo(8,20);tctx.moveTo(-6,-8);tctx.lineTo(-13,2);tctx.moveTo(6,-8);tctx.lineTo(13,2);tctx.stroke();tctx.restore();
+  const skin=opts.skin||"#a76f50",shirt=opts.shirt||"#3d7391",child=!!opts.child,time=opts.time||0;
+  const s=scale*(child?.78:1),arm=(opts.armSwing??Math.sin(time*6)*4),leg=(opts.legSwing??Math.cos(time*6)*4);
+  tctx.save();tctx.translate(x,y);tctx.scale(s,s);
+  if(opts.flip)tctx.scale(-1,1);
+  if(opts.pose==="bend"){
+    tctx.rotate(-.22);
+  }
+  if(opts.shadow!==false){tctx.fillStyle="rgba(0,0,0,.12)";tctx.beginPath();tctx.ellipse(0,24,12,4,0,0,Math.PI*2);tctx.fill();}
+  if(opts.pose==="sit"){
+    tctx.fillStyle=skin;tctx.beginPath();tctx.arc(0,-26,7,0,Math.PI*2);tctx.fill();
+    tctx.fillStyle=shirt;tctx.fillRect(-7,-18,14,20);
+    tctx.strokeStyle="#253746";tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-4,2);tctx.lineTo(10,6);tctx.lineTo(13,15);tctx.moveTo(3,2);tctx.lineTo(-8,7);tctx.lineTo(-8,16);tctx.moveTo(-6,-10);tctx.lineTo(-13,-2);tctx.moveTo(5,-10);tctx.lineTo(9+arm*.15,-2);tctx.stroke();
+    if(opts.cup){tctx.fillStyle="#f8f4df";tctx.fillRect(8,-7,6,8);tctx.strokeStyle="#d7c66a";tctx.lineWidth=1.5;tctx.strokeRect(8,-7,6,8);}
+  }else if(opts.pose==="lie"){
+    tctx.rotate(-.08);tctx.fillStyle=skin;tctx.beginPath();tctx.arc(-15,-6,7,0,Math.PI*2);tctx.fill();tctx.fillStyle=shirt;tctx.fillRect(-10,-14,28,13);tctx.strokeStyle="#253746";tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(16,-8);tctx.lineTo(28,-10);tctx.moveTo(15,-1);tctx.lineTo(28,4);tctx.moveTo(-2,-1);tctx.lineTo(12,11);tctx.moveTo(-6,-7);tctx.lineTo(6,8);tctx.stroke();
+  }else{
+    tctx.fillStyle=skin;tctx.beginPath();tctx.arc(0,-24,7,0,Math.PI*2);tctx.fill();tctx.fillStyle=shirt;tctx.fillRect(-7,-16,14,22);tctx.strokeStyle="#253746";tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(-5,6);tctx.lineTo(-7+leg*.12,20);tctx.moveTo(5,6);tctx.lineTo(7-leg*.12,20);tctx.moveTo(-6,-8);tctx.lineTo(-13,-1+arm*.20);tctx.moveTo(6,-8);tctx.lineTo(13,2-arm*.20);tctx.stroke();
+  }
+  tctx.restore();
 }
+
+function drawFarmRestArea(x,y,opts={}){
+  const phase=opts.phase||0,occupant=opts.occupant||"girl",mode=opts.mode||"sit",time=opts.time||0;
+  tctx.save();tctx.translate(x,y);
+  tctx.fillStyle="rgba(0,0,0,.10)";tctx.beginPath();tctx.ellipse(0,38,68,13,0,0,Math.PI*2);tctx.fill();
+  tctx.strokeStyle="#7e5d39";tctx.lineWidth=4;tctx.beginPath();tctx.moveTo(-48,34);tctx.lineTo(-48,-20);tctx.moveTo(48,34);tctx.lineTo(48,-20);tctx.stroke();
+  tctx.fillStyle="#d6c18a";tctx.beginPath();tctx.moveTo(-62,-18);tctx.lineTo(0,-54);tctx.lineTo(62,-18);tctx.closePath();tctx.fill();
+  tctx.fillStyle="rgba(255,242,210,.55)";tctx.fillRect(-52,-18,104,44);
+  tctx.fillStyle="#8c6f4a";tctx.fillRect(-20,10,40,5);tctx.fillRect(-18,15,4,17);tctx.fillRect(14,15,4,17);
+  tctx.fillStyle="#6f8f54";tctx.beginPath();tctx.arc(58,24,9+2*Math.sin(time*4),0,Math.PI*2);tctx.fill();
+  tctx.fillStyle="#9e7346";tctx.fillRect(54,24,5,12);
+  if(opts.showSign){tctx.fillStyle="#32454f";tctx.fillRect(-60,-64,70,16);tctx.fillStyle="#f2fbff";tctx.font="700 9px system-ui";tctx.textAlign="center";tctx.fillText(t("REST AREA","AIRE DE REPOS"),-25,-53);}
+  if(occupant){
+    if(mode==="sit"){
+      drawFarmPerson(-2,12,.92,{child:true,shirt:occupant==="girl"?"#6c5b99":"#d19943",skin:occupant==="girl"?"#c5835e":"#d29a76",pose:"sit",cup:true,time});
+    }else{
+      drawFarmPerson(-8,6,.92,{child:true,shirt:occupant==="girl"?"#6c5b99":"#d19943",skin:occupant==="girl"?"#c5835e":"#d29a76",pose:"lie",time});
+    }
+  }
+  tctx.restore();
+}
+
+function drawFarmActivityZone(x,y,opts={}){
+  const time=opts.time||0,type=opts.type||"plant";
+  tctx.save();tctx.translate(x,y);
+  if(type==="plant"){
+    tctx.fillStyle="#8d6139";tctx.fillRect(-42,6,84,26);
+    for(let i=0;i<4;i++){tctx.strokeStyle="#4b7f38";tctx.lineWidth=2;tctx.beginPath();const px=-28+i*18;tctx.moveTo(px,8);tctx.lineTo(px,0-((i%2)?6:0)-Math.sin(time*4+i)*1.5);tctx.stroke();tctx.beginPath();tctx.moveTo(px,2);tctx.lineTo(px-5,-4);tctx.moveTo(px,0);tctx.lineTo(px+5,-6);tctx.stroke();}
+    drawFarmPerson(-10,12,.88,{child:true,shirt:"#d19943",pose:"bend",time});
+  }else if(type==="tools"){
+    tctx.fillStyle="#8b6138";tctx.fillRect(-34,12,68,16);tctx.fillStyle="#c6b188";tctx.fillRect(-18,-10,14,20);tctx.fillRect(4,-6,16,16);
+  }
+  tctx.restore();
+}
+
+function drawFarmPhaseCharacters(seg,local){
+  const time=local+seg*.37;
+  if(seg===0){
+    drawFarmRestArea(124,286,{occupant:"girl",mode:"sit",time,showSign:true});
+    drawFarmPerson(244,286,1,{skin:"#d29a76",shirt:"#8a5d6a",time});
+    drawFarmActivityZone(660,300,{type:"plant",time});
+    drawFarmPerson(742,284,1,{shirt:"#365e80",time});
+  }else if(seg===1){
+    drawFarmRestArea(122,285,{occupant:null,time,showSign:true});
+    drawFarmPerson(84,286,1,{skin:"#d29a76",shirt:"#8a5d6a",time});
+    drawFarmActivityZone(216,304,{type:"plant",time});
+    drawFarmPerson(704,285,1,{shirt:"#365e80",time});
+    drawFarmPerson(642,300,.92,{skin:"#c5835e",child:true,shirt:"#6c5b99",time});
+  }else if(seg===2){
+    drawFarmRestArea(122,285,{occupant:"boy",mode:"lie",time,showSign:true});
+    drawFarmPerson(214,288,1,{skin:"#d29a76",shirt:"#8a5d6a",time});
+    drawFarmPerson(702,286,1,{shirt:"#365e80",time});
+    drawFarmPerson(632,301,.92,{skin:"#c5835e",child:true,shirt:"#6c5b99",time});
+  }else if(seg===3){
+    drawFarmRestArea(124,285,{occupant:null,time,showSign:true});
+    drawFarmPerson(88,286,1,{skin:"#d29a76",shirt:"#8a5d6a",time});
+    drawFarmActivityZone(248,302,{type:"plant",time});
+    drawFarmPerson(716,286,1,{shirt:"#365e80",time});
+    drawFarmPerson(610,298,.92,{skin:"#c5835e",child:true,shirt:"#6c5b99",time});
+  }else if(seg===4){
+    drawFarmRestArea(122,286,{occupant:"girl",mode:"sit",time,showSign:true});
+    drawFarmPerson(248,286,1,{skin:"#d29a76",shirt:"#8a5d6a",time});
+    drawFarmActivityZone(650,304,{type:"plant",time});
+    drawFarmPerson(735,286,1,{shirt:"#365e80",time});
+  }else{
+    drawFarmRestArea(122,286,{occupant:"boy",mode:"sit",time,showSign:true});
+    drawFarmPerson(250,286,1,{skin:"#d29a76",shirt:"#8a5d6a",time});
+    drawFarmPerson(710,286,1,{shirt:"#365e80",time});
+    drawFarmPerson(630,300,.92,{skin:"#c5835e",child:true,shirt:"#6c5b99",time});
+  }
+}
+
 function drawTractorImplement(kind,spin=0){
   tctx.save();tctx.lineCap='round';tctx.lineJoin='round';
   if(kind==='mower'){
@@ -2247,76 +2336,99 @@ function drawFarmHud(task,progress,metric1,metric2){
   drawRoundedPanel(560,16,222,104,15,'rgba(7,31,38,.82)','rgba(205,248,255,.26)');tctx.fillStyle='#eefbff';tctx.textAlign='left';tctx.font='900 12px system-ui';tctx.fillText(task,575,38);tctx.font='700 10px system-ui';tctx.fillStyle='#bfefff';tctx.fillText(metric1,575,59);tctx.fillText(metric2,575,77);tctx.fillStyle='rgba(255,255,255,.14)';tctx.fillRect(575,91,190,8);tctx.fillStyle='#69e0a7';tctx.fillRect(575,91,190*clamp(progress,0,1),8);
 }
 function drawTractorFarmWorld(){
-  const p=clamp(vehiclePhase3Progress,0,1);tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.globalAlpha=1;tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);
+  const p=clamp(vehiclePhase3Progress,0,1);
+  tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.globalAlpha=1;tctx.clearRect(0,0,templateCanvas.width,templateCanvas.height);
   let seg=0,local=0,kind='',task='',m1='',m2='';
   if(p<.12){seg=0;local=p/.12;kind='';task=t('Farm systems start-up','Démarrage des systèmes agricoles');m1=t('Hydraulics: READY','Hydraulique : PRÊT');m2=t('PTO: READY · Driver: SEATED & READY','PTO : PRÊTE · Conducteur : ASSIS ET PRÊT');}
-  else if(p<.29){seg=1;local=(p-.12)/.17;kind='mower';task=t('Job 1 · Mow & clear','Tâche 1 · Faucher et dégager');m1=t(`Field coverage: ${Math.round(local*100)}%`,`Couverture : ${Math.round(local*100)}%`);m2=t('Grass is being cut behind the mower','L’herbe est coupée derrière la faucheuse');}
-  else if(p<.47){seg=2;local=(p-.29)/.18;kind='plough';task=t('Job 2 · Prepare soil','Tâche 2 · Préparer le sol');m1=t(`Furrows prepared: ${Math.round(local*12)}/12`,`Sillons préparés : ${Math.round(local*12)}/12`);m2=t('Soil is turning behind the plough','Le sol se retourne derrière la charrue');}
-  else if(p<.64){seg=3;local=(p-.47)/.17;kind='seeder';task=t('Job 3 · Precision planting','Tâche 3 · Semis de précision');m1=t(`Seed rows: ${Math.round(local*12)}/12`,`Rangs semés : ${Math.round(local*12)}/12`);m2=t('Seed spacing: 18 cm · GPS locked','Espacement : 18 cm · GPS verrouillé');}
-  else if(p<.82){seg=4;local=(p-.64)/.18;kind='irrigator';task=t('Job 4 · Precision irrigation','Tâche 4 · Irrigation de précision');m1=t(`Soil moisture: ${31+Math.round(local*27)}%`,`Humidité du sol : ${31+Math.round(local*27)}%`);m2=t('Visible spray is wetting the crop rows','Le jet visible arrose les rangs de cultures');}
-  else{seg=5;local=(p-.82)/.18;kind='loader';task=t('Job 5 · Move & level material','Tâche 5 · Déplacer et niveler');m1=t(`Level zone: ${Math.round(local*100)}%`,`Zone nivelée : ${Math.round(local*100)}%`);m2=t('Loader is moving soil into a level surface','Le chargeur déplace le sol pour niveler la surface');}
-  drawFarmFieldBase(t('MULTI-PURPOSE FARM MISSION','MISSION AGRICOLE MULTIFONCTION'),t('Watch the implement change the land — not just the background','Observe l’outil transformer réellement le terrain'));
+  else if(p<.29){seg=1;local=(p-.12)/.17;kind='mower';task=t('Job 1 · Mow & clear','Tâche 1 · Faucher et dégager');m1=t(`Field coverage: ${Math.round(local*100)}%`,`Couverture : ${Math.round(local*100)}%`);m2=t('Grass is visibly being cut in the tractor path','L’herbe est visiblement coupée dans la trajectoire du tracteur');}
+  else if(p<.47){seg=2;local=(p-.29)/.18;kind='plough';task=t('Job 2 · Prepare soil','Tâche 2 · Préparer le sol');m1=t(`Furrows prepared: ${Math.round(local*12)}/12`,`Sillons préparés : ${Math.round(local*12)}/12`);m2=t('The plough is turning real soil and throwing clods','La charrue retourne le vrai sol et projette des mottes');}
+  else if(p<.64){seg=3;local=(p-.47)/.17;kind='seeder';task=t('Job 3 · Precision planting','Tâche 3 · Semis de précision');m1=t(`Seed rows: ${Math.round(local*12)}/12`,`Rangs semés : ${Math.round(local*12)}/12`);m2=t('Seeds are dropping into prepared rows','Les graines tombent dans les rangs préparés');}
+  else if(p<.82){seg=4;local=(p-.64)/.18;kind='irrigator';task=t('Job 4 · Precision irrigation','Tâche 4 · Irrigation de précision');m1=t(`Soil moisture: ${31+Math.round(local*27)}%`,`Humidité du sol : ${31+Math.round(local*27)}%`);m2=t('Visible spray is watering the crop rows','Le jet visible arrose les rangs de cultures');}
+  else{seg=5;local=(p-.82)/.18;kind='loader';task=t('Job 5 · Move & level material','Tâche 5 · Déplacer et niveler');m1=t(`Level zone: ${Math.round(local*100)}%`,`Zone nivelée : ${Math.round(local*100)}%`);m2=t('The loader is pushing soil into a flat working area','Le chargeur pousse le sol pour créer une zone plane');}
+
+  drawFarmFieldBase(t('MULTI-PURPOSE FARM MISSION','MISSION AGRICOLE MULTIFONCTION'),t('Watch the implement change the land — and the team change positions in each phase','Observe l’outil transformer réellement le terrain — et l’équipe changer de position à chaque phase'));
 
   const faceRight=seg===0?true:(seg%2===1);
   const tx=seg===0?395:(faceRight?220+360*local:580-360*local),ty=323;
-  const processedEdge=faceRight?Math.max(0,tx-70):Math.min(800,tx+70);
+  const workX=seg===0?tx:(tx+(faceRight?-118:118));
+  const processedEdge=faceRight?Math.max(0,workX):Math.min(800,workX);
   const behindX=faceRight?0:processedEdge,behindW=faceRight?processedEdge:800-processedEdge;
+  const aheadX=faceRight?processedEdge:0,aheadW=faceRight?800-processedEdge:processedEdge;
+  const sway=Math.sin(local*10*Math.PI);
 
-  /* FARM TEAM: deliberately spread across the scene instead of posing in one cluster. */
-  drawFarmPerson(72,286,1,{skin:'#d29a76',shirt:'#8a5d6a'});               // woman
-  drawFarmPerson(118,296,.92,{child:true,shirt:'#d19943'});               // boy
-  drawFarmPerson(708,286,1,{shirt:'#365e80'});                            // man
-  drawFarmPerson(645,302,.92,{skin:'#c5835e',child:true,shirt:'#6c5b99'});// girl
+  drawFarmPhaseCharacters(seg,local);
 
-  /* Draw task-specific BEFORE -> WORKING -> AFTER evidence. */
   if(seg===0){
-    tctx.fillStyle='#6fa94e';tctx.fillRect(0,300,800,150);
-    for(let x=8;x<800;x+=13){tctx.strokeStyle='rgba(58,112,49,.72)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x,448);tctx.lineTo(x+3,405-(x%31));tctx.stroke();}
+    tctx.fillStyle='#7aae4f';tctx.fillRect(0,300,800,150);
+    for(let x=8;x<800;x+=13){const h=28+(x%23)*.7+Math.sin(local*7+x*.08)*3;tctx.strokeStyle='rgba(58,112,49,.72)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x,448);tctx.lineTo(x+Math.sin(local*6+x*.1)*2,448-h);tctx.stroke();}
   }
   if(seg===1){
-    /* Tall grass ahead, short stubble behind the moving mower. */
     tctx.fillStyle='#78ad4f';tctx.fillRect(0,300,800,150);
-    for(let x=8;x<800;x+=11){const ahead=faceRight?x>processedEdge:x<processedEdge;tctx.strokeStyle=ahead?'rgba(51,110,42,.90)':'rgba(111,151,67,.78)';tctx.lineWidth=ahead?2.4:1.5;tctx.beginPath();tctx.moveTo(x,447);tctx.lineTo(x+(x%3),ahead?401-(x%27):434-(x%7));tctx.stroke();}
-    /* cut-grass clippings leaving the mower */
-    const rear=tx+(faceRight?-112:112);for(let i=0;i<26;i++){const a=i*.77+local*9,rr=9+(i%7)*4;tctx.fillStyle=`rgba(194,207,91,${.35+(i%4)*.10})`;tctx.fillRect(rear+Math.cos(a)*rr,343+Math.sin(a)*10,4,2);}
+    for(let x=8;x<800;x+=10){
+      const ahead=faceRight?x>processedEdge:x<processedEdge;
+      const h=ahead?(38+((x%31)*.8)+Math.sin(local*9+x*.08)*4):(14+((x%5)*.9)+Math.sin(local*8+x*.05));
+      tctx.strokeStyle=ahead?'rgba(43,104,41,.92)':'rgba(130,161,73,.95)';
+      tctx.lineWidth=ahead?2.5:1.35;
+      tctx.beginPath();tctx.moveTo(x,448);tctx.lineTo(x+Math.sin(local*8+x*.06)*2,448-h);tctx.stroke();
+    }
+    for(let i=0;i<32;i++){
+      const a=i*.55+local*16,rr=10+(i%7)*4;
+      tctx.fillStyle=`rgba(194,207,91,${.35+(i%4)*.10})`;
+      tctx.fillRect(workX+Math.cos(a)*rr,340+Math.sin(a)*11,4,2);
+    }
   }
   if(seg===2){
-    tctx.fillStyle='#7fa958';tctx.fillRect(0,300,800,150);
-    tctx.fillStyle='#8b6138';tctx.fillRect(behindX,300,behindW,150);
-    tctx.save();tctx.beginPath();tctx.rect(behindX,300,behindW,150);tctx.clip();for(let y=315;y<450;y+=14){tctx.strokeStyle='rgba(61,40,26,.50)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}tctx.restore();
-    /* soil chunks physically thrown by the plough */
-    const rear=tx+(faceRight?-135:135);for(let i=0;i<30;i++){const q=(i*17)%37;tctx.fillStyle=i%2?'rgba(94,58,34,.82)':'rgba(136,88,47,.78)';tctx.beginPath();tctx.arc(rear+(faceRight?-1:1)*(8+q),329-((i*11)%28),2+(i%4),0,Math.PI*2);tctx.fill();}
+    tctx.fillStyle='#8e6840';tctx.fillRect(0,300,800,150);
+    tctx.fillStyle='#a67a49';tctx.fillRect(aheadX,300,aheadW,150);
+    tctx.fillStyle='#7a5431';tctx.fillRect(behindX,300,behindW,150);
+    tctx.save();tctx.beginPath();tctx.rect(behindX,300,behindW,150);tctx.clip();
+    for(let y=316;y<450;y+=14){tctx.strokeStyle='rgba(55,36,21,.62)';tctx.lineWidth=3;tctx.beginPath();tctx.moveTo(0,y+Math.sin(local*8+y*.03)*1.4);tctx.lineTo(800,y+Math.sin(local*8+y*.03)*1.4);tctx.stroke();}
+    tctx.restore();
+    for(let i=0;i<36;i++){
+      const xoff=(faceRight?-1:1)*(10+((i*17)%39)),yoff=((i*11)%31),size=2+(i%4);
+      tctx.fillStyle=i%2?'rgba(94,58,34,.86)':'rgba(150,98,56,.80)';
+      tctx.beginPath();tctx.arc(workX+xoff,329-yoff+Math.sin(local*12+i)*2,size,0,Math.PI*2);tctx.fill();
+    }
   }
   if(seg===3){
     tctx.fillStyle='#8b6138';tctx.fillRect(0,300,800,150);
-    /* GPS row guides */
-    for(let y=318;y<447;y+=20){tctx.strokeStyle='rgba(111,225,255,.18)';tctx.lineWidth=1;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}
-    /* Seeds only appear on the land already passed by the planter. */
-    tctx.save();tctx.beginPath();tctx.rect(behindX,300,behindW,150);tctx.clip();for(let y=322;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.fillStyle='#e1c96b';tctx.beginPath();tctx.arc(x,y,2.4,0,Math.PI*2);tctx.fill();}}tctx.restore();
-    const rear=tx+(faceRight?-125:125);for(let i=0;i<10;i++){tctx.fillStyle='rgba(228,204,102,.85)';tctx.beginPath();tctx.arc(rear+(faceRight?-i*5:i*5),335+(i%3)*7,2.2,0,Math.PI*2);tctx.fill();}
+    for(let y=318;y<447;y+=20){tctx.strokeStyle='rgba(111,225,255,.16)';tctx.lineWidth=1;tctx.beginPath();tctx.moveTo(0,y);tctx.lineTo(800,y);tctx.stroke();}
+    tctx.save();tctx.beginPath();tctx.rect(behindX,300,behindW,150);tctx.clip();
+    for(let y=322;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.fillStyle='#e1c96b';tctx.beginPath();tctx.arc(x,y,2.3,0,Math.PI*2);tctx.fill();if((x+y)%56===0){tctx.strokeStyle='rgba(94,164,72,.75)';tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(x,y-1);tctx.lineTo(x-3,y-8-Math.sin(local*10+x*.03));tctx.moveTo(x,y-1);tctx.lineTo(x+3,y-8-Math.sin(local*10+x*.03));tctx.stroke();}}}
+    tctx.restore();
+    for(let i=0;i<14;i++){
+      const dropX=workX+(faceRight?-105:105)+(faceRight?-i*3:i*3),dropY=330+(i%4)*7+(local*22%8);
+      tctx.fillStyle='rgba(228,204,102,.90)';tctx.beginPath();tctx.arc(dropX,dropY,2.2,0,Math.PI*2);tctx.fill();
+    }
   }
   if(seg===4){
     tctx.fillStyle='#8a633d';tctx.fillRect(0,300,800,150);
     for(let y=320;y<445;y+=20){for(let x=18;x<795;x+=28){tctx.fillStyle='#4d9e4e';tctx.fillRect(x-2,y-9,4,11);}}
-    /* Wet soil appears only after the irrigator has passed. */
-    tctx.fillStyle='rgba(48,103,109,.28)';tctx.fillRect(behindX,300,behindW,150);
-    /* real water fan behind the tanker boom */
-    const rear=tx+(faceRight?-112:112);for(let i=0;i<32;i++){const spread=(i-16)*5;tctx.strokeStyle=`rgba(102,214,255,${.32+(i%5)*.08})`;tctx.lineWidth=1.6;tctx.beginPath();tctx.moveTo(rear,291);tctx.quadraticCurveTo(rear+(faceRight?-35:35),307,rear+(faceRight?-75:75),338+spread*.18);tctx.stroke();tctx.fillStyle='rgba(131,225,255,.58)';tctx.beginPath();tctx.arc(rear+(faceRight?-70:70),340+spread*.18,2,0,Math.PI*2);tctx.fill();}
+    tctx.fillStyle='rgba(48,103,109,.30)';tctx.fillRect(behindX,300,behindW,150);
+    for(let i=0;i<42;i++){
+      const spread=(i-21)*4.6 + Math.sin(local*16+i)*2;
+      const sx=workX,sy=292;
+      tctx.strokeStyle=`rgba(102,214,255,${.30+(i%5)*.10})`;tctx.lineWidth=1.7;
+      tctx.beginPath();tctx.moveTo(sx,sy);tctx.quadraticCurveTo(sx+(faceRight?-28:28),306,sx+(faceRight?-84:84),337+spread*.18);tctx.stroke();
+      tctx.fillStyle='rgba(131,225,255,.62)';tctx.beginPath();tctx.arc(sx+(faceRight?-78:78),338+spread*.18+Math.sin(local*18+i)*1.2,2,0,Math.PI*2);tctx.fill();
+    }
   }
   if(seg===5){
     tctx.fillStyle='#8a6545';tctx.fillRect(0,300,800,150);
-    const pileX=faceRight?650:150,pileR=48*(1-local*.72);tctx.fillStyle='#6d4b32';tctx.beginPath();tctx.ellipse(pileX,372,pileR,24+pileR*.35,0,Math.PI,Math.PI*2);tctx.fill();
-    /* smooth level surface grows as the loader works */
+    const pileX=faceRight?650:150,pileR=48*(1-local*.72);
+    tctx.fillStyle='#6d4b32';tctx.beginPath();tctx.ellipse(pileX,372,pileR,24+pileR*.35,0,Math.PI,Math.PI*2);tctx.fill();
     tctx.fillStyle='#a47c58';if(faceRight)tctx.fillRect(220,394,Math.max(0,360*local),24);else tctx.fillRect(580-360*local,394,Math.max(0,360*local),24);
-    const front=tx+(faceRight?132:-132);for(let i=0;i<18;i++){tctx.fillStyle='rgba(116,77,45,.70)';tctx.beginPath();tctx.arc(front+(i%6)*4*(faceRight?1:-1),343-(i%5)*4,3+(i%3),0,Math.PI*2);tctx.fill();}
+    const front=tx+(faceRight?132:-132);
+    for(let i=0;i<26;i++){tctx.fillStyle=`rgba(116,77,45,${.40+(i%4)*.08})`;tctx.beginPath();tctx.arc(front+(i%7)*4*(faceRight?1:-1),343-(i%5)*4+Math.sin(local*14+i)*1.5,3+(i%3),0,Math.PI*2);tctx.fill();}
+    for(let i=0;i<9;i++){tctx.strokeStyle='rgba(121,85,58,.55)';tctx.lineWidth=2;tctx.beginPath();const y=398+i*2;tctx.moveTo(faceRight?220:220+(1-local)*360,y);tctx.lineTo(faceRight?220+Math.max(0,360*local):580,y);tctx.stroke();}
   }
 
-  /* visible tyre tracks stay on the soil while the tractor is working */
   if(seg>=2){tctx.save();tctx.globalAlpha=.22;tctx.strokeStyle='#2d2722';tctx.lineWidth=3;tctx.setLineDash([9,7]);tctx.beginPath();tctx.moveTo(behindX,386);tctx.lineTo(behindX+behindW,386);tctx.moveTo(behindX,407);tctx.lineTo(behindX+behindW,407);tctx.stroke();tctx.setLineDash([]);tctx.restore();}
 
-  const spin=seg===0?0:(faceRight?local*13:-local*13);
+  const spin=seg===0?0:(local*13);
   drawTractorAt(tx,ty,.60,{paint:vehiclePaintColor,glow:.30,wheelSpin:spin,faceRight,implement:kind,smart:true,driver:true});
-  drawFarmHud(task,local,m1,m2);tctx.restore();
+  drawFarmHud(task,local,m1,m2);
+  tctx.restore();
 }
 function drawTractorPrecisionFinale(){
   const p=clamp(vehiclePhase4Progress,0,1),W=templateCanvas.width,H=templateCanvas.height;tctx.save();tctx.setTransform(1,0,0,1,0,0);tctx.clearRect(0,0,W,H);
