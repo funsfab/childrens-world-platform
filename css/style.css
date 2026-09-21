@@ -261,3 +261,46 @@ html[data-admin="true"] .hq-topbar{top:var(--admin-preview-offset,38px)}
 .vehicle-quiz{display:grid;gap:12px;width:100%}.vehicle-quiz-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.vehicle-quiz-progress{font-size:.68rem;color:#91bad2;font-weight:900}.vehicle-quiz-question{font-size:.92rem;color:#effaff;line-height:1.45}.vehicle-quiz-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.vehicle-quiz-option{border:1px solid rgba(147,232,255,.20);border-radius:12px;background:rgba(10,34,55,.75);color:#fff;padding:11px;text-align:left;font-weight:800;cursor:pointer}.vehicle-quiz-option.correct{border-color:rgba(104,245,190,.7);background:rgba(37,134,99,.20)}.vehicle-quiz-option.wrong{border-color:rgba(255,116,135,.55);background:rgba(158,57,73,.18)}.vehicle-quiz-feedback{min-height:26px;color:#a9efff;font-size:.75rem;line-height:1.4}.vehicle-quiz-actions{display:flex;flex-wrap:wrap;gap:8px}.vehicle-quiz-actions button{border:0;border-radius:999px;padding:9px 13px;font-weight:900;cursor:pointer}
 .admin-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.admin-form-grid label{display:grid;gap:5px;font-size:.72rem;font-weight:850;color:#d9e9f5}.admin-form-grid input,.admin-form-grid select,.admin-form-grid textarea{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid rgba(255,255,255,.13);border-radius:10px;background:#081a2e;color:#fff}.admin-form-grid textarea{min-height:74px;resize:vertical}.admin-form-wide{grid-column:1/-1}.complimentary-list{display:grid;gap:8px;margin-top:12px}.complimentary-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}.complimentary-row b{display:block}.complimentary-row small{display:block;margin-top:3px;color:#9fb7ca;line-height:1.4}.complimentary-row .admin-actions{justify-content:flex-end}
 @media(max-width:700px){.creator-vehicle-picker{grid-template-columns:1fr}.creator-vehicle-preview{min-height:150px}.creator-vehicle-preview img{height:105px}.vehicle-quiz-options{grid-template-columns:1fr}.vehicle-stage-notice{bottom:10px}.admin-form-grid{grid-template-columns:1fr}.admin-form-wide{grid-column:auto}.complimentary-row{grid-template-columns:1fr}.complimentary-row .admin-actions{justify-content:flex-start}}
+
+/* Dream Room Studio — isolated room-only additions. Future Vehicle styles remain untouched. */
+.creator-room-view-controls{display:grid;gap:8px;padding:10px 12px;margin:0 0 10px;border:1px solid rgba(93,228,255,.18);border-radius:16px;background:rgba(8,25,40,.56)}
+.creator-room-view-controls[hidden]{display:none!important}
+.creator-room-view-copy{display:grid;gap:2px}
+.creator-room-view-copy b{font-size:.92rem;color:#effaff}
+.creator-room-view-copy small{color:#a9c7d9;font-size:.75rem;line-height:1.35}
+.creator-room-view-buttons{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.creator-room-build-status{font-size:.75rem;color:#bfe9f6;font-weight:700}
+
+.creator-room-picker{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(230px,.8fr);gap:14px;align-items:stretch}
+.creator-room-preview{position:relative;min-height:240px;border:1px solid rgba(255,255,255,.10);border-radius:18px;overflow:hidden;background:#101b27;box-shadow:0 16px 36px rgba(0,0,0,.20)}
+.creator-room-preview img{display:block;width:100%;height:100%;min-height:240px;max-height:330px;object-fit:cover}
+.creator-room-preview-copy{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:14px 16px;background:linear-gradient(transparent,rgba(5,14,23,.90));color:#fff}
+.creator-room-preview-copy span{display:grid;gap:3px;text-align:left}.creator-room-preview-copy b{font-size:1rem}.creator-room-preview-copy small{font-size:.76rem;color:#d3e8f3}
+.creator-room-preview-copy strong{font-size:.75rem;background:rgba(93,228,255,.16);border:1px solid rgba(93,228,255,.35);padding:6px 9px;border-radius:999px;white-space:nowrap}
+.creator-room-picker-control{display:grid;align-content:start;gap:9px;padding:14px;border:1px solid rgba(255,255,255,.10);border-radius:18px;background:rgba(255,255,255,.035)}
+.creator-room-picker-control label{font-size:.78rem;font-weight:900;color:#dff7ff;text-transform:uppercase;letter-spacing:.04em}
+.creator-room-picker-control select{width:100%;min-height:46px;border-radius:12px;border:1px solid rgba(93,228,255,.26);background:#102234;color:#eefaff;padding:0 12px;font-weight:800}
+.creator-room-picker-control small{font-size:.75rem;line-height:1.45;color:#a8c8d9}
+
+.creator-object .room-object-svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 8px 7px rgba(0,0,0,.28));transform:perspective(240px) rotateX(3deg);transform-origin:50% 75%}
+.creator-design-stage.room-live-test{background:#071421;box-shadow:inset 0 0 0 1px rgba(93,228,255,.24),0 20px 50px rgba(0,0,0,.35)}
+.creator-design-stage.room-live-test .creator-object-layer,.creator-design-stage.room-live-test .creator-draw-canvas{opacity:0!important;visibility:hidden!important}
+.creator-design-stage.room-live-test .creator-template-canvas{filter:none!important;opacity:1!important;visibility:visible!important}
+.creator-design-stage.room-live-test.show-grid:before{display:none!important}
+.creator-design-stage.room-live-test .creator-build-layer{transform:none!important;animation:none!important}
+.creator-component.room-complete{opacity:.68;border-color:rgba(94,227,164,.5)!important;background:rgba(94,227,164,.10)!important}
+.creator-mode.room-complete{border-color:rgba(94,227,164,.56)!important;background:rgba(94,227,164,.10)!important}
+.creator-mode-status{display:block;margin-top:5px;color:#73eab1!important;font-weight:900}
+#testCreation:disabled{opacity:.45;filter:saturate(.45);cursor:not-allowed}
+
+@media(max-width:900px){
+  .creator-room-picker{grid-template-columns:1fr}.creator-room-preview{min-height:210px}.creator-room-preview img{min-height:210px;max-height:280px}
+}
+@media(max-width:640px){
+  .creator-room-preview{min-height:190px}.creator-room-preview img{min-height:190px;max-height:230px}
+  .creator-room-preview-copy{padding:11px 12px}.creator-room-preview-copy strong{font-size:.68rem}
+  .creator-room-view-buttons{align-items:stretch}.creator-room-build-status{width:100%}
+}
+@media(orientation:landscape) and (max-height:540px){
+  .creator-room-picker{grid-template-columns:minmax(0,1.5fr) minmax(220px,.8fr)}.creator-room-preview{min-height:170px}.creator-room-preview img{min-height:170px;max-height:200px}
+}
