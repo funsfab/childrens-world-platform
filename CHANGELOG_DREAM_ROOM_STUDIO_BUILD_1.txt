@@ -1,0 +1,30 @@
+Children World — Dream Room Studio Build 1
+Date: 2026-09-21
+
+Purpose
+- Replace the old simple Dream Room scan with a real-life interior-design mission for ages 10–13.
+- Keep Future Vehicle work intact while moving Creator Studio forward.
+
+Included
+- Five realistic design-style references: Scandinavian Light, Warm Modern Luxury, Afro-Modern Warmth, Urban Industrial Loft, Smart Future Home.
+- New room categories: Room shell & zones, Living zone, Dining zone, Studio kitchen, Lighting & decor, Smart home & lifestyle.
+- Real furniture / kitchen / smart-home parts with upgraded vector visuals.
+- Budget target (£2,200) and live room score.
+- Mission goals for lounge comfort, dining, working kitchen, lighting and smart-home detail.
+- Collision / circulation check retained.
+- 36-second live-use room test instead of the old static scan.
+- Live test includes moving resident, remote-to-sofa sequence, animated TV content, working-kitchen steam/water, second resident carrying food, moving robot vacuum, lighting changes and final result screen.
+- Responsive room-style picker for tablet/mobile.
+
+Files
+- creator.html
+- css/style.css
+- js/creator.js
+- assets/creator/room-scandi.webp
+- assets/creator/room-luxury.webp
+- assets/creator/room-afro.webp
+- assets/creator/room-industrial.webp
+- assets/creator/room-smart.webp
+
+Pending note preserved
+- Future Vehicle Blueprint OFF / creative drawing behavior still needs its separate final decision later. It was intentionally not changed in this Dream Room build.
