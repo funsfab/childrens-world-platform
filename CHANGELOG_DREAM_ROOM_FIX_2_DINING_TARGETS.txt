@@ -1,0 +1,17 @@
+Children World — Dream Room Fix 2
+Dining target visibility / usability correction
+
+What changed
+- Pendant Light target moved clearly above the dining table.
+- Dining Sideboard target moved to a clear right-wall position.
+- Every active Dream Room target now has a high-contrast label pill.
+- Clicking a room part highlights its matching target with a stronger flashing gold outline.
+- Pendant Light and Dining Sideboard now give direct placement guidance in Design Coach text.
+- Added a proper Dining Sideboard visual instead of a generic placeholder symbol.
+- Loose room pieces spawn low-left so they do not hide the target the child needs to find.
+
+Protected Future Vehicle
+- No Future Vehicle functions, fitting slots, save/restore logic, animations, or vehicle UI code were changed in this patch.
+
+Files
+- js/creator.js
