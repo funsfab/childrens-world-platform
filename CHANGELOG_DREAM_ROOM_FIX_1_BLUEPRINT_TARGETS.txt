@@ -1,0 +1,24 @@
+Children World — Dream Room Studio
+Correction Batch — Problem 1
+
+Problem 1 — Dream Room blueprint had no fitting targets
+
+Fixed:
+- Added visible glowing blueprint target slots for every Dream Room part.
+- Active room section now shows its own matching placement targets.
+- Clicking a room part creates a loose piece ready to drag into a target.
+- Pieces now snap only when they are near the correct target and close to the correct size.
+- Fitted pieces lock in place and their target is marked complete.
+- Required counters now count only genuinely fitted pieces, not simply clicked/created objects.
+- A room section completes only after its required pieces are fitted.
+- Completion still auto-advances to the next unfinished room section.
+- Test My Creation remains locked until all required room sections are genuinely complete.
+- Added clear visual pieces for required Door, Window, Pendant Light, Wall Art, Curtains and Smart Light targets.
+
+Protected Future Vehicle:
+- No Future Vehicle HTML or CSS was changed.
+- Core Future Vehicle blueprint, target-slot, snap, completion, save/restore and final-test functions were verified unchanged against the protected Dream Room rebuild baseline.
+
+Files included:
+- js/creator.js
+- CHANGELOG_DREAM_ROOM_FIX_1_BLUEPRINT_TARGETS.txt
