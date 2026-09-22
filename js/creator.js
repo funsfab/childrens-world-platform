@@ -2789,9 +2789,114 @@ function roomCollisionIssues(){
   return issues;
 }
 
-function roomPartCount(id){return roomObjects().filter(o=>o.dataset.partId===id).length;}
+function roomTargetDefinitions(){
+  const defs={
+    shell:[
+      {key:'room-shell-door',partId:'room-door',x:.49,y:.39,w:.075,h:.20,label:['DOOR','PORTE']},
+      {key:'room-shell-window',partId:'room-window',x:.205,y:.315,w:.235,h:.25,label:['WINDOW','FENÊTRE']},
+      {key:'room-shell-rug',partId:'rug',x:.315,y:.79,w:.31,h:.18,label:['MAIN RUG','TAPIS PRINCIPAL']},
+      {key:'room-shell-wall',partId:'room-wall',x:.50,y:.60,w:.24,h:.055,label:['ZONE EDGE','LIMITE DE ZONE']},
+      {key:'room-shell-divider',partId:'divider',x:.49,y:.50,w:.17,h:.065,label:['ROOM DIVIDER','CLOISON']}
+    ],
+    lounge:[
+      {key:'room-lounge-sofa',partId:'sofa',x:.235,y:.73,w:.25,h:.17,label:['SOFA','CANAPÉ']},
+      {key:'room-lounge-coffee',partId:'coffee-table',x:.405,y:.80,w:.16,h:.105,label:['COFFEE TABLE','TABLE BASSE']},
+      {key:'room-lounge-tv',partId:'television',x:.802,y:.30,w:.19,h:.20,label:['SMART TV','TV CONNECTÉE']},
+      {key:'room-lounge-tvstand',partId:'tv-stand',x:.802,y:.53,w:.22,h:.105,label:['MEDIA UNIT','MEUBLE TV']},
+      {key:'room-lounge-armchair',partId:'armchair',x:.115,y:.72,w:.10,h:.15,label:['ARMCHAIR','FAUTEUIL']},
+      {key:'room-lounge-shelf',partId:'shelf',x:.915,y:.33,w:.075,h:.24,label:['SHELF','ÉTAGÈRE']},
+      {key:'room-lounge-plant',partId:'plant',x:.69,y:.70,w:.08,h:.17,label:['PLANT','PLANTE']}
+    ],
+    dining:[
+      {key:'room-dining-table',partId:'dining-table',x:.50,y:.70,w:.20,h:.14,label:['DINING TABLE','TABLE À MANGER']},
+      {key:'room-dining-chair-l',partId:'dining-chair',x:.405,y:.72,w:.08,h:.13,label:['CHAIR','CHAISE']},
+      {key:'room-dining-chair-r',partId:'dining-chair',x:.595,y:.72,w:.08,h:.13,label:['CHAIR','CHAISE']},
+      {key:'room-dining-pendant',partId:'pendant',x:.50,y:.27,w:.07,h:.16,label:['PENDANT LIGHT','SUSPENSION']},
+      {key:'room-dining-sideboard',partId:'sideboard',x:.48,y:.52,w:.19,h:.10,label:['SIDEBOARD','BUFFET']}
+    ],
+    kitchen:[
+      {key:'room-kitchen-counter',partId:'kitchen-counter',x:.765,y:.55,w:.29,h:.12,label:['WORKTOP','PLAN DE TRAVAIL']},
+      {key:'room-kitchen-sink',partId:'kitchen-sink',x:.663,y:.49,w:.11,h:.075,label:['SINK','ÉVIER']},
+      {key:'room-kitchen-hob',partId:'hob',x:.842,y:.47,w:.11,h:.075,label:['HOB','PLAQUE']},
+      {key:'room-kitchen-fridge',partId:'fridge',x:.928,y:.38,w:.075,h:.25,label:['FRIDGE','FRIGO']},
+      {key:'room-kitchen-oven',partId:'oven',x:.895,y:.53,w:.07,h:.14,label:['OVEN','FOUR']},
+      {key:'room-kitchen-cabinet',partId:'kitchen-cabinet',x:.735,y:.36,w:.13,h:.12,label:['CABINET','MEUBLE']},
+      {key:'room-kitchen-kettle',partId:'kettle',x:.74,y:.48,w:.055,h:.075,label:['KETTLE','BOUILLOIRE']}
+    ],
+    style:[
+      {key:'room-style-floorlamp',partId:'floor-lamp',x:.105,y:.55,w:.075,h:.22,label:['FLOOR LAMP','LAMPADAIRE']},
+      {key:'room-style-art',partId:'wall-art',x:.49,y:.22,w:.13,h:.18,label:['WALL ART','ART MURAL']},
+      {key:'room-style-curtains',partId:'curtains',x:.205,y:.31,w:.26,h:.27,label:['CURTAINS','RIDEAUX']},
+      {key:'room-style-mirror',partId:'mirror',x:.36,y:.23,w:.075,h:.17,label:['MIRROR','MIROIR']},
+      {key:'room-style-books',partId:'books',x:.87,y:.56,w:.09,h:.055,label:['BOOKS','LIVRES']},
+      {key:'room-style-cushion',partId:'cushion',x:.24,y:.69,w:.065,h:.07,label:['CUSHION','COUSSIN']}
+    ],
+    smart:[
+      {key:'room-smart-speaker',partId:'smart-speaker',x:.755,y:.51,w:.065,h:.12,label:['SMART SPEAKER','ENCEINTE']},
+      {key:'room-smart-vacuum',partId:'robot-vacuum',x:.50,y:.89,w:.11,h:.07,label:['ROBOT VACUUM','ASPIRATEUR ROBOT']},
+      {key:'room-smart-light',partId:'smart-light',x:.61,y:.24,w:.06,h:.14,label:['SMART LIGHT','LAMPE CONNECTÉE']},
+      {key:'room-smart-thermostat',partId:'thermostat',x:.55,y:.31,w:.055,h:.08,label:['THERMOSTAT','THERMOSTAT']},
+      {key:'room-smart-laptop',partId:'laptop',x:.40,y:.61,w:.11,h:.075,label:['LAPTOP','ORDINATEUR']}
+    ]
+  };
+  return defs;
+}
+function roomTargetsForMode(modeId=activeMode){return roomTargetDefinitions()[modeId]||[];}
+function roomInstalledKeys(){return new Set(roomObjects().filter(o=>o.dataset.installed==='1'&&o.dataset.targetKey).map(o=>o.dataset.targetKey));}
+function roomPartCount(id){return roomObjects().filter(o=>o.dataset.partId===id&&o.dataset.installed==='1'&&o.dataset.targetKey).length;}
 function roomModeRequirements(modeId){return ROOM_REQUIREMENTS[modeId]||{};}
 function roomModeComplete(modeId){const req=roomModeRequirements(modeId);const ids=Object.keys(req);return ids.length>0&&ids.every(id=>roomPartCount(id)>=req[id]);}
+function roomTargetFor(el){
+  if(active!=='room'||!templateOn||el?.dataset.kind!=='part')return null;
+  const used=roomInstalledKeys(),targets=roomTargetsForMode(activeMode).filter(t=>t.partId===el.dataset.partId);
+  let best=null,bestD=Infinity;
+  for(const t of targets){
+    if(used.has(t.key)&&el.dataset.targetKey!==t.key)continue;
+    const dx=(+el.dataset.x)-t.x,dy=(+el.dataset.y)-t.y,d=Math.hypot(dx,dy);
+    if(d<bestD){best={...t,distance:d};bestD=d;}
+  }
+  return best;
+}
+function roomTargetCssSize(target){return Math.max(32,target.w*Math.max(1,stage.clientWidth));}
+function tryRoomSnap(el,announce=true){
+  if(!el||active!=='room'||!templateOn||el.dataset.kind!=='part')return false;
+  const target=roomTargetFor(el);
+  if(!target){
+    if(announce)$('creatorCoach').textContent=t('Choose the matching room zone and fit this object into its glowing blueprint target.','Choisis la zone correspondante et place cet objet dans sa cible lumineuse du plan.');
+    return false;
+  }
+  const targetPx=roomTargetCssSize(target),current=+el.dataset.size||58;
+  const sizeError=Math.abs(current-targetPx)/Math.max(1,targetPx);
+  const near=target.distance<=Math.max(.055,target.w*.50),closeSize=sizeError<=.22;
+  if(near&&closeSize){
+    el.dataset.installed='1';el.dataset.targetKey=target.key;el.classList.add('installed-part');
+    el.dataset.x=target.x;el.dataset.y=target.y;el.dataset.size=targetPx;el.dataset.aspect=target.w/target.h;el.dataset.rotation=0;
+    applyObjectStyle(el);selectObject(null);renderTemplate('room');refreshRoomComponentButtons();updateRoomProgressUI();
+    const finished=activeMode;if(roomModeComplete(finished))setTimeout(()=>updateRoomProgressUI({autoAdvance:true}),220);
+    if(announce){$('creatorCoach').textContent=t('CLICK — room object fitted into the correct blueprint target.','CLIC — objet placé dans la bonne cible du plan.');window.playTone?.(true);}
+    return true;
+  }
+  el.dataset.installed='0';el.dataset.targetKey='';el.classList.remove('installed-part');applyObjectStyle(el);
+  if(announce&&near&&!closeSize)$('creatorCoach').textContent=t('Correct place. Resize the object until it matches the target, then release it.','Bonne place. Redimensionne l’objet pour correspondre à la cible, puis relâche-le.');
+  else if(announce)$('creatorCoach').textContent=t('Drag the object onto the matching glowing target.','Fais glisser l’objet sur la cible lumineuse correspondante.');
+  return false;
+}
+function drawRoomTargetGuides(){
+  if(active!=='room'||!templateOn)return;
+  const used=roomInstalledKeys(),targets=roomTargetsForMode(activeMode),W=templateCanvas.width,H=templateCanvas.height;
+  tctx.save();
+  targets.forEach(target=>{
+    const installed=used.has(target.key),cx=target.x*W,cy=target.y*H,w=target.w*W,h=target.h*H;
+    tctx.save();tctx.translate(cx,cy);tctx.setLineDash(installed?[]:[9,7]);tctx.lineWidth=installed?2.5:3;
+    tctx.strokeStyle=installed?'rgba(102,235,174,.72)':'rgba(93,228,255,.92)';
+    tctx.fillStyle=installed?'rgba(102,235,174,.08)':'rgba(93,228,255,.08)';
+    tctx.shadowColor=installed?'rgba(102,235,174,.35)':'rgba(93,228,255,.55)';tctx.shadowBlur=installed?6:12;
+    tctx.beginPath();tctx.roundRect(-w/2,-h/2,w,h,Math.min(14,h*.18));tctx.fill();tctx.stroke();
+    tctx.shadowBlur=0;tctx.setLineDash([]);tctx.fillStyle=installed?'#8cf0c2':'#dffbff';tctx.font='900 10px system-ui';tctx.textAlign='center';
+    tctx.fillText(`${installed?'✓ ':''}${L(target.label)}`,0,Math.min(h/2-6,-h/2+16));tctx.restore();
+  });
+  tctx.restore();
+}
 function roomReadyForTest(){return roomModes.every(md=>roomModeComplete(md.id));}
 function roomNextUnfinishedMode(){return roomModes.find(md=>!roomModeComplete(md.id))?.id||null;}
 function roomRequirementText(modeId){const req=roomModeRequirements(modeId);const md=roomModes.find(x=>x.id===modeId);if(!md)return'';return Object.entries(req).map(([id,need])=>{const pp=md.parts.find(x=>x.id===id);return `${L(pp?.label||[id,id])} ${Math.min(roomPartCount(id),need)}/${need}`}).join(' · ');}
@@ -2844,6 +2949,7 @@ function drawRoomDesignTemplate(){
   /* compact design HUD */
   tctx.fillStyle='rgba(4,18,34,.82)';tctx.beginPath();tctx.roundRect(20,18,318,75,14);tctx.fill();tctx.fillStyle='#f3fbff';tctx.font='900 15px system-ui';tctx.textAlign='left';tctx.fillText(t('DREAM ROOM STUDIO','STUDIO CHAMBRE DE RÊVE'),35,43);tctx.fillStyle='#a8dff0';tctx.font='700 10px system-ui';tctx.fillText(t('Design for real life: comfort, flow, function and style.','Conçois pour la vraie vie : confort, circulation, fonction et style.'),35,62);tctx.fillText(`${t('Budget','Budget')}: £${m.budget.toLocaleString()} / £2,200   ·   ${t('Live score','Score')}: ${m.score}%`,35,80);
   tctx.fillStyle='rgba(4,18,34,.82)';tctx.beginPath();tctx.roundRect(608,18,172,118,14);tctx.fill();tctx.fillStyle='#f1fbff';tctx.font='900 11px system-ui';tctx.fillText(t('MISSION GOALS','OBJECTIFS'),622,39);tctx.font='700 10px system-ui';const goals=[[m.lounge,t('Comfortable lounge','Salon confortable')],[m.dining,t('Dining area','Coin repas')],[m.kitchen,t('Working kitchen','Cuisine fonctionnelle')],[m.light,t('Useful lighting','Éclairage utile')],[m.smart,t('Smart-home detail','Détail intelligent')]];goals.forEach(([ok,txt],i)=>{tctx.fillStyle=ok?'#75ebb6':'#8fa7bd';tctx.fillText(`${ok?'✓':'○'} ${txt}`,622,58+i*16)});
+  drawRoomTargetGuides();
   tctx.restore();
 }
 function drawRoomHuman(x,y,scale=1,opts={}){
@@ -3090,7 +3196,18 @@ function addPalettePart(p){
       el.dataset.size=startSize;applyObjectStyle(el);
     }
   }
-  commitHistory();if(active==='room'){renderTemplate('room');updateRoomProgressUI({autoAdvance:true});}return el;
+  if(active==='room'&&templateOn){
+    const target=roomTargetFor(el);
+    if(target){
+      el.dataset.targetHintKey=target.key;
+      el.dataset.aspect=target.w/target.h;
+      el.dataset.size=Math.max(30,roomTargetCssSize(target)*.72);
+      el.dataset.x=.50;el.dataset.y=.58;
+      applyObjectStyle(el);
+      $('creatorCoach').textContent=t('A loose room piece is ready. Drag it onto the matching glowing target and resize it until it clicks into place.','Une pièce de la pièce est prête. Fais-la glisser sur la cible lumineuse correspondante et redimensionne-la jusqu’au clic.');
+    }
+  }
+  commitHistory();if(active==='room'){renderTemplate('room');updateRoomProgressUI();}return el;
 }
 function renderComponents(md){
   const host=$('creatorComponents');
@@ -3159,6 +3276,14 @@ function roomPartSvg(id){
   const svg=(body,view='0 0 120 80')=>`<svg class="creator-object-icon room-object-svg" viewBox="${view}" aria-hidden="true">${body}</svg>`;
   const shadow='<ellipse cx="60" cy="70" rx="46" ry="6" fill="rgba(0,0,0,.18)"/>';
   switch(id){
+    case 'room-wall':return svg(`<rect x="8" y="32" width="104" height="18" rx="4" fill="#d9d2c7" stroke="#7d746b"/><path d="M18 32v18M42 32v18M66 32v18M90 32v18" stroke="#b6ada1"/>`);
+    case 'room-door':return svg(`<rect x="36" y="5" width="48" height="70" rx="4" fill="#9a6c43" stroke="#4d3728" stroke-width="3"/><rect x="43" y="12" width="34" height="56" rx="2" fill="#b98455"/><circle cx="72" cy="42" r="3" fill="#f0d17c"/>`);
+    case 'room-window':return svg(`<rect x="12" y="12" width="96" height="56" rx="4" fill="#a9d9ee" stroke="#5b7582" stroke-width="4"/><path d="M60 14v52M14 40h92" stroke="#eefaff" stroke-width="3"/><path d="M18 58L48 26M70 56l26-28" stroke="rgba(255,255,255,.5)" stroke-width="2"/>`);
+    case 'divider':return svg(`<rect x="10" y="28" width="100" height="25" rx="3" fill="#bda98c" stroke="#6f604f"/><path d="M30 29v23M52 29v23M74 29v23M96 29v23" stroke="#8f7c64"/>`);
+    case 'pendant':return svg(`<path d="M60 3v27" stroke="#39434a" stroke-width="4"/><path d="M35 48q25-28 50 0z" fill="#d3a25d" stroke="#665039"/><circle cx="60" cy="51" r="8" fill="#ffe7a5"/>`);
+    case 'wall-art':return svg(`<rect x="22" y="7" width="76" height="66" rx="3" fill="#f0e7da" stroke="#5e4b3c" stroke-width="4"/><circle cx="52" cy="33" r="12" fill="#cf8b64"/><path d="M31 62l18-18 14 12 13-20 12 26z" fill="#718c72"/>`);
+    case 'curtains':return svg(`<rect x="28" y="6" width="64" height="68" fill="#9bc7d9" opacity=".35"/><path d="M18 7h84" stroke="#444f55" stroke-width="4"/><path d="M22 9q12 20 2 64M38 9q10 22 1 64M82 9q-10 22-1 64M98 9q-12 20-2 64" fill="none" stroke="#c8b9a9" stroke-width="8"/>`);
+    case 'smart-light':return svg(`<path d="M60 7v18" stroke="#46515b" stroke-width="4"/><circle cx="60" cy="42" r="20" fill="#ffe38a" stroke="#f6f2df" stroke-width="3"/><path d="M34 42h-9M95 42h-9M42 19l-7-7M78 19l7-7" stroke="#64e4ff" stroke-width="3" stroke-linecap="round"/><rect x="51" y="61" width="18" height="8" rx="3" fill="#6c7480"/>`);
     case 'sofa':return svg(`${shadow}<defs><linearGradient id="rs" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#f5efe7"/><stop offset="1" stop-color="#b9a996"/></linearGradient></defs><rect x="13" y="31" width="94" height="31" rx="10" fill="url(#rs)" stroke="#6f655a"/><rect x="18" y="18" width="84" height="27" rx="10" fill="#ded2c5" stroke="#776d63"/><rect x="19" y="29" width="8" height="35" rx="4" fill="#9b8a78"/><rect x="93" y="29" width="8" height="35" rx="4" fill="#9b8a78"/><line x1="58" y1="22" x2="58" y2="43" stroke="#b7a99a"/>`);
     case 'armchair':return svg(`${shadow}<rect x="27" y="28" width="66" height="36" rx="12" fill="#c9b396" stroke="#665a4d"/><rect x="35" y="15" width="50" height="31" rx="12" fill="#dbcbb6"/><rect x="23" y="34" width="12" height="27" rx="6" fill="#a88d6f"/><rect x="85" y="34" width="12" height="27" rx="6" fill="#a88d6f"/>`);
     case 'coffee-table':return svg(`${shadow}<ellipse cx="60" cy="36" rx="45" ry="19" fill="#8b5d3b" stroke="#4a3427"/><ellipse cx="60" cy="32" rx="42" ry="16" fill="#a97750"/><rect x="54" y="42" width="12" height="25" rx="3" fill="#49352b"/>`);
@@ -3397,6 +3522,7 @@ function advanceVehicleAfterCompletion(completedMode){
 }
 function softSnap(el){
   if(active==='vehicle'){tryVehicleSnap(el,true);return}
+  if(active==='room'){tryRoomSnap(el,true);return}
   if(active!=='park')return;
   const tags=objectTags(el),targets=[...objectLayer.children].filter(o=>o!==el&&o.dataset.kind==='part');let desired=null;
   if(tags.includes('seated-person'))desired=['seat-target'];else if(tags.includes('duck'))desired=['water'];else if(tags.includes('pusher'))desired=['buggy'];else if(tags.includes('swing-rider'))desired=['match-swing'];
@@ -4159,8 +4285,8 @@ function startTest(){if(!active)return;
 function stopTest(showMessage=true){hideVehicleStageNotice();if(roomLiveActive)stopRoomLiveTest();if(!testRunning&&showMessage)return;if(vehicleRevealActive)resetVehiclePhaseOneReveal();testRunning=false;stage.classList.remove('testing','test-active','room-live-test');$('stopCreationTest').hidden=true;simulation.className='creator-simulation';simulation.innerHTML='';clearTestClasses();if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}if(active==='room')renderTemplate('room');if(showMessage){$('creatorCoach').textContent=t('Test stopped. Adjust any part, resize it or add something new, then test again.','Test arrêté. Modifie une pièce, redimensionne-la ou ajoute un élément puis reteste.');$('creatorTestResult').innerHTML=`<div class="creator-report"><div><b>${t('Test stopped — back to edit mode','Test arrêté — retour au mode édition')}</b><p>${t('Build → Test → Stop → Improve → Test again.','Construis → Teste → Arrête → Améliore → Reteste.')}</p></div></div>`;}}
 function roomCollisionReport(){const issues=roomCollisionIssues();return issues.length?t(`Furniture collision found: ${issues[0]}. Move one object so the room remains usable.`,`Collision de mobilier : ${issues[0]}. Déplace un objet pour garder la pièce utilisable.`):t('The room has a clear circulation path and no major furniture collision was detected.','La pièce conserve une circulation claire et aucune collision importante n’a été détectée.');}
 
-function setObjectSize(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.size=clamp(v,24,420);selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
-function setObjectRotation(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.rotation=v;selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(commit)commitHistory();}
+function setObjectSize(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.size=clamp(v,24,420);selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(active==='room'&&templateOn)tryRoomSnap(selectedObject,true);if(commit)commitHistory();}
+function setObjectRotation(v,commit=false){if(!selectedObject||selectedObject.dataset.installed==='1')return;selectedObject.dataset.rotation=v;selectedObject.dataset.installed='0';selectedObject.classList.remove('installed-part');applyObjectStyle(selectedObject);if(active==='vehicle')tryVehicleSnap(selectedObject,true);if(active==='room'&&templateOn)tryRoomSnap(selectedObject,true);if(commit)commitHistory();}
 function duplicateSelected(){if(!selectedObject||selectedObject.dataset.installed==='1')return;const d=objectData().find((_,i)=>objectLayer.children[i]===selectedObject);if(!d)return;let copy;if(d.kind==='blueprint'){const item=(missions[active].library||[]).find(x=>x.id===d.blueprintId);copy=addBlueprint(item,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}else if(d.kind==='vector')copy=addVector({type:d.vectorType,color:d.vectorColor,stroke:d.vectorStroke,path:d.vectorPath,x:clamp(d.x+.05,.02,.98),y:clamp(d.y+.05,.02,.98),size:d.size,aspect:d.aspect,rotation:d.rotation,label:d.label},{select:true});else{const p=findPart(d.partId)||part(d.partId,d.icon,d.label,d.label,JSON.parse(d.tags||'[]'),d.className);copy=addObject(p,clamp(d.x+.05,.02,.98),clamp(d.y+.05,.02,.98),d.size,d.rotation,{select:true})}commitHistory();if(active==='room'){renderTemplate('room');updateRoomProgressUI({autoAdvance:true});}return copy;}
 function deleteSelected(){if(!selectedObject)return;if(selectedObject.dataset.installed==='1'){$('creatorCoach').textContent=t('That piece is already fitted into the car and is locked in place.','Cette pièce est déjà fixée dans la voiture et verrouillée.');return}selectedObject.remove();selectedObject=null;selectObject(null);refreshLibraryCards();refreshVehicleComponentButtons();commitHistory();if(active==='room'){renderTemplate('room');updateRoomProgressUI();}}
 function layerSelected(front){if(!selectedObject)return;front?objectLayer.appendChild(selectedObject):objectLayer.insertBefore(selectedObject,objectLayer.firstChild);commitHistory();if(active==='room'){renderTemplate('room');updateRoomProgressUI();}}
