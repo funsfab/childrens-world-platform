@@ -51,6 +51,7 @@ const ROOM_STYLE_MAP={
  'room-smart':{wall:'#b9b4aa',floor:'#706c66',accent:'#5de4ff'}
 };
 const roomImageCache={};
+let roomHighlightedPartId='';
 roomLibrary.forEach(v=>{const img=new Image();img.decoding='async';img.src=v.img;img.onload=()=>{if(active==='room')renderTemplate('room')};roomImageCache[v.id]=img;});
 const ROOM_COSTS={
  'room-wall':90,'room-door':180,'room-window':240,'divider':220,'rug':160,
@@ -2811,8 +2812,10 @@ function roomTargetDefinitions(){
       {key:'room-dining-table',partId:'dining-table',x:.50,y:.70,w:.20,h:.14,label:['DINING TABLE','TABLE À MANGER']},
       {key:'room-dining-chair-l',partId:'dining-chair',x:.405,y:.72,w:.08,h:.13,label:['CHAIR','CHAISE']},
       {key:'room-dining-chair-r',partId:'dining-chair',x:.595,y:.72,w:.08,h:.13,label:['CHAIR','CHAISE']},
-      {key:'room-dining-pendant',partId:'pendant',x:.50,y:.27,w:.07,h:.16,label:['PENDANT LIGHT','SUSPENSION']},
-      {key:'room-dining-sideboard',partId:'sideboard',x:.48,y:.52,w:.19,h:.10,label:['SIDEBOARD','BUFFET']}
+      /* Keep the hanging light high above the table so it cannot blend into the table target. */
+      {key:'room-dining-pendant',partId:'pendant',x:.50,y:.205,w:.075,h:.18,label:['PENDANT LIGHT','SUSPENSION']},
+      /* Put the sideboard clearly against the right dining wall, away from table/chair targets. */
+      {key:'room-dining-sideboard',partId:'sideboard',x:.72,y:.52,w:.20,h:.105,label:['DINING SIDEBOARD','BUFFET SALLE À MANGER'],optional:true}
     ],
     kitchen:[
       {key:'room-kitchen-counter',partId:'kitchen-counter',x:.765,y:.55,w:.29,h:.12,label:['WORKTOP','PLAN DE TRAVAIL']},
@@ -2871,6 +2874,7 @@ function tryRoomSnap(el,announce=true){
   if(near&&closeSize){
     el.dataset.installed='1';el.dataset.targetKey=target.key;el.classList.add('installed-part');
     el.dataset.x=target.x;el.dataset.y=target.y;el.dataset.size=targetPx;el.dataset.aspect=target.w/target.h;el.dataset.rotation=0;
+    roomHighlightedPartId='';
     applyObjectStyle(el);selectObject(null);renderTemplate('room');refreshRoomComponentButtons();updateRoomProgressUI();
     const finished=activeMode;if(roomModeComplete(finished))setTimeout(()=>updateRoomProgressUI({autoAdvance:true}),220);
     if(announce){$('creatorCoach').textContent=t('CLICK — room object fitted into the correct blueprint target.','CLIC — objet placé dans la bonne cible du plan.');window.playTone?.(true);}
@@ -2884,16 +2888,34 @@ function tryRoomSnap(el,announce=true){
 function drawRoomTargetGuides(){
   if(active!=='room'||!templateOn)return;
   const used=roomInstalledKeys(),targets=roomTargetsForMode(activeMode),W=templateCanvas.width,H=templateCanvas.height;
+  const pulse=.58+.42*Math.sin(performance.now()/220);
   tctx.save();
   targets.forEach(target=>{
-    const installed=used.has(target.key),cx=target.x*W,cy=target.y*H,w=target.w*W,h=target.h*H;
-    tctx.save();tctx.translate(cx,cy);tctx.setLineDash(installed?[]:[9,7]);tctx.lineWidth=installed?2.5:3;
-    tctx.strokeStyle=installed?'rgba(102,235,174,.72)':'rgba(93,228,255,.92)';
-    tctx.fillStyle=installed?'rgba(102,235,174,.08)':'rgba(93,228,255,.08)';
-    tctx.shadowColor=installed?'rgba(102,235,174,.35)':'rgba(93,228,255,.55)';tctx.shadowBlur=installed?6:12;
+    const installed=used.has(target.key),highlighted=!!roomHighlightedPartId&&target.partId===roomHighlightedPartId;
+    const cx=target.x*W,cy=target.y*H,w=target.w*W,h=target.h*H;
+    tctx.save();tctx.translate(cx,cy);
+    tctx.setLineDash(installed?[]:(highlighted?[12,5]:[9,7]));
+    tctx.lineWidth=highlighted?5:(installed?2.5:3);
+    tctx.strokeStyle=installed?'rgba(102,235,174,.88)':highlighted?`rgba(255,221,91,${.85+.15*pulse})`:'rgba(93,228,255,.95)';
+    tctx.fillStyle=installed?'rgba(102,235,174,.10)':highlighted?'rgba(255,221,91,.16)':'rgba(93,228,255,.10)';
+    tctx.shadowColor=installed?'rgba(102,235,174,.40)':highlighted?'rgba(255,221,91,.90)':'rgba(93,228,255,.60)';
+    tctx.shadowBlur=highlighted?24:(installed?7:14);
     tctx.beginPath();tctx.roundRect(-w/2,-h/2,w,h,Math.min(14,h*.18));tctx.fill();tctx.stroke();
-    tctx.shadowBlur=0;tctx.setLineDash([]);tctx.fillStyle=installed?'#8cf0c2':'#dffbff';tctx.font='900 10px system-ui';tctx.textAlign='center';
-    tctx.fillText(`${installed?'✓ ':''}${L(target.label)}`,0,Math.min(h/2-6,-h/2+16));tctx.restore();
+    tctx.shadowBlur=0;tctx.setLineDash([]);
+    const label=(installed?'✓ ':'')+L(target.label)+(target.optional&&!installed?' · '+t('OPTIONAL','OPTIONNEL'):'');
+    tctx.font=highlighted?'900 13px system-ui':'900 11px system-ui';
+    tctx.textAlign='center';tctx.textBaseline='middle';
+    const labelW=Math.min(Math.max(tctx.measureText(label).width+22,84),210);
+    const labelY=-h/2-17;
+    tctx.fillStyle=highlighted?'rgba(87,64,10,.94)':'rgba(4,18,34,.90)';
+    tctx.beginPath();tctx.roundRect(-labelW/2,labelY-11,labelW,22,8);tctx.fill();
+    tctx.strokeStyle=highlighted?'rgba(255,221,91,.95)':'rgba(93,228,255,.55)';
+    tctx.lineWidth=1.5;tctx.stroke();
+    tctx.fillStyle=installed?'#8cf0c2':highlighted?'#fff1a6':'#e9fbff';
+    tctx.fillText(label,0,labelY);
+    tctx.strokeStyle=highlighted?'rgba(255,221,91,.95)':'rgba(93,228,255,.55)';
+    tctx.lineWidth=2;tctx.beginPath();tctx.moveTo(0,labelY+11);tctx.lineTo(0,-h/2);tctx.stroke();
+    tctx.restore();
   });
   tctx.restore();
 }
@@ -3160,7 +3182,7 @@ function renderModes(m,preferred){
     const b=document.createElement('button');b.type='button';b.className='creator-mode'+(md.id===activeMode?' active':'')+(complete?' is-complete':'')+(active==='room'&&complete?' room-complete':'');b.dataset.modeId=md.id;
     const modeCardHelp=(active==='vehicle'&&vehicleIs('tractor')&&md.id==='body')?t('Build the farm machine, cab and the real front/rear implement connection system.','Construis la machine agricole, la cabine et les vrais systèmes de connexion des outils avant/arrière.'):(active==='vehicle'&&vehicleIs('tractor')&&md.id==='future')?t('Fit precision GPS, soil sensing, crop cameras, autonomous guidance and the farm-drone dock.','Installe le GPS de précision, les capteurs du sol, les caméras de cultures, le guidage autonome et la station du drone agricole.'):L(md.help);
     b.innerHTML=`<span>${md.icon}</span><b>${L(md.label)}</b><small>${modeCardHelp}</small>${complete?`<small class="creator-mode-status">✓ ${t('Complete','Terminé')}</small>`:''}`;
-    b.onclick=()=>{activeMode=md.id;renderModes(m,activeMode);if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}if(active==='room'){renderTemplate('room');updateRoomProgressUI();}commitHistory()};host.appendChild(b)
+    b.onclick=()=>{activeMode=md.id;if(active==='room')roomHighlightedPartId='';renderModes(m,activeMode);if(active==='vehicle'){renderTemplate('vehicle');updateVehicleProgressUI();}if(active==='room'){renderTemplate('room');updateRoomProgressUI();}commitHistory()};host.appendChild(b)
   });
   const selected=modes.find(x=>x.id===activeMode);
   $('creatorModeHelp').textContent=(active==='vehicle'&&vehicleIs('tractor')&&selected.id==='future')
@@ -3197,14 +3219,20 @@ function addPalettePart(p){
     }
   }
   if(active==='room'&&templateOn){
+    roomHighlightedPartId=p.id;
     const target=roomTargetFor(el);
     if(target){
       el.dataset.targetHintKey=target.key;
       el.dataset.aspect=target.w/target.h;
       el.dataset.size=Math.max(30,roomTargetCssSize(target)*.72);
-      el.dataset.x=.50;el.dataset.y=.58;
+      el.dataset.x=.22;el.dataset.y=.84;
       applyObjectStyle(el);
-      $('creatorCoach').textContent=t('A loose room piece is ready. Drag it onto the matching glowing target and resize it until it clicks into place.','Une pièce de la pièce est prête. Fais-la glisser sur la cible lumineuse correspondante et redimensionne-la jusqu’au clic.');
+      const special=p.id==='pendant'
+        ?t('Pendant light selected — look for the flashing PENDANT LIGHT target above the dining table.','Suspension sélectionnée — cherche la cible SUSPENSION qui clignote au-dessus de la table.')
+        :p.id==='sideboard'
+          ?t('Dining sideboard selected — look for the flashing DINING SIDEBOARD target against the right dining wall.','Buffet sélectionné — cherche la cible BUFFET SALLE À MANGER qui clignote contre le mur droit du coin repas.')
+          :t('A loose room piece is ready. Its matching target is flashing. Drag the piece there and resize it until it clicks into place.','Une pièce est prête. Sa cible correspondante clignote. Fais-la glisser dessus et redimensionne-la jusqu’au clic.');
+      $('creatorCoach').textContent=special;
     }
   }
   commitHistory();if(active==='room'){renderTemplate('room');updateRoomProgressUI();}return el;
@@ -3281,6 +3309,7 @@ function roomPartSvg(id){
     case 'room-window':return svg(`<rect x="12" y="12" width="96" height="56" rx="4" fill="#a9d9ee" stroke="#5b7582" stroke-width="4"/><path d="M60 14v52M14 40h92" stroke="#eefaff" stroke-width="3"/><path d="M18 58L48 26M70 56l26-28" stroke="rgba(255,255,255,.5)" stroke-width="2"/>`);
     case 'divider':return svg(`<rect x="10" y="28" width="100" height="25" rx="3" fill="#bda98c" stroke="#6f604f"/><path d="M30 29v23M52 29v23M74 29v23M96 29v23" stroke="#8f7c64"/>`);
     case 'pendant':return svg(`<path d="M60 3v27" stroke="#39434a" stroke-width="4"/><path d="M35 48q25-28 50 0z" fill="#d3a25d" stroke="#665039"/><circle cx="60" cy="51" r="8" fill="#ffe7a5"/>`);
+    case 'sideboard':return svg(`${shadow}<rect x="12" y="28" width="96" height="34" rx="4" fill="#866044" stroke="#483526" stroke-width="3"/><rect x="19" y="35" width="25" height="20" rx="2" fill="#6b4a34"/><rect x="48" y="35" width="25" height="20" rx="2" fill="#a27b58"/><rect x="77" y="35" width="24" height="20" rx="2" fill="#6b4a34"/><circle cx="40" cy="45" r="2" fill="#e5c983"/><circle cx="69" cy="45" r="2" fill="#e5c983"/><circle cx="97" cy="45" r="2" fill="#e5c983"/><rect x="20" y="62" width="6" height="8" fill="#49372a"/><rect x="94" y="62" width="6" height="8" fill="#49372a"/>`);
     case 'wall-art':return svg(`<rect x="22" y="7" width="76" height="66" rx="3" fill="#f0e7da" stroke="#5e4b3c" stroke-width="4"/><circle cx="52" cy="33" r="12" fill="#cf8b64"/><path d="M31 62l18-18 14 12 13-20 12 26z" fill="#718c72"/>`);
     case 'curtains':return svg(`<rect x="28" y="6" width="64" height="68" fill="#9bc7d9" opacity=".35"/><path d="M18 7h84" stroke="#444f55" stroke-width="4"/><path d="M22 9q12 20 2 64M38 9q10 22 1 64M82 9q-10 22-1 64M98 9q-12 20-2 64" fill="none" stroke="#c8b9a9" stroke-width="8"/>`);
     case 'smart-light':return svg(`<path d="M60 7v18" stroke="#46515b" stroke-width="4"/><circle cx="60" cy="42" r="20" fill="#ffe38a" stroke="#f6f2df" stroke-width="3"/><path d="M34 42h-9M95 42h-9M42 19l-7-7M78 19l7-7" stroke="#64e4ff" stroke-width="3" stroke-linecap="round"/><rect x="51" y="61" width="18" height="8" rx="3" fill="#6c7480"/>`);
