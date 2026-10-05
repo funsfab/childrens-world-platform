@@ -1,133 +1,82 @@
 (()=>{
   'use strict';
-  const C=window.CWCurriculum;
-  if(!C)return;
-  const {TIERS,COUNTRIES,PER_STAGE}=C;
-  const M=window.CWChallengeModel;
-  const STORAGE='cw_brain_battle_v5';
-  const SESSION='cw_brain_battle_active_v3';
+  const TIERS=['Explorer','Challenger','Investigator','Expert','Master Mission'];
+  const STORAGE='cw_brain_battle_v4';
+  const SESSION='cw_brain_battle_active_v2';
+  const PER_TIER=20;
+  const bank=Array.isArray(window.BRAIN_BANK)?window.BRAIN_BANK:[];
   const $=id=>document.getElementById(id);
-  const intro=$('challengeIntro'), syllabus=$('syllabusPanel'), arena=$('challengeArena'), results=$('challengeResults');
+  const intro=$('challengeIntro'), arena=$('challengeArena'), results=$('challengeResults');
   let run=null,current=null,answered=false,answerState=null;
 
   const lang=()=>window.CWLang?.current?.()||'en';
-  // Strict delivery-language rule: no cross-language fallback for curriculum fields.
-  const txt=(obj)=>obj&&typeof obj==='object'&&Object.prototype.hasOwnProperty.call(obj,lang())?obj[lang()]:null;
+  const txt=(obj)=>obj?.[lang()] ?? obj?.en ?? String(obj??'');
   const tr=(en,fr)=>lang()==='fr'?fr:en;
-  const shuffle=a=>M.shuffled(a);
-  const keyFor=(childId,age,country)=>`${childId}:${age}:${country}`;
-  const pct=n=>M.initialScore(n,PER_STAGE);
-  const loadAll=()=>{try{return JSON.parse(localStorage.getItem(STORAGE)||'{"profiles":{}}')}catch(_){return {profiles:{}}}};
-  const saveAll=s=>{localStorage.setItem(STORAGE,JSON.stringify(s));return s};
-  function profile(){const p=C.preferences();const all=loadAll();return all.profiles?.[keyFor(p.childId,p.age,p.country)]||{childId:p.childId,age:p.age,country:p.country,cycles:[],activeCycle:1,seenIds:[]}}
-  function saveProfile(pf){const all=loadAll();all.profiles=all.profiles||{};all.profiles[keyFor(pf.childId||C.childId(),pf.age,pf.country)]=pf;saveAll(all);return pf}
-  function currentCycle(pf=profile()){let c=pf.cycles.find(x=>x.number===pf.activeCycle);if(!c){c={number:pf.activeCycle,stages:{},completed:false,startedAt:Date.now()};pf.cycles.push(c);saveProfile(pf)}return c}
-  function stageState(tier,pf=profile()){const c=currentCycle(pf);return c.stages[tier]||null}
-  function firstIncompleteTier(){const pf=profile(),c=currentCycle(pf);if(c.completed)return null;for(let i=0;i<TIERS.length;i++)if(!c.stages[i]?.mastered)return i;return 4}
+  const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x};
+
+  function loadProgress(){try{return JSON.parse(localStorage.getItem(STORAGE)||'{}')}catch(_){return {}}}
+  function saveProgress(data){localStorage.setItem(STORAGE,JSON.stringify(data))}
   function saveSession(){if(run)localStorage.setItem(SESSION,JSON.stringify({run,answered,answerState,updatedAt:Date.now()}))}
-  const clearSession=()=>localStorage.removeItem(SESSION);
-  function loadSession(){try{const s=JSON.parse(localStorage.getItem(SESSION)||'null');const p=C.preferences();if(!s?.run||s.run.childId!==p.childId||s.run.age!==p.age||s.run.country!==p.country)return null;return s}catch(_){return null}}
-  function qById(id){return C.findByConcept(id,lang())}
-  function languageComplete(q){return !!(txt(q.q)&&txt(q.a))}
-  function poolFor(tier){const p=C.preferences();return C.eligible({age:p.age,country:p.country,tier,language:lang()}).filter(languageComplete)}
-  function chooseQuestions(tier){
-    const pf=profile();return M.selectUnseenFirst(poolFor(tier),pf.seenIds||[],PER_STAGE);
+  function clearSession(){localStorage.removeItem(SESSION)}
+  function loadSession(){try{const s=JSON.parse(localStorage.getItem(SESSION)||'null');if(!s?.run||!Array.isArray(s.run.queue)||!Number.isInteger(s.run.tier))return null;return s}catch(_){return null}}
+  function firstIncompleteTier(){const p=loadProgress();const mastered=Array.isArray(p.mastered)?p.mastered:[];for(let i=0;i<TIERS.length;i++)if(!mastered.includes(i))return i;return 4}
+  function startTier(tierIndex=firstIncompleteTier()){
+    const tierBank=bank.filter(q=>q.tier===tierIndex);
+    const ids=new Set(tierBank.map(q=>q.id));
+    const prompts=new Set(tierBank.map(q=>q.q?.en));
+    if(tierBank.length!==PER_TIER || ids.size!==PER_TIER || prompts.size!==PER_TIER){alert('Brain Battle question bank is incomplete or duplicated for this level.');return}
+    const pool=shuffle(tierBank).slice(0,PER_TIER);
+    run={tier:tierIndex,phase:'base',queue:pool.map(q=>q.id),position:0,missed:[],attempts:{},score:0,streak:0,baseAnswered:0};
+    answered=false;answerState=null;saveSession();intro.hidden=true;results.hidden=true;arena.hidden=false;nextQuestion();
   }
-  function ensureReady(tier){
-    const pool=poolFor(tier),ids=new Set(pool.map(q=>q.conceptId||q.id));
-    if(pool.length<PER_STAGE||ids.size<PER_STAGE){showDataBlock(tier,pool.length);return false}
-    return true;
-  }
-  function startTier(tier=firstIncompleteTier()){
-    const p=C.preferences();if(!p.country)return showSyllabus();if(Number(p.age)!==10)return showUnavailableAge(p.age);const pf=profile(),cycle=currentCycle(pf);if(cycle.completed||tier===null)return showMissionComplete(cycle);
-    if(!ensureReady(tier))return;
-    const questions=chooseQuestions(tier);
-    run={childId:p.childId,age:p.age,country:p.country,cycle:profile().activeCycle,tier,phase:'base',queue:questions.map(q=>q.conceptId||q.id),position:0,missed:[],attempts:{},baseCorrect:0,baseAnswers:0,streak:0,initialScore:null};
-    answered=false;answerState=null;saveSession();intro.hidden=true;syllabus.hidden=true;results.hidden=true;arena.hidden=false;nextQuestion();
-  }
+  function findQuestion(id){return bank.find(q=>q.id===id)}
   function nextQuestion(){
     if(!run)return;
-    if(run.position>=run.queue.length)return run.phase==='base'?finishBaseRound():finishReviewRound();
-    current=qById(run.queue[run.position]);if(!current||!languageComplete(current)){return showDataBlock(run.tier,0)}
+    if(run.position>=run.queue.length){if(run.phase==='base')return finishBaseRound();return finishReviewRound()}
+    current=findQuestion(run.queue[run.position]);if(!current){run.position++;saveSession();return nextQuestion()}
     answered=false;answerState=null;renderQuestion();saveSession();
   }
   function renderQuestion(){
-    $('tierName').textContent=TIERS[run.tier];
-    $('challengeScore').textContent=run.phase==='base'?`${run.baseCorrect} / ${PER_STAGE}`:`${run.initialScore}%`;
-    $('challengeStreak').textContent=run.streak;
-    $('challengeProgress').textContent=`${run.position+1} / ${run.queue.length}`;
-    $('challengePhase').textContent=run.phase==='base'?tr('Main round','Série principale'):tr('Mastery review • original score stays fixed','Révision de maîtrise • le score initial reste fixe');
-    $('challengeSubject').textContent=txt(current.subject)||current.subjectCode||'CURRICULUM';
-    $('challengeQuestion').textContent=txt(current.q)||tr('This question is unavailable in the selected website language.','Cette question est indisponible dans la langue choisie.');
-    $('missionContext').textContent=`${COUNTRIES[run.country]?.flag||''} ${txt(COUNTRIES[run.country]?.label)||run.country} • Age ${run.age} • ${tr('Mission','Mission')} ${run.cycle}`;
-    $('difficultyPips').innerHTML=Array.from({length:5},(_,i)=>`<i class="${i<=run.tier?'on':''}"></i>`).join('');
+    $('tierName').textContent=TIERS[run.tier];$('challengeScore').textContent=run.score;$('challengeStreak').textContent=run.streak;
+    $('challengeProgress').textContent=`${run.position+1} / ${run.queue.length}`;$('challengePhase').textContent=run.phase==='base'?tr('Main round','Série principale'):tr('Review round','Révision');
+    $('challengeSubject').textContent=txt(current.subject);$('challengeQuestion').textContent=txt(current.q);$('difficultyPips').innerHTML=Array.from({length:5},(_,i)=>`<i class="${i<=run.tier?'on':''}"></i>`).join('');
     $('challengeFeedback').textContent='';$('nextChallenge').hidden=true;$('provePanel').hidden=true;
-    const box=$('challengeOptions'),open=$('openResponse');box.innerHTML='';open.hidden=true;$('openAnswerKey').hidden=true;$('openSelfCheck').hidden=true;$('openAnswer').value='';$('openAnswer').disabled=false;$('revealAnswer').disabled=false;$('selfCorrect').disabled=false;$('selfReview').disabled=false;
-    if(Array.isArray(current.choices)&&current.choices.length>=2&&current.choices.every(c=>txt(c))){
-      const choices=shuffle(current.choices);box.hidden=false;box.innerHTML=choices.map((_,i)=>`<button type="button" data-choice="${i}"></button>`).join('');
-      box.querySelectorAll('button').forEach((b,i)=>{b.textContent=txt(choices[i]);b.dataset.answerId=String(current.choices.indexOf(choices[i]));b.onclick=()=>answer(b,choices[i])});
-    }else{
-      box.hidden=true;open.hidden=false;$('revealAnswer').onclick=()=>{const guide=txt(current.why)||txt(current.guidance)||'';$('openAnswerKey').hidden=false;$('openAnswerKey').innerHTML=`<span class="eyebrow">${tr('EXPECTED ANSWER / SUCCESS CRITERIA','RÉPONSE ATTENDUE / CRITÈRES')}</span><p><b>${txt(current.a)}</b></p>${guide?`<p>${guide}</p>`:''}`;$('openSelfCheck').hidden=false};$ ('selfCorrect').onclick=()=>answerOpen(true);$('selfReview').onclick=()=>answerOpen(false);
-    }
+    const choices=shuffle(current.choices);const box=$('challengeOptions');box.innerHTML=choices.map((c,i)=>`<button type="button" data-choice="${i}"></button>`).join('');
+    box.querySelectorAll('button').forEach((b,i)=>{b.textContent=txt(choices[i]);b.dataset.answer=choices[i].en;b.onclick=()=>answer(b,choices[i])});
   }
-  function isCorrectChoice(choice){const answer=txt(current.a);return txt(choice)===answer}
   function feedbackForState(state){
     if(state.correct)return tr('✅ Correct. Keep going.','✅ Correct. Continue.');
-    const attempts=run.attempts[current.conceptId||current.id]||1;
-    const hint=txt(current.hint);
-    if(attempts>=2&&hint)return tr(`Not quite. Hint: ${hint} This question will return.`,`Pas encore. Indice : ${hint} Cette question reviendra.`);
-    return tr('Not quite. This question will return in mastery review.','Pas encore. Cette question reviendra pendant la révision de maîtrise.');
-  }
-  function answer(btn,choice){
-    if(answered)return;answered=true;const correct=isCorrectChoice(choice);run.attempts[current.conceptId||current.id]=(run.attempts[current.conceptId||current.id]||0)+1;
-    document.querySelectorAll('#challengeOptions button').forEach(b=>{b.disabled=true;const idx=Number(b.dataset.answerId);if(isCorrectChoice(current.choices[idx]))b.classList.add('correct')});
-    if(correct){btn.classList.add('correct');run.streak++;if(run.phase==='base'){run.baseCorrect++;run.baseAnswers++}run.missed=run.missed.filter(id=>id!==(current.conceptId||current.id));const why=txt(current.why);if(correct&&run.tier>=2&&why){$('provePanel').hidden=false;$('provePanel').innerHTML=`<span class="eyebrow">${tr('WHY IT WORKS','POURQUOI')}</span><p>${why}</p>`}window.playTone?.(true)}
-    else{btn.classList.add('wrong');run.streak=0;if(run.phase==='base')run.baseAnswers++;if(!run.missed.includes(current.conceptId||current.id))run.missed.push(current.conceptId||current.id);window.playTone?.(false)}
-    answerState={choiceText:txt(choice),correct};$('challengeFeedback').textContent=feedbackForState(answerState);$('challengeScore').textContent=run.phase==='base'?`${run.baseCorrect} / ${PER_STAGE}`:`${run.initialScore}%`;$('challengeStreak').textContent=run.streak;
-    $('nextChallenge').textContent=run.position===run.queue.length-1?tr('Finish round →','Terminer la série →'):tr('Next challenge →','Question suivante →');$('nextChallenge').hidden=false;saveSession();
-  }
-
-  function answerOpen(correct){
-    if(answered)return;answered=true;run.attempts[current.conceptId||current.id]=(run.attempts[current.conceptId||current.id]||0)+1;
-    $('openAnswer').disabled=true;$('revealAnswer').disabled=true;$('selfCorrect').disabled=true;$('selfReview').disabled=true;
-    if(correct){run.streak++;if(run.phase==='base'){run.baseCorrect++;run.baseAnswers++}run.missed=run.missed.filter(id=>id!==(current.conceptId||current.id));window.playTone?.(true)}
-    else{run.streak=0;if(run.phase==='base')run.baseAnswers++;if(!run.missed.includes(current.conceptId||current.id))run.missed.push(current.conceptId||current.id);window.playTone?.(false)}
-    answerState={open:true,typed:$('openAnswer').value,correct};$('challengeFeedback').textContent=feedbackForState(answerState);$('challengeScore').textContent=run.phase==='base'?`${run.baseCorrect} / ${PER_STAGE}`:`${run.initialScore}%`;$('challengeStreak').textContent=run.streak;$('nextChallenge').textContent=run.position===run.queue.length-1?tr('Finish round →','Terminer la série →'):tr('Next challenge →','Question suivante →');$('nextChallenge').hidden=false;saveSession();
+    const attempts=run.attempts[current.id]||1;
+    return attempts>=2?tr(`Not quite. Hint: ${txt(current.hint)} This question will return.`,`Pas encore. Indice : ${txt(current.hint)} Cette question reviendra.`):tr('Not quite. This question will return in your review round.','Pas encore. Cette question reviendra pendant la révision.');
   }
   function restoreAnsweredState(state){
-    if(!state)return;answered=true;answerState=state;if(state.open){$('openAnswer').value=state.typed||'';$('openAnswer').disabled=true;$('revealAnswer').click();$('revealAnswer').disabled=true;$('selfCorrect').disabled=true;$('selfReview').disabled=true}else{const buttons=[...document.querySelectorAll('#challengeOptions button')];buttons.forEach(b=>{b.disabled=true;const idx=Number(b.dataset.answerId);if(isCorrectChoice(current.choices[idx]))b.classList.add('correct');if(b.textContent===state.choiceText&&!state.correct)b.classList.add('wrong')})}$('challengeFeedback').textContent=feedbackForState(state);$('nextChallenge').hidden=false;
+    if(!state)return;answered=true;answerState=state;
+    const buttons=[...document.querySelectorAll('#challengeOptions button')];buttons.forEach(b=>{b.disabled=true;if(b.dataset.answer===current.a.en)b.classList.add('correct');if(b.dataset.answer===state.choice&&!state.correct)b.classList.add('wrong')});
+    $('challengeFeedback').textContent=feedbackForState(state);
+    if(state.correct&&run.tier>=2){$('provePanel').hidden=false;$('provePanel').innerHTML=`<span class="eyebrow">${tr('WHY IT WORKS','POURQUOI')}</span><p>${txt(current.why)}</p>`}
+    $('nextChallenge').textContent=run.position===run.queue.length-1?tr('Finish round →','Terminer la série →'):tr('Next challenge →','Question suivante →');$('nextChallenge').hidden=false;
+  }
+  function answer(btn,choice){
+    if(answered)return;answered=true;const correct=choice.en===current.a.en;run.attempts[current.id]=(run.attempts[current.id]||0)+1;
+    document.querySelectorAll('#challengeOptions button').forEach(b=>{b.disabled=true;if(b.dataset.answer===current.a.en)b.classList.add('correct')});
+    if(correct){btn.classList.add('correct');run.score+=100+(run.tier*30)+(run.phase==='review'?25:0);run.streak++;run.missed=run.missed.filter(id=>id!==current.id);if(run.tier>=2){$('provePanel').hidden=false;$('provePanel').innerHTML=`<span class="eyebrow">${tr('WHY IT WORKS','POURQUOI')}</span><p>${txt(current.why)}</p>`}window.playTone?.(true)}
+    else{btn.classList.add('wrong');run.streak=0;run.score=Math.max(0,run.score-15);if(!run.missed.includes(current.id))run.missed.push(current.id);window.playTone?.(false)}
+    answerState={choice:choice.en,correct};$('challengeFeedback').textContent=feedbackForState(answerState);$('challengeScore').textContent=run.score;$('challengeStreak').textContent=run.streak;
+    $('nextChallenge').textContent=run.position===run.queue.length-1?tr('Finish round →','Terminer la série →'):tr('Next challenge →','Question suivante →');$('nextChallenge').hidden=false;saveSession();
   }
   function advance(){if(!run||!answered)return;run.position++;answered=false;answerState=null;saveSession();nextQuestion()}
-  function persistInitialStage(){
-    const pf=profile(),cycle=currentCycle(pf);run.initialScore=pct(run.baseCorrect);cycle.stages[run.tier]={tier:run.tier,initialCorrect:run.baseCorrect,initialScore:run.initialScore,mastered:false,questionIds:[...run.queue],missedInitial:[...run.missed],startedAt:cycle.stages[run.tier]?.startedAt||Date.now(),updatedAt:Date.now()};
-    const seen=new Set(pf.seenIds||[]);run.queue.forEach(id=>seen.add(id));pf.seenIds=[...seen];saveProfile(pf);
-  }
-  function finishBaseRound(){persistInitialStage();saveSession();if(run.missed.length){showIntermission(`${run.initialScore}% • ${run.missed.length} ${tr('to master','à maîtriser')}`,tr('That is your official stage score. It will not change. Now master only the questions you missed before moving up.','C’est ton score officiel pour cette étape. Il ne changera pas. Maintenant, maîtrise uniquement les questions manquées avant de progresser.'),tr('Start mastery review →','Commencer la révision →'),beginReview)}else masterTier()}
+  function finishBaseRound(){run.baseAnswered=PER_TIER;saveSession();if(run.missed.length){showIntermission(tr(`${run.missed.length} question${run.missed.length===1?'':'s'} to strengthen.`,`${run.missed.length} question${run.missed.length===1?'':'s'} à renforcer.`),tr('You are not moving up yet. Retry only the questions you missed until you master them.','Tu ne passes pas encore au niveau suivant. Reprends uniquement les questions manquées jusqu’à les maîtriser.'),tr('Start review →','Commencer la révision →'),()=>beginReview())}else masterTier()}
   function beginReview(){run.phase='review';run.queue=shuffle(run.missed);run.position=0;answered=false;answerState=null;saveSession();results.hidden=true;arena.hidden=false;nextQuestion()}
-  function finishReviewRound(){saveSession();if(run.missed.length){showIntermission(`${run.initialScore}% • ${run.missed.length} ${tr('still to master','encore à maîtriser')}`,tr('Your original score is unchanged. These missed questions will return again until they are mastered.','Ton score initial ne change pas. Ces questions reviendront jusqu’à leur maîtrise.'),tr('Review again →','Réviser encore →'),beginReview)}else masterTier()}
+  function finishReviewRound(){saveSession();if(run.missed.length){showIntermission(tr(`${run.missed.length} still to master.`,`${run.missed.length} encore à maîtriser.`),tr('Good effort. Those questions will come back again — with a hint if you need one.','Bon effort. Ces questions vont revenir — avec un indice si nécessaire.'),tr('Review again →','Réviser encore →'),()=>beginReview())}else masterTier()}
   function masterTier(){
-    const pf=profile(),cycle=currentCycle(pf),st=cycle.stages[run.tier]||{};st.mastered=true;st.masteredAt=Date.now();st.initialScore=run.initialScore??st.initialScore;cycle.stages[run.tier]=st;
-    const tierName=TIERS[run.tier],isMaster=run.tier===4;
-    if(isMaster){cycle.completed=true;cycle.completedAt=Date.now();cycle.overallScore=M.missionOverall(TIERS.map((_,i)=>cycle.stages[i]?.initialScore||0))}
-    saveProfile(pf);clearSession();
-    if(window.CWState){CWState.addXP(180+(run.tier*40),`Brain Battle: ${tierName}`);CWState.setProgress(`brainbattle-age${run.age}-${run.country}`,Math.round(((run.tier+1)/TIERS.length)*100),{tier:tierName,initialScore:st.initialScore,mastery:'complete',cycle:run.cycle});CWState.logActivity({id:`brain-${run.age}-${run.country}-${run.cycle}-${run.tier}`,title:`${tierName} mastered`,icon:'🧠',detail:`Initial score ${st.initialScore}% • mastery complete`,href:'challenge.html'});if(isMaster){CWState.addAchievement(`brain-master-${run.age}-${run.country}-${run.cycle}`,`Age ${run.age} Mission ${run.cycle} Mastered`,'🧠');CWState.addPassport(`brain-${run.age}-${run.country}-${run.cycle}`,{title:`Age ${run.age} Mission ${run.cycle}`,country:run.country})}}
-    if(isMaster)return showMissionComplete(cycle);
-    showIntermission(tr(`${tierName} mastered.`,`${tierName} maîtrisé.`),tr(`Your official ${tierName} score is ${st.initialScore}%. Mastery is complete. Next: ${TIERS[run.tier+1]}.`,`Ton score officiel ${tierName} est ${st.initialScore} %. Maîtrise terminée. Ensuite : ${TIERS[run.tier+1]}.`),tr(`Continue to ${TIERS[run.tier+1]} →`,`Continuer vers ${TIERS[run.tier+1]} →`),()=>startTier(run.tier+1));
+    const progress=loadProgress();const mastered=new Set(Array.isArray(progress.mastered)?progress.mastered:[]);mastered.add(run.tier);saveProgress({mastered:[...mastered].sort(),lastTier:run.tier,updatedAt:Date.now()});
+    const tierName=TIERS[run.tier];if(window.CWState){CWState.addXP(180+(run.tier*40),`Brain Battle: ${tierName}`);CWState.setProgress('brainbattle',Math.round((mastered.size/TIERS.length)*100),{tier:tierName,score:run.score});CWState.logActivity({id:'brain-'+Date.now(),title:`${tierName} mastered`,icon:'🧠',detail:`20 questions mastered • ${run.score} points`,href:'challenge.html'});if(run.tier===4){CWState.complete('brainbattle',{score:run.score});CWState.addAchievement('brain-master','Brain Battle Master','🧠')}}
+    const isMaster=run.tier===4;clearSession();showIntermission(isMaster?tr('Brain Battle Mastered!','Brain Battle maîtrisé !'):tr(`${tierName} mastered.`,`${tierName} maîtrisé.`),isMaster?tr('You completed all five levels and mastered every missed question. Choose whether to replay Master Mission or begin a completely fresh journey from Explorer.','Tu as terminé les cinq niveaux et maîtrisé toutes les questions manquées. Choisis de rejouer la Mission Maître ou de recommencer un nouveau parcours depuis Explorateur.'):tr(`You mastered all 20 ${tierName} questions. The next level is ${TIERS[run.tier+1]}.`,`Tu as maîtrisé les 20 questions ${tierName}. Le prochain niveau est ${TIERS[run.tier+1]}.`),isMaster?tr('Play Master Mission Again','Rejouer la Mission Maître'):tr(`Continue to ${TIERS[run.tier+1]} →`,`Continuer vers ${TIERS[run.tier+1]} →`),()=>startTier(isMaster?4:run.tier+1),isMaster)
   }
-  function scoreBoard(cycle){return TIERS.map((name,i)=>`<div><small>${name}</small><b>${cycle.stages[i]?.initialScore??'—'}%</b><span>${cycle.stages[i]?.mastered?tr('Mastered','Maîtrisé'):tr('Not complete','Non terminé')}</span></div>`).join('')}
-  function showMissionComplete(cycle){
-    arena.hidden=true;intro.hidden=true;syllabus.hidden=true;results.hidden=false;$('resultEyebrow').textContent=tr('MISSION COMPLETE','MISSION TERMINÉE');$('challengeResultTitle').textContent=tr(`Age ${run.age} Mission ${run.cycle} mastered!`,`Mission ${run.cycle} de l’âge ${run.age} maîtrisée !`);$('challengeResultCopy').textContent=tr(`Overall initial performance: ${cycle.overallScore}%. Every missed question was mastered. Your original stage scores are preserved.`,`Performance initiale globale : ${cycle.overallScore} %. Toutes les questions manquées ont été maîtrisées. Tes scores initiaux sont conservés.`);$('stageScoreBoard').innerHTML=scoreBoard(cycle);$('againChallenge').textContent=tr('Start New Mission →','Commencer une nouvelle mission →');$('againChallenge').onclick=startNewMission;$('restartExplorer').hidden=true;
-  }
-  function startNewMission(){const pf=profile();pf.activeCycle=Math.max(...pf.cycles.map(c=>c.number),0)+1;saveProfile(pf);clearSession();startTier(0)}
-  function showIntermission(title,copy,button,handler){arena.hidden=true;intro.hidden=true;syllabus.hidden=true;results.hidden=false;$('resultEyebrow').textContent=tr('LEVEL CHECKPOINT','ÉTAPE DU NIVEAU');$('challengeResultTitle').textContent=title;$('challengeResultCopy').textContent=copy;$('stageScoreBoard').innerHTML='';$('againChallenge').textContent=button;$('againChallenge').onclick=handler;$('restartExplorer').hidden=true}
-  function showDataBlock(tier,count){showIntermission(tr('Curriculum data connection needed','Connexion aux données du programme requise'),tr(`This engine needs at least ${PER_STAGE} unique ${TIERS[tier]} activities for this exact age, syllabus and website language. ${count} are currently connected in this test package. The engine will not invent or duplicate curriculum questions.`,`Ce moteur a besoin d’au moins ${PER_STAGE} activités uniques de niveau ${TIERS[tier]} pour cet âge, ce programme et cette langue. ${count} sont actuellement connectées dans ce paquet de test. Le moteur n’inventera ni ne dupliquera les questions.`),tr('Choose another syllabus','Choisir un autre programme'),showSyllabus)}
-  function showUnavailableAge(age){showIntermission(tr(`Age ${age} is parent-unlocked but not built yet.`,`L’âge ${age} est autorisé par le parent mais pas encore construit.`),tr('Age 10 is the curriculum being coded and tested first. Your permission is saved; the later age can be connected without changing the child profile.','Le programme de 10 ans est construit et testé en premier. L’autorisation est enregistrée ; l’autre âge pourra être connecté plus tard sans modifier le profil de l’enfant.'),tr('Back to age choice','Retour au choix de l’âge'),showSyllabus)}
-  function renderIntro(){const p=C.preferences(),pf=p.country?profile():null,c=pf?currentCycle(pf):null;const country=p.country?`${COUNTRIES[p.country].flag} ${txt(COUNTRIES[p.country].label)||COUNTRIES[p.country].code}`:tr('Choose syllabus','Choisir le programme');$('curriculumSummary').innerHTML=`<span>${tr('Age','Âge')} <b>${p.age}</b></span><span>${tr('Syllabus','Programme')} <b>${country}</b></span><span>${tr('Mission','Mission')} <b>${c?.number||1}${c?.completed?' ✓':''}</b></span>`;$('startChallenge').textContent=!p.country?tr('Choose syllabus','Choisir le programme'):c?.completed?tr('View Mission Complete','Voir la mission terminée'):tr('Continue learning','Continuer')}
-  function showSyllabus(){
-    clearSession();intro.hidden=true;arena.hidden=true;results.hidden=true;syllabus.hidden=false;const access=C.accessState(),p=C.preferences();$('ageAccessStrip').innerHTML=`<b>${tr('Curriculum age','Âge du programme')}:</b>`+access.unlockedAges.map(age=>`<button type="button" class="age-chip ${Number(p.age)===age?'selected':''}" data-age="${age}">${age}${age===access.defaultAge?' • '+tr('default','défaut'):''}</button>`).join('');$('ageAccessStrip').querySelectorAll('button').forEach(b=>b.onclick=()=>{C.savePreferences({age:Number(b.dataset.age)});showSyllabus()});
-    $('syllabusGrid').innerHTML=Object.values(COUNTRIES).map(c=>`<button type="button" class="syllabus-card ${p.country===c.code?'selected':''}" data-country="${c.code}"><span>${c.flag}</span><b>${txt(c.label)||c.code}</b><small>${tr('Use this country syllabus','Utiliser ce programme national')}</small></button>`).join('');$('syllabusGrid').querySelectorAll('button').forEach(b=>b.onclick=()=>{C.savePreferences({country:b.dataset.country});renderIntro();syllabus.hidden=true;intro.hidden=false});
-    $('challengeDataNote').textContent=tr('Country choice does not change the website language. Parent-approved curriculum ages appear above.','Le choix du pays ne change pas la langue du site. Les âges autorisés par le parent apparaissent ci-dessus.');
-  }
-  $('startChallenge').onclick=()=>C.preferences().country?startTier(firstIncompleteTier()):showSyllabus();$('changeSyllabus').onclick=showSyllabus;$('nextChallenge').onclick=advance;
-  const saved=loadSession();renderIntro();if(!C.preferences().country){showSyllabus()}else if(saved){run=saved.run;answered=saved.answered;answerState=saved.answerState;intro.hidden=true;syllabus.hidden=true;results.hidden=true;arena.hidden=false;current=qById(run.queue[run.position]);if(current){renderQuestion();if(answered)restoreAnsweredState(answerState)}else startTier(firstIncompleteTier())}
+  function showIntermission(title,copy,button,handler,isMaster=false){arena.hidden=true;results.hidden=false;$('challengeResultTitle').textContent=title;$('challengeResultCopy').textContent=copy;const b=$('againChallenge');b.textContent=button;b.onclick=handler;const restart=$('restartExplorer');restart.hidden=!isMaster;restart.textContent=tr('Start Again from Explorer','Recommencer depuis Explorateur');restart.onclick=()=>{localStorage.removeItem(STORAGE);clearSession();startTier(0)}}
+  $('startChallenge').onclick=()=>startTier(firstIncompleteTier());$('nextChallenge').onclick=advance;$('resetBrain').onclick=()=>{if(confirm(tr('Reset Brain Battle level progress?','Réinitialiser la progression de Brain Battle ?'))){localStorage.removeItem(STORAGE);clearSession();startTier(0)}};
+
+  // Resume an active question/review after a language switch or accidental reload.
+  const saved=loadSession();
+  if(saved){run=saved.run;intro.hidden=true;results.hidden=true;arena.hidden=false;if(run.position>=run.queue.length)nextQuestion();else{current=findQuestion(run.queue[run.position]);if(current){answered=false;answerState=null;renderQuestion();if(saved.answered&&saved.answerState)restoreAnsweredState(saved.answerState)}else nextQuestion()}}
 })();
