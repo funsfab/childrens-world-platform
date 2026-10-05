@@ -1,31 +1,9 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071426"><title>Brain Battle — Age Curriculum Challenge</title><link rel="stylesheet" href="css/style.css"></head>
-<body class="subpage challenge-page"><header class="sub-top shell-wide"><a class="brand compact" href="hq.html"><span class="brand-mark">🧠</span><span><strong>BRAIN BATTLE</strong><small>AGE CURRICULUM CHALLENGE</small></span></a><a class="pill ghost" href="hq.html">← My World HQ</a></header>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#071426"><title>Brain Battle — Adaptive Challenge</title><link rel="stylesheet" href="css/style.css"></head>
+<body class="subpage challenge-page"><header class="sub-top shell-wide"><a class="brand compact" href="hq.html"><span class="brand-mark">🧠</span><span><strong>BRAIN BATTLE</strong><small>ADAPTIVE CHALLENGE ENGINE</small></span></a><a class="pill ghost" href="hq.html">← My World HQ</a></header>
 <main class="shell challenge-shell">
-<section class="challenge-intro" id="challengeIntro">
-  <span class="eyebrow">MIXED CURRICULUM • MASTER ONE LEVEL AT A TIME</span>
-  <h1>Your next learning mission starts here.</h1>
-  <p>The website language is already set. Choose the country syllabus you want to learn, then Children World mixes 20 questions from subjects and topics across that syllabus.</p>
-  <div class="curriculum-summary" id="curriculumSummary"></div>
-  <div class="tier-track"><span>Explorer</span><span>Challenger</span><span>Investigator</span><span>Expert</span><span>Master Mission</span></div>
-  <div class="challenge-intro-actions"><button class="btn primary" id="startChallenge">Continue learning</button><button class="btn secondary" id="changeSyllabus">Change syllabus</button></div>
-</section>
-
-<section class="syllabus-panel" id="syllabusPanel" hidden>
-  <span class="eyebrow">COUNTRY SYLLABUS</span><h1>Which country's syllabus do you want to learn?</h1>
-  <p class="syllabus-note">This does not change your website language. It only changes which country's curriculum Children World uses.</p>
-  <div class="age-access-strip" id="ageAccessStrip"></div>
-  <div class="syllabus-grid" id="syllabusGrid"></div>
-  <p class="challenge-data-note" id="challengeDataNote"></p>
-</section>
-
-<section class="challenge-arena" id="challengeArena" hidden>
-  <div class="mission-context" id="missionContext"></div>
-  <div class="challenge-hud"><div><small>Current stage</small><b id="tierName">Explorer</b></div><div><small>Question</small><b id="challengeProgress">1 / 20</b></div><div><small>Initial score</small><b id="challengeScore">0 / 20</b></div><div><small>Streak</small><b id="challengeStreak">0</b></div></div>
-  <div class="challenge-phase" id="challengePhase">Main round</div>
-  <div class="challenge-card"><span class="eyebrow" id="challengeSubject">WORLD</span><div class="difficulty-pips" id="difficultyPips"></div><h2 id="challengeQuestion"></h2><div class="challenge-options" id="challengeOptions"></div><div class="open-response" id="openResponse" hidden><label for="openAnswer">Your answer</label><textarea id="openAnswer" rows="4" placeholder="Write your answer here..."></textarea><button type="button" class="btn small secondary" id="revealAnswer">Check against the answer</button><div class="open-answer-key" id="openAnswerKey" hidden></div><div class="open-self-check" id="openSelfCheck" hidden><button type="button" class="btn small primary" id="selfCorrect">I got it right</button><button type="button" class="btn small secondary" id="selfReview">I need to review it</button></div></div><div class="prove-panel" id="provePanel" hidden></div><p id="challengeFeedback" class="challenge-feedback"></p><button class="btn small primary" id="nextChallenge" hidden>Next challenge →</button></div>
-</section>
-
-<section class="challenge-results" id="challengeResults" hidden><span class="eyebrow" id="resultEyebrow">LEVEL CHECKPOINT</span><h1 id="challengeResultTitle"></h1><p id="challengeResultCopy"></p><div class="stage-score-board" id="stageScoreBoard"></div><div class="challenge-result-actions"><button class="btn primary" id="againChallenge">Continue</button><button class="btn secondary" id="restartExplorer" hidden>New Mission</button></div></section>
+<section class="challenge-intro" id="challengeIntro"><span class="eyebrow">MASTER ONE LEVEL AT A TIME</span><h1>How far can you go?</h1><p>Each level has 20 questions. Questions you miss return in a review round, and you move up only after you have mastered them.</p><div class="tier-track"><span>Explorer</span><span>Challenger</span><span>Investigator</span><span>Expert</span><span>Master Mission</span></div><div class="challenge-intro-actions"><button class="btn primary" id="startChallenge">Start Brain Battle</button><button class="btn secondary" id="resetBrain">Reset progress</button></div></section>
+<section class="challenge-arena" id="challengeArena" hidden><div class="challenge-hud"><div><small>Current tier</small><b id="tierName">Explorer</b></div><div><small>Question</small><b id="challengeProgress">1 / 20</b></div><div><small>Score</small><b id="challengeScore">0</b></div><div><small>Streak</small><b id="challengeStreak">0</b></div></div><div class="challenge-phase" id="challengePhase">Main round</div><div class="challenge-card"><span class="eyebrow" id="challengeSubject">WORLD</span><div class="difficulty-pips" id="difficultyPips"></div><h2 id="challengeQuestion"></h2><div class="challenge-options" id="challengeOptions"></div><div class="prove-panel" id="provePanel" hidden></div><p id="challengeFeedback" class="challenge-feedback"></p><button class="btn small primary" id="nextChallenge" hidden>Next challenge →</button></div></section>
+<section class="challenge-results" id="challengeResults" hidden><span class="eyebrow">LEVEL CHECKPOINT</span><h1 id="challengeResultTitle"></h1><p id="challengeResultCopy"></p><div class="challenge-result-actions"><button class="btn primary" id="againChallenge">Continue</button><button class="btn secondary" id="restartExplorer" hidden>Start Again from Explorer</button></div></section>
 </main>
-<script src="js/access.js"></script><script src="js/state.js"></script><script src="js/i18n.js"></script><script src="js/music.js"></script><script src="js/common.js"></script><script src="js/brain-bank.js"></script><script src="js/age10-verified-sample.js"></script><script src="js/curriculum-policy.js"></script><script src="js/challenge-model.js"></script><script src="js/challenge.js"></script></body></html>
+<script src="js/access.js"></script><script src="js/state.js"></script><script src="js/i18n.js"></script><script src="js/music.js"></script><script src="js/common.js"></script><script src="js/brain-bank.js"></script><script src="js/challenge.js"></script></body></html>
