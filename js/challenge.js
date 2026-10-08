@@ -3,8 +3,8 @@
   const TIERS=['Explorer','Challenger','Investigator','Expert','Master Mission'];
   const PER_TIER=20;
   const PROGRESS_KEY='cw_age10_challenge_progress_v1';
-  const SESSION_KEY='cw_age10_challenge_session_v1';
-  const PAUSED_KEY='cw_age10_challenge_paused_runs_v1';
+  const SESSION_KEY='cw_age10_challenge_session_objective_v2';
+  const PAUSED_KEY='cw_age10_challenge_paused_runs_objective_v2';
   const PREF_KEY='cw_age10_challenge_preferences_v1';
   const AGE_ACCESS_KEY='cw_curriculum_access_v1';
   const NEED_TEXT=1, OPEN_RESPONSE=2;
@@ -75,91 +75,134 @@
   function renderStageNavigators(){renderStageNavigator('cwIntroStageNavigator');renderStageNavigator('cwResultStageNavigator');renderStageNavigator('cwArenaStageNavigator')}
 
   function topicKeyFromId(id){return String(id||'').replace(/-(EXPLORER|CHALLENGER|INVESTIGATOR|EXPERT|MASTER-MISSION)-\d+$/,'')}
-  function cleanPrompt(raw){
+  function cleanSourcePrompt(raw){
     let s=String(raw||'').trim();
     s=s.replace(/\s*\[Task\s+\d+\]\s*$/i,'').trim();
     s=s.replace(/^(?:Challenge|Défi)\s*\d+\s*[:：]\s*/i,'').trim();
     s=s.replace(/^.*?\s*-\s*(?:Challenge|Défi)\s*\d+\s*[:：]\s*/i,'').trim();
-
-    // Master Mission source prompts are project briefs. Brain Battle shows the
-    // same verified learning focus as a clean four-choice question; the child
-    // can still explain their thinking in the optional writing box.
-    let m;
-    if(lang()==='en'){
-      m=s.match(/^Master Mission\s+\d+\s*:\s*.*?\babout\s+(.+?)\s+within\b/i);
-      if(m)return `Which statement about ${m[1].trim()} is correct?`;
-    }else{
-      m=s.match(/^Mission Ma[iî]tre\s+\d+\s*:\s*.*?\bsur\s+(.+?)\s+dans\b/i);
-      if(m)return `Quelle affirmation sur ${m[1].trim()} est correcte ?`;
-    }
-
-    // Remove authoring / generation scaffolding. These notes belong to the
-    // curriculum source, not to the child-facing Brain Battle question.
-    const markers=[
-      /\s+(?:Evidence cycle|Learning cycle|Cycle de preuve|Cycle d[’']apprentissage|Cycle)\s+\d+\s*[:：]\s*/i,
-      /\s+(?:Topic focus|Repère du thème)\s+\d+(?:\.\d+)?\.?/i,
-      /\s+(?:Mission cycle|Cycle de mission)\s+\d+\.?/i
-    ];
+    const markers=lang()==='fr'
+      ?[/\s+Cycle de preuve\s+\d+\s*[:：]/i,/\s+Cycle d[’']apprentissage\s+\d+\s*[:：]/i,/\s+Cycle\s+\d+\s*[:：]/i,/\s+Repère du thème\s+\d+(?:\.\d+)?\.?/i,/\s+Cycle de mission\s+\d+\.?/i]
+      :[/\s+Evidence cycle\s+\d+\s*[:：]/i,/\s+Learning cycle\s+\d+\s*[:：]/i,/\s+Cycle\s+\d+\s*[:：]/i,/\s+Topic focus\s+\d+(?:\.\d+)?\.?/i,/\s+Mission cycle\s+\d+\.?/i];
     let cut=s.length;
-    for(const re of markers){const hit=s.match(re);if(hit&&hit.index<cut)cut=hit.index}
+    for(const re of markers){const m=s.match(re);if(m&&m.index<cut)cut=m.index}
     s=s.slice(0,cut).trim();
-
-    // Authored inline options are used to build the buttons, but are not
-    // repeated inside the question heading.
-    s=s.replace(/\s+(?:Options?|Choices?)\s*:\s*[A-D][.)][\s\S]*$/i,'').trim();
-    s=s.replace(/\s+(?:Options?|Choix)\s*:\s*[A-D][.)][\s\S]*$/i,'').trim();
-
-    // Several curriculum banks use a repeated teaching template whose second
-    // clause was intended for lesson planning. Present the verified concept as
-    // a direct, answerable multiple-choice question instead.
-    if(lang()==='en'){
-      const direct=[
-        [/^In one clear sentence,\s*explain\s+(.+?)\.\s*Give one simple computing example\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^Explain\s+(.+?)\s+in one clear sentence for (?:an Age 10 learner|another 10-year-old)\.?$/i,m=>`Which statement about ${m[1].trim().replace(/\s+concept$/i,'')} is correct?`],
-        [/^Give one accurate fact about\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^What should a beginner artist remember first about\s+(.+?)\?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^Explain why\s+(.+?)\s+matters\b[\s\S]*$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^Give one cause, effect or consequence connected with\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^How does\s+(.+?)\s+affect choices\b[\s\S]*$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^Compare a sensible and less sensible use of\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^How could\s+(.+?)\s+help someone plan ahead\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^What trade-off or responsibility is connected with\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^What evidence would help you investigate a real-world example of\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^How could two different choices involving\s+(.+?)\s+lead to different outcomes\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^What information should be checked before making a decision about\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^Design a small investigation or comparison that tests understanding of\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^What misleading assumption about\s+(.+?)\s+should an investigator avoid\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^How could a table, record, receipt, advert, interview or survey help analyse\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^Critique an over-simple claim about\s+(.+?)\.\s*What fuller explanation fits better\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^Why is\s+(.+?)\s+more complex than one simple rule\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^How could priorities or circumstances change a decision involving\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^Explain one benefit, one limitation and one risk connected with\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^How could two people make different reasonable decisions about\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
-        [/^What long-term consequence or ethical consideration should be included when explaining\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`]
-      ];
-      for(const [re,fn] of direct){const hit=s.match(re);if(hit){s=fn(hit);break}}
-    }else{
-      const direct=[
-        [/^En une phrase claire,\s*explique\s+(.+?)\.\s*Donne un exemple informatique simple\.?$/i,m=>`Quelle affirmation sur ${m[1].trim()} est correcte ?`],
-        [/^Explique\s+(.+?)\s+en une phrase claire pour (?:un enfant de 10 ans|un élève de 10 ans)\.?$/i,m=>`Quelle affirmation sur ${m[1].trim().replace(/\s+concept$/i,'')} est correcte ?`],
-        [/^Donne un fait exact sur\s+(.+?)\.?$/i,m=>`Quelle affirmation sur ${m[1].trim()} est correcte ?`]
-      ];
-      for(const [re,fn] of direct){const hit=s.match(re);if(hit){s=fn(hit);break}}
-    }
-    return s.trim();
+    s=s.replace(/\s+(?:Options?|Choices?|Choix)\s*:\s*[A-D][.)][\s\S]*$/i,'').trim();
+    return s;
   }
   function cleanAnswer(raw){
     let s=String(raw||'').trim();
-    s=s.replace(/^Expected learning focus\s*:\s*/i,'').replace(/^Objectif d[’']apprentissage attendu\s*:\s*/i,'');
+    if(lang()==='fr'){
+      s=s.replace(/^(?:Attendu civique|Attendu pratique|Attendu créatif|Attendu historique|Attendu|Objectif d[’']apprentissage attendu)\s*:\s*/i,'');
+      s=s.split(/\s+(?:Note d[’']apprentissage|Barème|Rubrique|Note pédagogique)\s*:/i)[0].trim();
+    }else{
+      s=s.replace(/^(?:Expected (?:creative|historical|civic|learning|health|scientific)?\s*focus|Expected focus|Expected learning focus|Expected historical focus|Expected civic focus)\s*:\s*/i,'');
+      s=s.split(/\s+(?:Learning note|Skill|Teaching note)\s*:/i)[0].trim();
+    }
     s=s.replace(/\s+(?:Explorer|Challenger|Investigator|Expert|Master Mission|Explorateur|Investigateur|Mission Ma[iî]tre)\s*-\s*\d+\b[\s\S]*$/i,'').trim();
     return s;
   }
-  function cleanGuidance(raw){return cleanAnswer(raw)}
+  function cleanGuidance(raw){
+    let s=String(raw||'').trim();
+    if(!s)return'';
+    if(lang()==='fr'){
+      s=s.replace(/^(?:Objectif d[’']apprentissage attendu|Attendu civique|Attendu pratique|Attendu créatif|Attendu historique|Attendu)\s*:\s*/i,'');
+      if(/^Rubrique\s*:/i.test(s)){const parts=s.replace(/^Rubrique\s*:\s*/i,'').split('. ');s=parts.length>1?parts[parts.length-1]:''}
+    }else{
+      s=s.replace(/^(?:Core knowledge|Expected core|Anchor the investigation in this fact|Use this core fact)\s*:\s*/i,'');
+      if(/^Rubric\s*:/i.test(s)){const parts=s.replace(/^Rubric\s*:\s*/i,'').split('. ');s=parts.length>1?parts[parts.length-1]:''}
+    }
+    return cleanAnswer(s);
+  }
+  function objectiveFocus(raw){
+    const s=cleanSourcePrompt(raw);
+    let m;
+    if(lang()==='fr'){
+      m=s.match(/^Mission Ma[iî]tre(?:\s+\d+)?\s*:\s*.*?\bsur\s+(.+?)(?:\s+dans\b|\.)/i);if(m)return m[1].trim();
+      const patterns=[
+        /^Que signifie\s+(.+?)\??$/i,/^Qu[’']est-ce que\s+(.+?)\??$/i,/^Quelle est l[’']idée clé derrière\s+(.+?)\??$/i,
+        /^Donne un fait exact sur\s+(.+?)\.?$/i,/^Explique\s+(.+?)\s+en une phrase claire(?: pour .*?)?\.?$/i,
+        /^Pourquoi\s+(.+?)\s+est-il plus complexe\b/i,/^Critique une affirmation trop simple sur\s+(.+?)\./i,
+        /^Quelle limite, perspective ou différence régionale faut-il considérer en étudiant\s+(.+?)\??$/i,
+        /^Quel facteur, quelle limite ou quelle différence individuelle faut-il considérer en étudiant\s+(.+?)\??$/i,
+        /^Pourquoi\s+(.+?)\s+est-il important\b/i,/^Comment\s+(.+?)\s+est-il lié\b/i,
+        /^Quel élément de preuve ou quelle observation pourrait t[’']aider à étudier\s+(.+?)\??$/i,
+        /^Quel compromis, quelle limite ou quel contexte compte lorsqu[’']on applique\s+(.+?)\??$/i,
+        /^Quelles informations vérifierais-tu avant d[’']utiliser\s+(.+?)\b/i,/^Quel est le point essentiel à retenir sur\s+(.+?)\??$/i
+      ];
+      for(const re of patterns){m=s.match(re);if(m)return m[1].trim().replace(/\s+concept$/i,'')}
+    }else{
+      m=s.match(/^Master Mission(?:\s+\d+)?\s*:\s*.*?\babout\s+(.+?)(?:\s+within\b|\.)/i);if(m)return m[1].trim();
+      m=s.match(/^Master Mission(?:\s+\d+)?\s*:\s*.*?\binvolving\s+(.+?)(?:\s+within\b|\.)/i);if(m)return m[1].trim();
+      const patterns=[
+        /^What does\s+(.+?)\s+mean\??$/i,/^What is (?:the key idea behind )?(.+?)\??$/i,/^What are\s+(.+?)\??$/i,
+        /^Give one accurate fact about\s+(.+?)\.?$/i,/^Give one accurate everyday fact about\s+(.+?)\.?$/i,
+        /^Explain\s+(.+?)(?: concept)?\s+in one clear sentence(?: for .*?)?\.?$/i,
+        /^In one clear sentence,\s*explain\s+(.+?)(?:\.\s*Give .*)?\.?$/i,
+        /^What should a beginner(?: artist)? remember first about\s+(.+?)\??$/i,/^How could you recognise\s+(.+?)\s+in\b/i,
+        /^Choose the best everyday example of\s+(.+?)\s+and explain why it fits\.?$/i,
+        /^Why is\s+(.+?)\s+more complex than\b/i,/^Critique an over-simple (?:claim|idea|rule|statement) about\s+(.+?)\./i,
+        /^How could priorities or circumstances change a decision involving\s+(.+?)\??$/i,
+        /^Explain one benefit, one limitation and one risk connected with\s+(.+?)\.?$/i,
+        /^Give one cause, benefit or consequence connected with\s+(.+?)\.?$/i,
+        /^Give one cause, purpose, right, duty or consequence connected with\s+(.+?)\.?$/i,
+        /^Give one purpose, effect or use connected with\s+(.+?)\.?$/i,
+        /^What trade-off, limitation or context matters when applying\s+(.+?)\??$/i,
+        /^Explain why\s+(.+?)\s+matters\b/i,/^How does\s+(.+?)\s+connect\b/i,
+        /^What evidence or observation could help you investigate\s+(.+?)\??$/i,
+        /^What factor, limitation or individual difference should be considered when studying\s+(.+?)\??$/i,
+        /^How could two people experience\s+(.+?)\s+differently\b/i,/^How could two lawful viewpoints about\s+(.+?)\s+disagree\b/i,
+        /^Why should a claim about\s+(.+?)\s+be checked\b/i,/^What limitation, perspective or regional difference should be considered when investigating\s+(.+?)\??$/i,
+        /^How could people reasonably disagree about\s+(.+?)\s+while\b/i,/^What information would you check before using\s+(.+?)\s+in\b/i,
+        /^How could two people use\s+(.+?)\s+differently\b/i,/^Compare two possible ways of handling a situation involving\s+(.+?)\./i,
+        /^Design a small investigation or comparison that tests understanding of\s+(.+?)\.?$/i,
+        /^What materials, techniques or visual choices would you investigate when studying\s+(.+?)\??$/i,
+        /^A museum label for Age 10 needs one clear sentence about\s+(.+?)\. What should it say\??$/i,
+        /^What institutional difference, legal limit, regional variation or competing interest must be included when explaining\s+(.+?)\??$/i,
+        /^What safety, context, individual difference or long-term effect must be included when explaining\s+(.+?)\??$/i,
+        /^What constitutional, legal, local, social or European context must be included when explaining\s+(.+?)\??$/i,
+        /^What evidence in an artwork would help you identify\s+(.+?)\??$/i,
+        /^How could a table, record, receipt, advert, interview or survey help analyse\s+(.+?)\??$/i,
+        /^Why is\s+(.+?)\s+important when\b/i,/^How could official records, personal testimony and material evidence be combined to study\s+(.+?)\??$/i,
+        /^Use\s+(.+?)\s+in a scenario\b/i
+      ];
+      for(const re of patterns){m=s.match(re);if(m)return m[1].trim().replace(/\s+concept$/i,'')}
+    }
+    return'';
+  }
+  function genericRubricAnswer(s){
+    const x=String(s||'').trim();
+    return lang()==='fr'
+      ?/^(?:Construction correcte|Couverture mondiale équilibrée|Réponse cohérente|Réponse pertinente|Réponse valide|Classification correcte|Un exemple pertinent)\b/i.test(x)
+      :/^(?:Any\b|Valid\b|A coherent\b|Accurate classification\b|Reasoned\b|A relevant\b|A meaningful\b|A vague\b|Beginning,\s*problem\b|Strong response\b|An answer that\b|A response that\b)/i.test(x);
+  }
+  function objectiveQuestion(raw,answer,flags){
+    const s=cleanSourcePrompt(raw),focus=objectiveFocus(raw),a=cleanAnswer(answer);
+    if(!s||!a||genericRubricAnswer(a))return null;
+    if(flags&OPEN_RESPONSE)return null;
+    if(lang()==='fr'){
+      if(/^(?:Crée|Créer|Écris|Écrire|Construis|Construire|Prépare|Préparer|Produis|Produire|Développe|Développer|Rédige|Rédiger|Compose|Composer|Invente|Inventer|Dessine|Dessiner|Joue|Jouer|Planifie|Planifier|Audit|Annote|Annoter|Intègre|Intégrer)\b/i.test(s)&&!/^Mission Ma[iî]tre/i.test(s))return null;
+      if(/^Mission Ma[iî]tre/i.test(s))return focus?{question:`Quelle affirmation sur ${focus} est correcte ?`,focus}:null;
+      if(focus&&/^(?:Donne|Explique|Critique|Compare|Quelle limite|Quel facteur|Quel compromis|Quelles informations|Pourquoi .+ plus complexe|Comment .+ pourrait|Quel élément de preuve)/i.test(s))return{question:`Quelle affirmation sur ${focus} est correcte ?`,focus};
+      if(/\?$/.test(s)&&s.length<=700&&!/\b(?:ta propre|crée|écris|construis|annote|justifie ta)\b/i.test(s))return{question:s,focus};
+      return focus?{question:`Quelle affirmation sur ${focus} est correcte ?`,focus}:null;
+    }
+    if(/^(?:Create|Write|Design|Build|Prepare|Produce|Develop|Draft|Compose|Invent|Draw|Role[- ]?play|Lead|Expand|Rewrite|Plan|Make|Construct|Record|Present|Debate|Discuss|Imagine|Audit|Annotate)\b/i.test(s)&&!/^Master Mission/i.test(s))return null;
+    if(/\bSituation\s*:.*\bTask\s*:/i.test(s))return null;
+    if(/^Master Mission/i.test(s))return focus?{question:`Which statement about ${focus} is correct?`,focus}:null;
+    if(focus&&/^(?:Give|Explain|Critique|Compare|What should a beginner|How could|What evidence|What factor|What limitation|What trade-off|What information|What safety|What constitutional|What institutional|What materials|A museum label|Why is .+ more complex|Design a small investigation)/i.test(s))return{question:`Which statement about ${focus} is correct?`,focus};
+    if(/\?$/.test(s)&&s.length<=700&&!/\b(?:your own|create|write|design|build|annotate|justify your|lead the)\b/i.test(s))return{question:s,focus};
+    if(/^(?:Find|Calculate|Work out|Estimate and check|Solve)\b/i.test(s))return{question:`What is the correct answer to this problem: ${s.replace(/[.]+$/,'')}?`,focus};
+    return focus?{question:`Which statement about ${focus} is correct?`,focus}:null;
+  }
   function loadShard(tier){return new Promise((resolve,reject)=>{
     if(Number(prefs.age)!==10)return reject(new Error('AGE_NOT_AVAILABLE'));
     const src=`js/age10-bank/${lang()}_${tier}.js`;delete window.CW_AGE10_BANK_SHARD;
     const s=document.createElement('script');s.src=src;s.onload=()=>{const sh=window.CW_AGE10_BANK_SHARD;if(!sh||sh.tier!==tier||sh.language!==lang())return reject(new Error('SHARD_INVALID'));
-      bank=sh.rows.filter(r=>!r[2]||r[2]===prefs.country).map(r=>{const subject=sh.subjects[r[1]],rawQ=String(r[3]||''),q=cleanPrompt(rawQ),a=cleanAnswer(r[4]),g=cleanGuidance(r[5]||''),flags=Number(r[6]||0);return{id:r[0],tier,subject:{en:subject,fr:subject},rawQ,q:{en:q,fr:q},a:{en:a,fr:a},guidance:g,flags,topicKey:topicKeyFromId(r[0])};});
+      bank=sh.rows.filter(r=>!r[2]||r[2]===prefs.country).map(r=>{
+        const subject=sh.subjects[r[1]],rawQ=String(r[3]||''),a=cleanAnswer(r[4]),g=cleanGuidance(r[5]||''),flags=Number(r[6]||0),obj=objectiveQuestion(rawQ,a,flags);
+        if(!obj)return null;
+        return{id:r[0],tier,subject:{en:subject,fr:subject},rawQ,q:{en:obj.question,fr:obj.question},a:{en:a,fr:a},guidance:g,flags:0,focus:obj.focus||'',topicKey:topicKeyFromId(r[0])};
+      }).filter(Boolean);
       bankMap=new Map(bank.map(q=>[q.id,q]));topicBuckets=new Map();for(const q of bank){if(!topicBuckets.has(q.topicKey))topicBuckets.set(q.topicKey,[]);topicBuckets.get(q.topicKey).push(q)}s.remove();resolve(bank)};s.onerror=()=>reject(new Error('SHARD_LOAD_FAILED'));document.head.appendChild(s)
   })}
   function hashId(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
@@ -173,23 +216,100 @@
   function answerType(s){const x=normalAnswer(s),words=x.split(' ').filter(Boolean);if(/^[-+]?\d+(?:[.,/]\d+)?(?:\s*[%a-zà-öø-ÿ]*)?$/.test(x))return'num';if(words.length<=2)return'short';if(/[;,]/.test(String(s))&&words.length>7)return'list';return'long'}
   function styleKey(q){let s=String(q||'').toLowerCase().replace(/^challenge\s*\d+\s*:\s*/,'').replace(/\[task\s*\d+\]/g,'').replace(/\d+/g,'#');const lastQ=s.match(/([^.!?]*\?)(?![\s\S]*\?)/);if(lastQ)s=lastQ[1].trim();const patterns=[['main idea',/what is the main idea/],['infer',/what can you infer/],['literal figurative',/literal or figurative|literal ou figur/],['word class',/word class|classe grammaticale|classe de mot/],['correct form',/choose the correct form|choisis la bonne forme|choisis la forme correcte/],['meaning',/what does .* mean|que signifie|sens de/],['example',/example|exemple/],['definition',/define|definition|définis|définition/],['compare',/\bcompare\b|\bsimilarity\b|\bcomparaison\b|ressemblance/]];for(const [k,r] of patterns)if(r.test(s))return k;return s.split(/\s+/).slice(0,7).join(' ')}
   function questionMode(q){let s=String(q||'').toLowerCase().replace(/^challenge\s*\d+\s*:\s*/,'').replace(/\[task\s*\d+\]/g,'').trim();const lastQ=s.match(/([^.!?]*\?)(?![\s\S]*\?)/);if(lastQ)s=lastQ[1].trim();const m=s.match(/^(what|why|how|which|who|where|when|is|are|can|could|should|does|do|if|state|give|explain|choose|write|describe|compare|name|identify|define|correct|rewrite|add|join|design|create|plan|formule|donne|explique|choisis|écris|décris|compare|nomme|identifie|définis|corrige|réécris|ajoute|crée)\b/);return m?m[1]:s.split(/\s+/)[0]||''}
-  function extractInlineOptions(q){const text=String(q||'');let m=text.match(/(?:options?|choices?)\s*:\s*(.+)$/i);if(m){const found=[...m[1].matchAll(/(?:^|\s)[A-D][.)]\s*([\s\S]*?)(?=(?:\s+[A-D][.)]\s)|$)/gi)].map(x=>x[1].trim()).filter(Boolean);if(found.length>=2)return found.slice(0,4)}m=text.match(/\(([^()\/]{1,30})\/([^()\/]{1,30})\)/);if(m)return[m[1].trim(),m[2].trim()];m=text.match(/\b([A-Za-zÀ-ÖØ-öø-ÿ-]{2,25})\s+(?:or|ou)\s+([A-Za-zÀ-ÖØ-öø-ÿ-]{2,25})\??\s*$/i);if(m)return[m[1].trim(),m[2].trim()];if(/\btrue\s+or\s+false\b/i.test(text))return['True','False'];if(/\bvrai\s+ou\s+faux\b/i.test(text))return['Vrai','Faux'];return[]}
+  function extractInlineOptions(q){
+    const text=String(q||'');let m=text.match(/(?:options?|choices?|choix)\s*:\s*(.+)$/i);
+    if(m){const found=[...m[1].matchAll(/(?:^|\s)[A-D][.)]\s*([\s\S]*?)(?=(?:\s+[A-D][.)]\s)|$)/gi)].map(x=>x[1].trim()).filter(Boolean);if(found.length>=2)return found.slice(0,4)}
+    m=text.match(/\(([^()\/]{1,40})\/([^()\/]{1,40})\)/);if(m)return[m[1].trim(),m[2].trim()];
+    m=text.match(/\b([A-Za-zÀ-ÖØ-öø-ÿ-]{2,30})\s+(?:or|ou)\s+([A-Za-zÀ-ÖØ-öø-ÿ-]{2,30})\??\s*$/i);if(m)return[m[1].trim(),m[2].trim()];
+    if(/\btrue\s+or\s+false\b/i.test(text))return['True','False'];
+    if(/\bvrai\s+ou\s+faux\b/i.test(text))return['Vrai','Faux'];
+    return[];
+  }
   function makeChoice(text,correct=false){return{en:text,fr:text,correct}}
-  function openResponseChoices(q){const wrong=lang()==='fr'?["Une réponse hors sujet qui ne répond pas à la consigne.","Une réponse vague qui n'inclut pas le détail demandé.","Une réponse qui répète seulement la consigne sans développer l'idée."]:["An unrelated response that does not answer the task.","A vague response that leaves out the detail the task asks for.","A response that only repeats the task without developing the idea."];return seededShuffle([makeChoice(q.a.en,true),...wrong.map(x=>makeChoice(x,false))],hashId(q.id)^0x51ed270b)}
-  function fallbackDistractors(q){const t=answerType(q.a.en);if(lang()==='fr')return t==='short'?['Les deux autres choix','Aucun de ces choix','Pas assez d’informations']:['Cette réponse ne traite pas la question posée.','Cette réponse affirme l’inverse de l’idée attendue.','Il n’y a pas assez d’éléments pour soutenir cette réponse.'];return t==='short'?['Both of the other choices','None of these choices','Not enough information']:['This response does not address the question asked.','This response states the opposite of the required idea.','There is not enough information to support this response.']}
-  function buildChoices(q){
-    if(q.flags&OPEN_RESPONSE)return openResponseChoices(q);
-    const seed=hashId(q.id),correct=q.a.en,authored=extractInlineOptions(q.rawQ||q.q.en),choices=[makeChoice(correct,true)],used=new Set([normalAnswer(correct)]);
-    const correctNorm=normalAnswer(correct);
-    if(authored.length>=2&&authored.some(x=>correctNorm===normalAnswer(x)||correctNorm.startsWith(normalAnswer(x)+' '))){
-      for(const x of authored){const nx=normalAnswer(x);if(!nx||used.has(nx)||correctNorm===nx)continue;choices.push(makeChoice(x,false));used.add(nx)}
-      if(authored.length===2){for(const x of (lang()==='fr'?['Les deux','Aucun des deux']:['Both','Neither']))if(!used.has(normalAnswer(x))){choices.push(makeChoice(x,false));used.add(normalAnswer(x))}}
+  function replaceFirst(text,re,replacement){return re.test(text)?text.replace(re,replacement):null}
+  function oppositeVariant(text){
+    const s=String(text||'').trim();
+    const pairs=lang()==='fr'
+      ?[[/\bvrai\b/i,'faux'],[/\bfaux\b/i,'vrai'],[/\baugmente\b/i,'diminue'],[/\bdiminue\b/i,'augmente'],[/\bplus\b/i,'moins'],[/\bmoins\b/i,'plus'],[/\bavant\b/i,'après'],[/\baprès\b/i,'avant'],[/\bnord\b/i,'sud'],[/\bsud\b/i,'nord'],[/\best\b/i,'ouest'],[/\bouest\b/i,'est'],[/\bconducteur\b/i,'isolant'],[/\bisolant\b/i,'conducteur'],[/\blittéral\b/i,'figuré'],[/\bfiguré\b/i,'littéral']]
+      :[[/\btrue\b/i,'false'],[/\bfalse\b/i,'true'],[/\bincreases?\b/i,'decreases'],[/\bdecreases?\b/i,'increases'],[/\bmore\b/i,'less'],[/\bless\b/i,'more'],[/\bbefore\b/i,'after'],[/\bafter\b/i,'before'],[/\bnorth\b/i,'south'],[/\bsouth\b/i,'north'],[/\beast\b/i,'west'],[/\bwest\b/i,'east'],[/\bconductor\b/i,'insulator'],[/\binsulator\b/i,'conductor'],[/\bliteral\b/i,'figurative'],[/\bfigurative\b/i,'literal'],[/\brenewable\b/i,'non-renewable'],[/\bnon-renewable\b/i,'renewable']];
+    for(const [re,rep] of pairs){const v=replaceFirst(s,re,rep);if(v&&normalAnswer(v)!==normalAnswer(s))return v}
+    return'';
+  }
+  function negateStatement(text){
+    const s=String(text||'').trim();if(!s)return'';
+    const reps=lang()==='fr'
+      ?[[/\bpeut\b/i,'ne peut pas'],[/\bpeuvent\b/i,'ne peuvent pas'],[/\bpermet\b/i,'ne permet pas'],[/\bpermettent\b/i,'ne permettent pas'],[/\baide\b/i,"n'aide pas"],[/\baident\b/i,"n'aident pas"],[/\bsignifie\b/i,'ne signifie pas'],[/\bcomprend\b/i,'ne comprend pas'],[/\bcontient\b/i,'ne contient pas'],[/\best\b/i,"n'est pas"],[/\bsont\b/i,'ne sont pas']]
+      :[[/\bcan\b/i,'cannot'],[/\bmay\b/i,'cannot'],[/\bwill\b/i,'will not'],[/\bhelps\b/i,'does not help'],[/\ballows\b/i,'does not allow'],[/\bmeans\b/i,'does not mean'],[/\bincludes\b/i,'does not include'],[/\bcontains\b/i,'does not contain'],[/\brequires\b/i,'does not require'],[/\buses\b/i,'does not use'],[/\bshows\b/i,'does not show'],[/\bsupports\b/i,'does not support'],[/\bprovides\b/i,'does not provide'],[/\bexplains\b/i,'does not explain'],[/\bcombines\b/i,'does not combine'],[/\bdescribes\b/i,'does not describe'],[/\bidentifies\b/i,'does not identify'],[/\bstores\b/i,'does not store'],[/\bmoves\b/i,'does not move'],[/\brefers\b/i,'does not refer'],[/\brepresents\b/i,'does not represent'],[/\bforms\b/i,'does not form'],[/\bdiffers\b/i,'does not differ'],[/\bchanges\b/i,'does not change'],[/\bconnects\b/i,'does not connect'],[/\breduces\b/i,'does not reduce'],[/\bimproves\b/i,'does not improve'],[/\bprotects\b/i,'does not protect'],[/\bis\b/i,'is not'],[/\bare\b/i,'are not']];
+    for(const [re,rep] of reps){const v=replaceFirst(s,re,rep);if(v&&normalAnswer(v)!==normalAnswer(s)&&!/not not/i.test(v))return v}
+    return'';
+  }
+  function extremeVariant(text,focus){
+    const s=String(text||'').trim();if(!s)return'';
+    const reps=lang()==='fr'
+      ?[[/\bcertains?\b/i,'tous'],[/\bsouvent\b/i,'toujours'],[/\bgénéralement\b/i,'toujours'],[/\bparfois\b/i,'toujours']]
+      :[[/\bsome\b/i,'all'],[/\boften\b/i,'always'],[/\busually\b/i,'always'],[/\bsometimes\b/i,'always']];
+    for(const [re,rep] of reps){const v=replaceFirst(s,re,rep);if(v&&normalAnswer(v)!==normalAnswer(s))return v}
+    if(!focus)return'';
+    return lang()==='fr'?`${focus} fonctionne toujours exactement de la même manière dans toutes les situations.`:`${focus} always works exactly the same way in every situation.`;
+  }
+  function numericDistractors(answer){
+    const s=String(answer||'').trim(),out=[];
+    const frac=s.match(/^(-?\d+)\s*\/\s*(\d+)(.*)$/);
+    if(frac){const n=Number(frac[1]),d=Number(frac[2]),tail=frac[3]||'';for(const [a,b] of [[n+1,d],[Math.max(0,n-1),d],[d,n||1]])out.push(`${a}/${b}${tail}`);return out}
+    const nums=[...s.matchAll(/-?\d+(?:[.,]\d+)?/g)];
+    if(!nums.length)return out;
+    const values=nums.map(m=>Number(m[0].replace(',','.')));
+    const render=(arr)=>{let i=0;return s.replace(/-?\d+(?:[.,]\d+)?/g,()=>{const orig=nums[i][0],v=arr[i++];const dec=/[.,]/.test(orig)?Math.max(0,(orig.split(/[.,]/)[1]||'').length):0;let t=dec?v.toFixed(dec):String(Math.round(v));if(orig.includes(','))t=t.replace('.',',');return t})};
+    const scale=v=>Math.max(1,Math.abs(v)>=100?10:Math.abs(v)>=20?5:1);
+    const plus=values.map(v=>v+scale(v)),minus=values.map(v=>v-scale(v));
+    out.push(render(plus),render(minus));
+    if(values.length>1){const swap=[...values].reverse();out.push(render(swap))}
+    else out.push(render(values.map(v=>v===0?2:v*2)));
+    return out;
+  }
+  function shortDistractors(q,used){
+    const out=[],bucket=topicBuckets.get(q.topicKey)||[],wanted=answerType(q.a.en),scored=[];
+    for(const x of bucket){
+      if(x.id===q.id||answerEquivalent(q.a.en,x.a.en)||answerType(x.a.en)!==wanted)continue;
+      const n=normalAnswer(x.a.en);if(!n||used.has(n))continue;
+      let score=tokenOverlap(q.rawQ,x.rawQ)+tokenOverlap(q.focus||'',x.focus||'')*1.4;
+      if(questionMode(q.q.en)===questionMode(x.q.en))score+=.5;
+      score-=Math.abs(normalAnswer(q.a.en).split(' ').length-normalAnswer(x.a.en).split(' ').length)*.04;
+      scored.push([score,hashId(x.id)^hashId(q.id),x.a.en]);
     }
-    const bucket=topicBuckets.get(q.topicKey)||[];const wantedType=answerType(correct),sk=styleKey(q.q.en);const scored=[];
-    for(const x of bucket){if(x.id===q.id||answerEquivalent(correct,x.a.en))continue;const nx=normalAnswer(x.a.en);if(!nx||used.has(nx))continue;const guideCross=Math.max(tokenOverlap(correct,x.guidance||''),tokenOverlap(q.guidance||'',x.a.en));if(wantedType==='long'&&guideCross>.28)continue;let score=tokenOverlap(q.q.en,x.q.en);if(styleKey(x.q.en)===sk)score+=.85;if(questionMode(x.q.en)===questionMode(q.q.en))score+=.45;const candidateType=answerType(x.a.en);if(candidateType===wantedType)score+=.35;else if(wantedType==='long')score-=.30;else if(wantedType==='short'||wantedType==='num')score-=.25;score-=tokenOverlap(correct,x.a.en)*.35;score-=guideCross*.45;scored.push([score,hashId(x.id)^seed,x.a.en])}
-    scored.sort((a,b)=>b[0]-a[0]||a[1]-b[1]);for(const [score,,ans] of scored){if(score<.18)continue;const n=normalAnswer(ans);if(used.has(n))continue;choices.push(makeChoice(ans,false));used.add(n);if(choices.length===4)break}
-    for(const ans of fallbackDistractors(q)){if(choices.length===4)break;const n=normalAnswer(ans);if(!used.has(n)){choices.push(makeChoice(ans,false));used.add(n)}}
-    return seededShuffle(choices.slice(0,4),seed^0x85ebca6b)
+    scored.sort((a,b)=>b[0]-a[0]||a[1]-b[1]);
+    for(const [score,,ans] of scored){if(score<.15)continue;const n=normalAnswer(ans);if(!used.has(n)){out.push(ans);used.add(n)}if(out.length===3)break}
+    return out;
+  }
+  function relatedFalseVariants(q){
+    const out=[],used=new Set([normalAnswer(q.a.en)]),add=v=>{const n=normalAnswer(v);if(v&&n&&!used.has(n)){out.push(v);used.add(n)}};
+    add(oppositeVariant(q.a.en));add(negateStatement(q.a.en));
+    if(q.guidance){add(oppositeVariant(q.guidance));add(negateStatement(q.guidance))}
+    add(extremeVariant(q.a.en,q.focus));
+    if(out.length<3&&q.focus){
+      add(lang()==='fr'?`${q.focus} n’a aucun lien avec l’idée demandée dans cette question.`:`${q.focus} has no connection with the idea asked about in this question.`);
+      add(lang()==='fr'?`${q.focus} signifie toujours exactement le contraire de l’idée correcte.`:`${q.focus} always means exactly the opposite of the correct idea.`);
+    }
+    return out.slice(0,3);
+  }
+  function buildChoices(q){
+    const seed=hashId(q.id),correct=q.a.en,authored=extractInlineOptions(q.rawQ),choices=[makeChoice(correct,true)],used=new Set([normalAnswer(correct)]),correctNorm=normalAnswer(correct);
+    if(authored.length>=2&&authored.some(x=>correctNorm===normalAnswer(x)||correctNorm.startsWith(normalAnswer(x)+' ')||normalAnswer(x).startsWith(correctNorm+' '))){
+      for(const x of authored){const nx=normalAnswer(x);if(!nx||used.has(nx)||answerEquivalent(correct,x))continue;choices.push(makeChoice(x,false));used.add(nx);if(choices.length===4)break}
+      if(authored.length===2){for(const x of (lang()==='fr'?['Les deux','Aucun des deux']:['Both','Neither'])){const n=normalAnswer(x);if(choices.length<4&&!used.has(n)){choices.push(makeChoice(x,false));used.add(n)}}}
+    }
+    if(choices.length<4){
+      const type=answerType(correct);
+      if(type==='num'){for(const x of numericDistractors(correct)){const n=normalAnswer(x);if(choices.length<4&&n&&!used.has(n)){choices.push(makeChoice(x,false));used.add(n)}}}
+      else if(type==='short'){const opp=oppositeVariant(correct),on=normalAnswer(opp);if(opp&&on&&!used.has(on)){choices.push(makeChoice(opp,false));used.add(on)}for(const x of shortDistractors(q,used)){if(choices.length<4)choices.push(makeChoice(x,false))}}
+      else{for(const x of relatedFalseVariants(q)){const n=normalAnswer(x);if(choices.length<4&&n&&!used.has(n)){choices.push(makeChoice(x,false));used.add(n)}}}
+    }
+    if(choices.length<4){for(const x of relatedFalseVariants(q)){const n=normalAnswer(x);if(choices.length<4&&n&&!used.has(n)){choices.push(makeChoice(x,false));used.add(n)}}}
+    const fallback=lang()==='fr'
+      ?[`${q.focus||'Cette idée'} ne correspond pas à la définition donnée.`,`${q.focus||'Cette idée'} est toujours identique dans toutes les situations.`,`${q.focus||'Cette idée'} n’a aucun rôle dans ce sujet.`]
+      :[`${q.focus||'This idea'} does not match the definition in the question.`,`${q.focus||'This idea'} is always identical in every situation.`,`${q.focus||'This idea'} has no role in this subject.`];
+    for(const x of fallback){const n=normalAnswer(x);if(choices.length<4&&!used.has(n)){choices.push(makeChoice(x,false));used.add(n)}}
+    return seededShuffle(choices.slice(0,4),seed^0x85ebca6b);
   }
   function select20Unseen(pool,seen){const seenSet=new Set(seen||[]),unique=[...new Map(pool.map(q=>[q.id,q])).values()],unseen=unique.filter(q=>!seenSet.has(q.id));if(unseen.length<PER_TIER)return[];const picked=[],pickedIds=new Set(),bySubject=new Map();for(const q of unseen){const k=q.subject.en;if(!bySubject.has(k))bySubject.set(k,[]);bySubject.get(k).push(q)}for(const [,items] of shuffle([...bySubject.entries()])){const q=shuffle(items)[0];if(q&&!pickedIds.has(q.id)){picked.push(q);pickedIds.add(q.id)}if(picked.length===PER_TIER)return picked}const byTopic=new Map();for(const q of unseen){if(pickedIds.has(q.id))continue;if(!byTopic.has(q.topicKey))byTopic.set(q.topicKey,[]);byTopic.get(q.topicKey).push(q)}let topicGroups=shuffle([...byTopic.values()]);while(picked.length<PER_TIER&&topicGroups.length){const next=[];for(const group of topicGroups){const candidates=shuffle(group.filter(q=>!pickedIds.has(q.id)));if(candidates.length){const q=candidates[0];picked.push(q);pickedIds.add(q.id);if(candidates.length>1)next.push(candidates.slice(1))}if(picked.length===PER_TIER)break}topicGroups=next}if(picked.length<PER_TIER){for(const q of shuffle(unseen)){if(!pickedIds.has(q.id)){picked.push(q);pickedIds.add(q.id)}if(picked.length===PER_TIER)break}}return picked.slice(0,PER_TIER)}
   function saveSession(){if(run)localStorage.setItem(SESSION_KEY,JSON.stringify({run,answered,answerState,updatedAt:Date.now()}))}
@@ -250,16 +370,13 @@
   function txt(obj){return obj?.[lang()] ?? ''}
   function setHidden(el,hidden){if(!el)return;el.hidden=hidden;el.style.display=hidden?'none':''}
   function ensureWrittenUI(){
-    const card=$('challengeQuestion')?.closest('.challenge-card');if(!card)return{};let guide=$('cwAnswerGuide'),wrap=$('cwWrittenWrap'),ta=$('cwWrittenResponse'),status=$('cwWrittenStatus');
-    if(!guide){guide=document.createElement('p');guide.id='cwAnswerGuide';guide.style.cssText='margin:8px 0 0;color:#9fb8d1;font-size:.82rem;line-height:1.45';$('challengeOptions').before(guide)}
-    if(!wrap){wrap=document.createElement('div');wrap.id='cwWrittenWrap';wrap.style.cssText='margin-top:14px;padding:14px;border:1px solid rgba(93,228,255,.18);border-radius:16px;background:rgba(4,20,38,.34)';wrap.innerHTML=`<label for="cwWrittenResponse" style="display:block;font-weight:850;color:#d9f7ff;margin-bottom:7px"></label><textarea id="cwWrittenResponse" rows="4" style="width:100%;box-sizing:border-box;resize:vertical;border:1px solid rgba(255,255,255,.16);border-radius:13px;background:#07182a;color:#eef8ff;padding:11px 12px;font:inherit;line-height:1.45;outline:none"></textarea><small id="cwWrittenStatus" style="display:block;margin-top:7px;color:#91a9c0;line-height:1.4"></small>`;$('challengeOptions').after(wrap);ta=$('cwWrittenResponse');status=$('cwWrittenStatus')}
-    return{guide,wrap,ta,status}
+    const guide=$('cwAnswerGuide'),wrap=$('cwWrittenWrap');
+    if(guide)setHidden(guide,true);
+    if(wrap)setHidden(wrap,true);
+    return{guide,wrap,ta:$('cwWrittenResponse'),status:$('cwWrittenStatus')};
   }
-  function responseTokens(text){const stop=lang()==='fr'?STOP_FR:STOP_EN;return new Set((String(text||'').toLowerCase().match(/[a-zà-öø-ÿ']+/g)||[]).filter(w=>w.length>2&&!stop.has(w)))}
-  function explanationResult(text){const t=String(text||'').trim();if(!t)return{pass:false,empty:true};const A=responseTokens(t),B=responseTokens(`${current.a.en} ${current.guidance||''}`);let shared=0;for(const x of A)if(B.has(x))shared++;const ratio=shared/Math.max(1,Math.min(8,B.size));const similar=answerEquivalent(t,current.a.en);return{pass:similar||(shared>=2&&ratio>=.22),empty:false,shared,ratio}}
-  function updateWrittenStatus(){if(!(current?.flags&NEED_TEXT))return;const ui=ensureWrittenUI(),text=ui.ta?.value||'',r=explanationResult(text);run.textResponses=run.textResponses||{};run.textResponses[current.id]=text;if(r.empty){ui.status.textContent=tr('Your written explanation is practice. It does not reduce the four-choice score.','Ton explication écrite est un entraînement. Elle ne réduit pas le score des quatre choix.');ui.status.style.color='#91a9c0'}else if(r.pass){ui.status.textContent=tr('✅ Explanation check: Pass — your wording is close to the expected idea.','✅ Vérification de l’explication : validée — ta formulation est proche de l’idée attendue.');ui.status.style.color='#7debb4'}else{ui.status.textContent=tr('✍️ Response saved. Keep it clear and relevant; the four-choice answer controls the score.','✍️ Réponse enregistrée. Reste clair et pertinent ; le choix parmi quatre contrôle le score.');ui.status.style.color='#b7c8d8'}saveSession()}
-  function renderWrittenUI(){const ui=ensureWrittenUI(),needed=!!(current.flags&NEED_TEXT),open=!!(current.flags&OPEN_RESPONSE);setHidden(ui.guide,!needed);setHidden(ui.wrap,!needed);if(!needed)return;ui.guide.textContent=open?tr('Choose what a strong answer should include, then write your own response below.','Choisis ce qu’une bonne réponse doit contenir, puis écris ta propre réponse ci-dessous.'):tr('Choose the best answer. You can also explain your thinking below.','Choisis la meilleure réponse. Tu peux aussi expliquer ton raisonnement ci-dessous.');ui.wrap.querySelector('label').textContent=open?tr('Your own response (practice)','Ta propre réponse (entraînement)'):tr('Explain your thinking (practice)','Explique ton raisonnement (entraînement)');ui.ta.placeholder=open?tr('Write your response here…','Écris ta réponse ici…'):tr('Write a short explanation here…','Écris une courte explication ici…');run.textResponses=run.textResponses||{};ui.ta.value=run.textResponses[current.id]||'';ui.ta.oninput=()=>updateWrittenStatus();updateWrittenStatus()}
-  function nextQuestion(){if(!run)return;if(run.position>=run.queue.length){return run.phase==='base'?finishBaseRound():finishReviewRound()}current=findQuestion(run.queue[run.position]);if(!current){alert(tr('A verified question could not be loaded. No fallback was used.','Une question vérifiée n’a pas pu être chargée. Aucun contenu de secours n’a été utilisé.'));return}current.choices=buildChoices(current);current.hint={en:current.guidance||tr('Review the question carefully.','Relis attentivement la question.'),fr:current.guidance||tr('Review the question carefully.','Relis attentivement la question.')};current.why={en:current.guidance||current.a.en,fr:current.guidance||current.a.en};answered=false;answerState=null;renderQuestion();saveSession()}
+  function updateWrittenStatus(){}
+  function renderWrittenUI(){ensureWrittenUI()}
   function renderQuestion(){renderStageNavigators();$('tierName').textContent=TIERS[run.tier];$('challengeScore').textContent=scoreText();$('challengeStreak').textContent=run.streak;$('challengeProgress').textContent=`${run.position+1} / ${run.queue.length}`;$('challengePhase').textContent=run.phase==='base'?(run.mode==='practice'?tr('Practice round','Série d’entraînement'):tr('Main round','Série principale')):tr('Review round','Révision');$('challengeSubject').textContent=txt(current.subject);$('challengeQuestion').textContent=txt(current.q);$('difficultyPips').innerHTML=Array.from({length:5},(_,i)=>`<i class="${i<=run.tier?'on':''}"></i>`).join('');$('challengeFeedback').textContent='';setHidden($('nextChallenge'),true);setHidden($('provePanel'),true);const choices=current.choices;const box=$('challengeOptions');box.innerHTML=choices.map((c,i)=>`<button type="button" data-choice="${i}"></button>`).join('');box.querySelectorAll('button').forEach((b,i)=>{b.textContent=`${['A','B','C','D'][i]}. ${txt(choices[i])}`;b.dataset.correct=choices[i].correct?'1':'0';b.dataset.answer=choices[i].en;b.onclick=()=>answer(b,choices[i])});renderWrittenUI()}
   function feedbackForState(state){if(state.correct)return tr('✅ Correct. Keep going.','✅ Correct. Continue.');const attempts=run.attempts[current.id]||1;return attempts>=2?tr(`Not quite. Hint: ${txt(current.hint)} This question will return.`,`Pas encore. Indice : ${txt(current.hint)} Cette question reviendra.`):tr('Not quite. This question will return in your review round.','Pas encore. Cette question reviendra pendant la révision.')}
   function answer(btn,choice){if(answered)return;answered=true;const correct=!!choice.correct;run.attempts[current.id]=(run.attempts[current.id]||0)+1;document.querySelectorAll('#challengeOptions button').forEach(b=>{b.disabled=true;if(b.dataset.correct==='1')b.classList.add('correct')});if(correct){btn.classList.add('correct');run.streak++;run.missed=run.missed.filter(id=>id!==current.id);if(run.phase==='base')run.baseCorrect++;if(run.tier>=2){setHidden($('provePanel'),false);$('provePanel').innerHTML=`<span class="eyebrow">${tr('WHY IT WORKS','POURQUOI')}</span><p>${txt(current.why)}</p>`}window.playTone?.(true)}else{btn.classList.add('wrong');run.streak=0;if(!run.missed.includes(current.id))run.missed.push(current.id);window.playTone?.(false)}if(run.phase==='base')run.baseAnswered++;answerState={choice:choice.en,correct};$('challengeFeedback').textContent=feedbackForState(answerState);$('challengeScore').textContent=scoreText();$('challengeStreak').textContent=run.streak;updateWrittenStatus();const last=run.position===run.queue.length-1,stillMissed=run.phase==='review'&&run.missed.length>0;$('nextChallenge').textContent=last?(stillMissed?tr('Continue review →','Continuer la révision →'):tr('Finish round →','Terminer la série →')):tr('Next challenge →','Question suivante →');setHidden($('nextChallenge'),false);saveSession()}
