@@ -75,12 +75,91 @@
   function renderStageNavigators(){renderStageNavigator('cwIntroStageNavigator');renderStageNavigator('cwResultStageNavigator');renderStageNavigator('cwArenaStageNavigator')}
 
   function topicKeyFromId(id){return String(id||'').replace(/-(EXPLORER|CHALLENGER|INVESTIGATOR|EXPERT|MASTER-MISSION)-\d+$/,'')}
-  function cleanPrompt(q){return String(q||'').replace(/\s*\[Task\s+\d+\]\s*$/i,'').trim()}
+  function cleanPrompt(raw){
+    let s=String(raw||'').trim();
+    s=s.replace(/\s*\[Task\s+\d+\]\s*$/i,'').trim();
+    s=s.replace(/^(?:Challenge|Défi)\s*\d+\s*[:：]\s*/i,'').trim();
+    s=s.replace(/^.*?\s*-\s*(?:Challenge|Défi)\s*\d+\s*[:：]\s*/i,'').trim();
+
+    // Master Mission source prompts are project briefs. Brain Battle shows the
+    // same verified learning focus as a clean four-choice question; the child
+    // can still explain their thinking in the optional writing box.
+    let m;
+    if(lang()==='en'){
+      m=s.match(/^Master Mission\s+\d+\s*:\s*.*?\babout\s+(.+?)\s+within\b/i);
+      if(m)return `Which statement about ${m[1].trim()} is correct?`;
+    }else{
+      m=s.match(/^Mission Ma[iî]tre\s+\d+\s*:\s*.*?\bsur\s+(.+?)\s+dans\b/i);
+      if(m)return `Quelle affirmation sur ${m[1].trim()} est correcte ?`;
+    }
+
+    // Remove authoring / generation scaffolding. These notes belong to the
+    // curriculum source, not to the child-facing Brain Battle question.
+    const markers=[
+      /\s+(?:Evidence cycle|Learning cycle|Cycle de preuve|Cycle d[’']apprentissage|Cycle)\s+\d+\s*[:：]\s*/i,
+      /\s+(?:Topic focus|Repère du thème)\s+\d+(?:\.\d+)?\.?/i,
+      /\s+(?:Mission cycle|Cycle de mission)\s+\d+\.?/i
+    ];
+    let cut=s.length;
+    for(const re of markers){const hit=s.match(re);if(hit&&hit.index<cut)cut=hit.index}
+    s=s.slice(0,cut).trim();
+
+    // Authored inline options are used to build the buttons, but are not
+    // repeated inside the question heading.
+    s=s.replace(/\s+(?:Options?|Choices?)\s*:\s*[A-D][.)][\s\S]*$/i,'').trim();
+    s=s.replace(/\s+(?:Options?|Choix)\s*:\s*[A-D][.)][\s\S]*$/i,'').trim();
+
+    // Several curriculum banks use a repeated teaching template whose second
+    // clause was intended for lesson planning. Present the verified concept as
+    // a direct, answerable multiple-choice question instead.
+    if(lang()==='en'){
+      const direct=[
+        [/^In one clear sentence,\s*explain\s+(.+?)\.\s*Give one simple computing example\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^Explain\s+(.+?)\s+in one clear sentence for (?:an Age 10 learner|another 10-year-old)\.?$/i,m=>`Which statement about ${m[1].trim().replace(/\s+concept$/i,'')} is correct?`],
+        [/^Give one accurate fact about\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^What should a beginner artist remember first about\s+(.+?)\?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^Explain why\s+(.+?)\s+matters\b[\s\S]*$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^Give one cause, effect or consequence connected with\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^How does\s+(.+?)\s+affect choices\b[\s\S]*$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^Compare a sensible and less sensible use of\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^How could\s+(.+?)\s+help someone plan ahead\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^What trade-off or responsibility is connected with\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^What evidence would help you investigate a real-world example of\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^How could two different choices involving\s+(.+?)\s+lead to different outcomes\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^What information should be checked before making a decision about\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^Design a small investigation or comparison that tests understanding of\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^What misleading assumption about\s+(.+?)\s+should an investigator avoid\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^How could a table, record, receipt, advert, interview or survey help analyse\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^Critique an over-simple claim about\s+(.+?)\.\s*What fuller explanation fits better\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^Why is\s+(.+?)\s+more complex than one simple rule\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^How could priorities or circumstances change a decision involving\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^Explain one benefit, one limitation and one risk connected with\s+(.+?)\.?$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^How could two people make different reasonable decisions about\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`],
+        [/^What long-term consequence or ethical consideration should be included when explaining\s+(.+?)\??$/i,m=>`Which statement about ${m[1].trim()} is correct?`]
+      ];
+      for(const [re,fn] of direct){const hit=s.match(re);if(hit){s=fn(hit);break}}
+    }else{
+      const direct=[
+        [/^En une phrase claire,\s*explique\s+(.+?)\.\s*Donne un exemple informatique simple\.?$/i,m=>`Quelle affirmation sur ${m[1].trim()} est correcte ?`],
+        [/^Explique\s+(.+?)\s+en une phrase claire pour (?:un enfant de 10 ans|un élève de 10 ans)\.?$/i,m=>`Quelle affirmation sur ${m[1].trim().replace(/\s+concept$/i,'')} est correcte ?`],
+        [/^Donne un fait exact sur\s+(.+?)\.?$/i,m=>`Quelle affirmation sur ${m[1].trim()} est correcte ?`]
+      ];
+      for(const [re,fn] of direct){const hit=s.match(re);if(hit){s=fn(hit);break}}
+    }
+    return s.trim();
+  }
+  function cleanAnswer(raw){
+    let s=String(raw||'').trim();
+    s=s.replace(/^Expected learning focus\s*:\s*/i,'').replace(/^Objectif d[’']apprentissage attendu\s*:\s*/i,'');
+    s=s.replace(/\s+(?:Explorer|Challenger|Investigator|Expert|Master Mission|Explorateur|Investigateur|Mission Ma[iî]tre)\s*-\s*\d+\b[\s\S]*$/i,'').trim();
+    return s;
+  }
+  function cleanGuidance(raw){return cleanAnswer(raw)}
   function loadShard(tier){return new Promise((resolve,reject)=>{
     if(Number(prefs.age)!==10)return reject(new Error('AGE_NOT_AVAILABLE'));
     const src=`js/age10-bank/${lang()}_${tier}.js`;delete window.CW_AGE10_BANK_SHARD;
     const s=document.createElement('script');s.src=src;s.onload=()=>{const sh=window.CW_AGE10_BANK_SHARD;if(!sh||sh.tier!==tier||sh.language!==lang())return reject(new Error('SHARD_INVALID'));
-      bank=sh.rows.filter(r=>!r[2]||r[2]===prefs.country).map(r=>{const subject=sh.subjects[r[1]],q=cleanPrompt(r[3]),a=r[4],g=r[5]||'',flags=Number(r[6]||0);return{id:r[0],tier,subject:{en:subject,fr:subject},q:{en:q,fr:q},a:{en:a,fr:a},guidance:g,flags,topicKey:topicKeyFromId(r[0])};});
+      bank=sh.rows.filter(r=>!r[2]||r[2]===prefs.country).map(r=>{const subject=sh.subjects[r[1]],rawQ=String(r[3]||''),q=cleanPrompt(rawQ),a=cleanAnswer(r[4]),g=cleanGuidance(r[5]||''),flags=Number(r[6]||0);return{id:r[0],tier,subject:{en:subject,fr:subject},rawQ,q:{en:q,fr:q},a:{en:a,fr:a},guidance:g,flags,topicKey:topicKeyFromId(r[0])};});
       bankMap=new Map(bank.map(q=>[q.id,q]));topicBuckets=new Map();for(const q of bank){if(!topicBuckets.has(q.topicKey))topicBuckets.set(q.topicKey,[]);topicBuckets.get(q.topicKey).push(q)}s.remove();resolve(bank)};s.onerror=()=>reject(new Error('SHARD_LOAD_FAILED'));document.head.appendChild(s)
   })}
   function hashId(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
@@ -100,7 +179,7 @@
   function fallbackDistractors(q){const t=answerType(q.a.en);if(lang()==='fr')return t==='short'?['Les deux autres choix','Aucun de ces choix','Pas assez d’informations']:['Cette réponse ne traite pas la question posée.','Cette réponse affirme l’inverse de l’idée attendue.','Il n’y a pas assez d’éléments pour soutenir cette réponse.'];return t==='short'?['Both of the other choices','None of these choices','Not enough information']:['This response does not address the question asked.','This response states the opposite of the required idea.','There is not enough information to support this response.']}
   function buildChoices(q){
     if(q.flags&OPEN_RESPONSE)return openResponseChoices(q);
-    const seed=hashId(q.id),correct=q.a.en,authored=extractInlineOptions(q.q.en),choices=[makeChoice(correct,true)],used=new Set([normalAnswer(correct)]);
+    const seed=hashId(q.id),correct=q.a.en,authored=extractInlineOptions(q.rawQ||q.q.en),choices=[makeChoice(correct,true)],used=new Set([normalAnswer(correct)]);
     const correctNorm=normalAnswer(correct);
     if(authored.length>=2&&authored.some(x=>correctNorm===normalAnswer(x)||correctNorm.startsWith(normalAnswer(x)+' '))){
       for(const x of authored){const nx=normalAnswer(x);if(!nx||used.has(nx)||correctNorm===nx)continue;choices.push(makeChoice(x,false));used.add(nx)}
@@ -181,7 +260,7 @@
   function updateWrittenStatus(){if(!(current?.flags&NEED_TEXT))return;const ui=ensureWrittenUI(),text=ui.ta?.value||'',r=explanationResult(text);run.textResponses=run.textResponses||{};run.textResponses[current.id]=text;if(r.empty){ui.status.textContent=tr('Your written explanation is practice. It does not reduce the four-choice score.','Ton explication écrite est un entraînement. Elle ne réduit pas le score des quatre choix.');ui.status.style.color='#91a9c0'}else if(r.pass){ui.status.textContent=tr('✅ Explanation check: Pass — your wording is close to the expected idea.','✅ Vérification de l’explication : validée — ta formulation est proche de l’idée attendue.');ui.status.style.color='#7debb4'}else{ui.status.textContent=tr('✍️ Response saved. Keep it clear and relevant; the four-choice answer controls the score.','✍️ Réponse enregistrée. Reste clair et pertinent ; le choix parmi quatre contrôle le score.');ui.status.style.color='#b7c8d8'}saveSession()}
   function renderWrittenUI(){const ui=ensureWrittenUI(),needed=!!(current.flags&NEED_TEXT),open=!!(current.flags&OPEN_RESPONSE);setHidden(ui.guide,!needed);setHidden(ui.wrap,!needed);if(!needed)return;ui.guide.textContent=open?tr('Choose what a strong answer should include, then write your own response below.','Choisis ce qu’une bonne réponse doit contenir, puis écris ta propre réponse ci-dessous.'):tr('Choose the best answer. You can also explain your thinking below.','Choisis la meilleure réponse. Tu peux aussi expliquer ton raisonnement ci-dessous.');ui.wrap.querySelector('label').textContent=open?tr('Your own response (practice)','Ta propre réponse (entraînement)'):tr('Explain your thinking (practice)','Explique ton raisonnement (entraînement)');ui.ta.placeholder=open?tr('Write your response here…','Écris ta réponse ici…'):tr('Write a short explanation here…','Écris une courte explication ici…');run.textResponses=run.textResponses||{};ui.ta.value=run.textResponses[current.id]||'';ui.ta.oninput=()=>updateWrittenStatus();updateWrittenStatus()}
   function nextQuestion(){if(!run)return;if(run.position>=run.queue.length){return run.phase==='base'?finishBaseRound():finishReviewRound()}current=findQuestion(run.queue[run.position]);if(!current){alert(tr('A verified question could not be loaded. No fallback was used.','Une question vérifiée n’a pas pu être chargée. Aucun contenu de secours n’a été utilisé.'));return}current.choices=buildChoices(current);current.hint={en:current.guidance||tr('Review the question carefully.','Relis attentivement la question.'),fr:current.guidance||tr('Review the question carefully.','Relis attentivement la question.')};current.why={en:current.guidance||current.a.en,fr:current.guidance||current.a.en};answered=false;answerState=null;renderQuestion();saveSession()}
-  function renderQuestion(){renderStageNavigators();$('tierName').textContent=TIERS[run.tier];$('challengeScore').textContent=scoreText();$('challengeStreak').textContent=run.streak;$('challengeProgress').textContent=`${run.position+1} / ${run.queue.length}`;$('challengePhase').textContent=run.phase==='base'?(run.mode==='practice'?tr('Practice round','Série d’entraînement'):tr('Main round','Série principale')):tr('Review round','Révision');$('challengeSubject').textContent=txt(current.subject);$('challengeQuestion').textContent=txt(current.q);$('difficultyPips').innerHTML=Array.from({length:5},(_,i)=>`<i class="${i<=run.tier?'on':''}"></i>`).join('');$('challengeFeedback').textContent='';setHidden($('nextChallenge'),true);setHidden($('provePanel'),true);const choices=current.choices;const box=$('challengeOptions');box.innerHTML=choices.map((c,i)=>`<button type="button" data-choice="${i}"></button>`).join('');box.querySelectorAll('button').forEach((b,i)=>{b.textContent=txt(choices[i]);b.dataset.correct=choices[i].correct?'1':'0';b.dataset.answer=choices[i].en;b.onclick=()=>answer(b,choices[i])});renderWrittenUI()}
+  function renderQuestion(){renderStageNavigators();$('tierName').textContent=TIERS[run.tier];$('challengeScore').textContent=scoreText();$('challengeStreak').textContent=run.streak;$('challengeProgress').textContent=`${run.position+1} / ${run.queue.length}`;$('challengePhase').textContent=run.phase==='base'?(run.mode==='practice'?tr('Practice round','Série d’entraînement'):tr('Main round','Série principale')):tr('Review round','Révision');$('challengeSubject').textContent=txt(current.subject);$('challengeQuestion').textContent=txt(current.q);$('difficultyPips').innerHTML=Array.from({length:5},(_,i)=>`<i class="${i<=run.tier?'on':''}"></i>`).join('');$('challengeFeedback').textContent='';setHidden($('nextChallenge'),true);setHidden($('provePanel'),true);const choices=current.choices;const box=$('challengeOptions');box.innerHTML=choices.map((c,i)=>`<button type="button" data-choice="${i}"></button>`).join('');box.querySelectorAll('button').forEach((b,i)=>{b.textContent=`${['A','B','C','D'][i]}. ${txt(choices[i])}`;b.dataset.correct=choices[i].correct?'1':'0';b.dataset.answer=choices[i].en;b.onclick=()=>answer(b,choices[i])});renderWrittenUI()}
   function feedbackForState(state){if(state.correct)return tr('✅ Correct. Keep going.','✅ Correct. Continue.');const attempts=run.attempts[current.id]||1;return attempts>=2?tr(`Not quite. Hint: ${txt(current.hint)} This question will return.`,`Pas encore. Indice : ${txt(current.hint)} Cette question reviendra.`):tr('Not quite. This question will return in your review round.','Pas encore. Cette question reviendra pendant la révision.')}
   function answer(btn,choice){if(answered)return;answered=true;const correct=!!choice.correct;run.attempts[current.id]=(run.attempts[current.id]||0)+1;document.querySelectorAll('#challengeOptions button').forEach(b=>{b.disabled=true;if(b.dataset.correct==='1')b.classList.add('correct')});if(correct){btn.classList.add('correct');run.streak++;run.missed=run.missed.filter(id=>id!==current.id);if(run.phase==='base')run.baseCorrect++;if(run.tier>=2){setHidden($('provePanel'),false);$('provePanel').innerHTML=`<span class="eyebrow">${tr('WHY IT WORKS','POURQUOI')}</span><p>${txt(current.why)}</p>`}window.playTone?.(true)}else{btn.classList.add('wrong');run.streak=0;if(!run.missed.includes(current.id))run.missed.push(current.id);window.playTone?.(false)}if(run.phase==='base')run.baseAnswered++;answerState={choice:choice.en,correct};$('challengeFeedback').textContent=feedbackForState(answerState);$('challengeScore').textContent=scoreText();$('challengeStreak').textContent=run.streak;updateWrittenStatus();const last=run.position===run.queue.length-1,stillMissed=run.phase==='review'&&run.missed.length>0;$('nextChallenge').textContent=last?(stillMissed?tr('Continue review →','Continuer la révision →'):tr('Finish round →','Terminer la série →')):tr('Next challenge →','Question suivante →');setHidden($('nextChallenge'),false);saveSession()}
   function advance(){if(!run||!answered)return;if(current?.flags&NEED_TEXT)updateWrittenStatus();run.position++;answered=false;answerState=null;saveSession();nextQuestion()}
